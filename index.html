@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABPA · SIAL París 2026 — Galerie</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:   #1a1a1a;
+  --dark:    #222222;
+  --mid:     #2e2e2e;
+  --surface: #333333;
+  --line:    rgba(255,255,255,0.1);
+  --line2:   rgba(255,255,255,0.18);
+  --white:   #f5f2ee;
+  --muted:   #888880;
+  --faint:   #4a4a46;
+  --accent:  #c8b97a;   /* warm gold — drawn from the LOGO warmth */
+  --red:     #c0614a;
+  --amber:   #c49a3a;
+  --green:   #5a8f5a;
+  --blue:    #6a8fb0;
+  --r: 4px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--black);
+  color: var(--white);
+  min-height: 100vh;
+  font-size: 13.5px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--dark);
+  border-bottom: 1px solid var(--line);
+  padding: 0 36px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.brand-mark {
+  font-size: 18px;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.brand-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--white);
+}
+.brand-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--line2);
+}
+.brand-project {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.topstat {
+  text-align: right;
+}
+.topstat-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--accent);
+  line-height: 1;
+}
+.topstat-label {
+  font-size: 10px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-top: 2px;
+}
+
+/* ── LAYOUT ── */
+.layout { display: flex; min-height: calc(100vh - 58px); }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 210px;
+  flex-shrink: 0;
+  background: var(--dark);
+  border-right: 1px solid var(--line);
+  padding: 28px 0;
+  position: sticky;
+  top: 58px;
+  height: calc(100vh - 58px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-logo-row {
+  padding: 0 20px 24px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 14px;
+}
+.sidebar-eyebrow {
+  font-size: 10px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 4px;
+}
+.sidebar-client {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--white);
+  letter-spacing: 0.5px;
+}
+.sidebar-event {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.nav-group-label {
+  padding: 8px 20px 4px;
+  font-size: 9.5px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: 'DM Mono', monospace;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12.5px;
+  border-left: 2px solid transparent;
+  transition: all 0.14s;
+  user-select: none;
+}
+.nav-item:hover { background: var(--mid); color: var(--white); }
+.nav-item.active {
+  background: var(--mid);
+  color: var(--white);
+  border-left-color: var(--accent);
+  font-weight: 500;
+}
+.nav-sq { font-size: 8px; color: var(--accent); flex-shrink: 0; }
+.sidebar-footer {
+  margin-top: auto;
+  padding: 18px 20px 0;
+  border-top: 1px solid var(--line);
+  font-size: 10px;
+  color: var(--faint);
+  line-height: 1.7;
+}
+
+/* ── MAIN ── */
+.main { flex: 1; padding: 36px 40px; overflow-x: hidden; max-width: 960px; }
+.panel { display: none; animation: fadeIn 0.2s ease; }
+.panel.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.panel-eyebrow {
+  font-size: 10px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 8px;
+}
+.panel-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+.panel-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 32px;
+  max-width: 580px;
+  line-height: 1.7;
+}
+.divider {
+  width: 32px;
+  height: 1px;
+  background: var(--accent);
+  margin: 14px 0 28px;
+}
+
+/* ── STAT ROW ── */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+.stat-cell {
+  background: var(--dark);
+  padding: 16px 14px;
+  text-align: center;
+}
+.stat-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--accent);
+  line-height: 1;
+}
+.stat-label {
+  font-size: 10px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 5px;
+}
+
+/* ── PROGRESS ── */
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--dark);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  margin-bottom: 28px;
+}
+.progress-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.progress-track {
+  flex: 1;
+  height: 2px;
+  background: var(--mid);
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+.progress-pct {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  min-width: 34px;
+  text-align: right;
+}
+
+/* ── AREA BLOCKS ── */
+.area-block { margin-bottom: 2px; }
+.area-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 18px;
+  background: var(--dark);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s;
+}
+.area-block.open .area-header { border-bottom-color: transparent; }
+.area-header:hover { background: var(--mid); }
+.area-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.area-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 500;
+  flex: 1;
+  letter-spacing: 0.2px;
+}
+.area-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 400;
+  font-family: 'DM Mono', monospace;
+}
+.ab-amber { background: rgba(196,154,58,0.12); color: var(--amber); }
+.ab-green { background: rgba(90,143,90,0.12); color: var(--green); }
+.ab-blue  { background: rgba(106,143,176,0.12); color: var(--blue); }
+.ab-red   { background: rgba(192,97,74,0.12); color: var(--red); }
+.ab-muted { background: rgba(255,255,255,0.06); color: var(--muted); }
+.area-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--faint);
+}
+.area-chevron {
+  font-size: 10px;
+  color: var(--faint);
+  transition: transform 0.18s;
+}
+.area-block.open .area-chevron { transform: rotate(90deg); }
+
+.area-body {
+  display: none;
+  border: 1px solid var(--line);
+  border-top: none;
+}
+.area-block.open .area-body { display: block; }
+
+.sec-label {
+  padding: 8px 18px 6px;
+  font-size: 9.5px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-family: 'DM Mono', monospace;
+  background: var(--mid);
+  border-bottom: 1px solid var(--line);
+}
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 9px 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--dark);
+  transition: background 0.1s;
+}
+.check-row:last-child { border-bottom: none; }
+.check-row:hover { background: var(--mid); }
+.check-row input[type=checkbox] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+}
+.check-row label {
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1.55;
+  color: var(--white);
+}
+.check-row.done label {
+  text-decoration: line-through;
+  color: var(--faint);
+}
+
+/* ── BUDGET ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+.kpi-cell {
+  background: var(--dark);
+  padding: 20px 24px;
+}
+.kpi-cell.accent-border { border-left: 2px solid var(--accent); }
+.kpi-eyebrow { font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; font-family: 'DM Mono', monospace; }
+.kpi-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1;
+}
+.kpi-val.low { color: var(--green); }
+.kpi-val.high { color: var(--red); }
+.kpi-val.neutral { color: var(--accent); }
+.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+.budget-table-wrap {
+  background: var(--dark);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 0 24px;
+  margin-bottom: 16px;
+}
+table.bt { width: 100%; border-collapse: collapse; }
+table.bt tr { border-bottom: 1px solid var(--line); }
+table.bt tr:last-child { border-bottom: none; }
+table.bt td { padding: 11px 0; font-size: 13px; }
+table.bt td:first-child { color: var(--muted); padding-right: 20px; }
+table.bt td:last-child { text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; white-space: nowrap; }
+table.bt tr.driver td { }
+table.bt tr.driver td:first-child { color: var(--white); }
+table.bt tr.driver td:last-child { color: var(--red); }
+table.bt tr.total-row td { border-top: 1px solid var(--line2); padding-top: 16px; font-weight: 500; }
+table.bt tr.total-row td:first-child { color: var(--white); font-size: 14px; }
+table.bt tr.total-row td:last-child { color: var(--accent); font-size: 14px; }
+
+/* ── CALLOUT ── */
+.callout {
+  border-left: 2px solid var(--accent);
+  padding: 14px 18px;
+  background: rgba(200,185,122,0.04);
+  border-radius: 0 var(--r) var(--r) 0;
+  margin-top: 14px;
+}
+.callout p { font-size: 12.5px; color: var(--muted); line-height: 1.75; }
+.callout p strong { color: var(--white); font-weight: 500; }
+
+/* ── TIMELINE ── */
+.tl-item { display: flex; gap: 0; }
+.tl-spine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 30px;
+  flex-shrink: 0;
+}
+.tl-node {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.tl-thread {
+  flex: 1;
+  width: 1px;
+  background: var(--line2);
+  margin: 3px 0;
+  min-height: 16px;
+}
+.tl-body { flex: 1; padding: 0 0 26px 6px; }
+.tl-date {
+  font-size: 10px;
+  color: var(--faint);
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 3px;
+}
+.tl-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px;
+  font-weight: 500;
+  margin-bottom: 5px;
+  letter-spacing: 0.1px;
+}
+.tl-desc { font-size: 12.5px; color: var(--muted); line-height: 1.65; }
+.tl-critical { border-left: 1px solid var(--red); padding-left: 12px; }
+
+/* ── PROVIDERS ── */
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.provider-card {
+  background: var(--dark);
+  padding: 20px 22px;
+  transition: background 0.12s;
+}
+.provider-card:hover { background: var(--mid); }
+.pc-num {
+  font-size: 10px;
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+.pc-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.pc-meta { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
+.pc-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px; }
+.pc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(200,185,122,0.3);
+  padding-bottom: 1px;
+  transition: border-color 0.12s;
+  font-family: 'DM Mono', monospace;
+}
+.pc-link:hover { border-color: var(--accent); }
+.pc-contact { font-size: 11px; color: var(--faint); margin-top: 5px; font-family: 'DM Mono', monospace; }
+.provider-full {
+  background: var(--dark);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 20px 22px;
+  margin-bottom: 1px;
+  transition: background 0.12s;
+}
+.provider-full:hover { background: var(--mid); }
+
+/* ── DESIGN ── */
+.design-card {
+  background: var(--dark);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 24px;
+  margin-bottom: 12px;
+  transition: border-color 0.14s;
+}
+.design-card:hover { border-color: var(--line2); }
+.design-card.featured { border-color: rgba(200,185,122,0.35); }
+.dc-num { font-size: 10px; color: var(--faint); font-family: 'DM Mono', monospace; margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+.dc-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 21px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  letter-spacing: 0.1px;
+}
+.dc-body { font-size: 13px; color: var(--muted); line-height: 1.75; }
+.dc-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+.dc-tag {
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid var(--line2);
+  color: var(--faint);
+  font-family: 'DM Mono', monospace;
+}
+.dc-tag.featured { border-color: rgba(200,185,122,0.4); color: var(--accent); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .sidebar { display: none; }
+  .main { padding: 24px 18px; }
+  .topbar { padding: 0 18px; }
+  .topbar-right { display: none; }
+  .stat-row { grid-template-columns: repeat(3,1fr); }
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">■</div>
+    <div class="brand-name">Galerie</div>
+    <div class="brand-sep"></div>
+    <div class="brand-project">ABPA · SIAL París 2026</div>
+  </div>
+  <div class="topbar-right">
+    <div class="topstat"><div class="topstat-val">677</div><div class="topstat-label">m² totales</div></div>
+    <div class="topstat"><div class="topstat-val">4</div><div class="topstat-label">islas</div></div>
+    <div class="topstat"><div class="topstat-val">24</div><div class="topstat-label">co-expositores</div></div>
+    <div class="topstat"><div class="topstat-val">43</div><div class="topstat-label">personas</div></div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo-row">
+      <div class="sidebar-eyebrow">Proyecto</div>
+      <div class="sidebar-client">ABPA</div>
+      <div class="sidebar-event">SIAL París · 17–21 oct 2026</div>
+    </div>
+
+    <div class="nav-group-label">Módulos</div>
+    <div class="nav-item active" onclick="showPanel('checklist',this)">
+      <span class="nav-sq">■</span>Checklist
+    </div>
+    <div class="nav-item" onclick="showPanel('budget',this)">
+      <span class="nav-sq">■</span>Presupuesto
+    </div>
+    <div class="nav-item" onclick="showPanel('timeline',this)">
+      <span class="nav-sq">■</span>Camino crítico
+    </div>
+    <div class="nav-item" onclick="showPanel('providers',this)">
+      <span class="nav-sq">■</span>Proveedores
+    </div>
+    <div class="nav-item" onclick="showPanel('design',this)">
+      <span class="nav-sq">■</span>Ideas de diseño
+    </div>
+    <div class="nav-item" onclick="showPanel('staffing',this)">
+      <span class="nav-sq">■</span>Staffing
+    </div>
+
+    <div class="sidebar-footer">
+      Generado por Galerie<br>
+      info@galerie-expo.com<br>
+      galerie-expo.com
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ══ CHECKLIST ══ -->
+    <div id="panel-checklist" class="panel active">
+      <div class="panel-eyebrow">■ Términos de referencia — traducidos</div>
+      <div class="panel-title">Checklist de requerimientos</div>
+      <div class="divider"></div>
+      <div class="panel-sub">Marcá cada ítem a medida que se confirma con el montador. El progreso se actualiza en tiempo real.</div>
+
+      <div class="stat-row">
+        <div class="stat-cell"><div class="stat-val">677</div><div class="stat-label">m² totales</div></div>
+        <div class="stat-cell"><div class="stat-val">342</div><div class="stat-label">m² pollo</div></div>
+        <div class="stat-cell"><div class="stat-val">149</div><div class="stat-label">m² MBRF</div></div>
+        <div class="stat-cell"><div class="stat-val">105</div><div class="stat-label">m² cerdo</div></div>
+        <div class="stat-cell"><div class="stat-val">80</div><div class="stat-label">m² huevos</div></div>
+      </div>
+
+      <div class="progress-row">
+        <div class="progress-label">Progreso general</div>
+        <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+        <div class="progress-pct" id="prog-pct">0 %</div>
+      </div>
+
+      <!-- ISLA 1 -->
+      <div class="area-block open">
+        <div class="area-header" onclick="toggleArea(this)">
+          <div class="area-dot" style="background:#c49a3a;"></div>
+          <div class="area-label">Isla 1 — 105,38 m²</div>
+          <div class="area-badge ab-amber">Cerdo</div>
+          <div class="area-count" id="cnt-a1"></div>
+          <div class="area-chevron">▶</div>
+        </div>
+        <div class="area-body">
+          <div class="sec-label">Recepción ABPA</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 banquetas en área de recepción</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mostrador con toma de corriente embutida, estante y puertas con cerradura</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Toma de corriente libre en recepción</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Papelera + panel de comunicación visual</label></div>
+          <div class="sec-label">2 Salas de reunión — mampara móvil</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 mesa para 4–6 personas por sala</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>6 sillas por sala (soporte mín. 100 kg)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Ventilador · perchero · toma de corriente libre</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Papelera · gabinete con llave y enchufe interior</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mampara retráctil para unir ambas salas</label></div>
+          <div class="sec-label">Despensa / Pantry</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Pileta con instalación de agua y desagüe</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 heladera · 2 cafeteras · 1 termo grande · 1 pava eléctrica</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Soporte/dispensador para bidones de 20 L (apilable)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Tomas de corriente para heladera, pava y cafeteras</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 columna de lockers con llave · caja de corriente central del área · papelera 100 L</label></div>
+          <div class="sec-label">6 módulos empresariales</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Estandarización de tamaño entre espacios con igual cantidad de mesas</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Paneles visuales en todas las paredes (mín. 2 paneles laterales por empresa)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Señalización con bandera de identificación de proteína (cerdo)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mostrador con toma embutida + logo aplicado · toma libre · papelera</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Distribución: 2 empresas c/1 mesa · 3 empresas c/2 mesas · 1 empresa c/3 mesas (redondas + 4 sillas c/u)</label></div>
+        </div>
+      </div>
+
+      <!-- ISLA 2 -->
+      <div class="area-block open">
+        <div class="area-header" onclick="toggleArea(this)">
+          <div class="area-dot" style="background:#5a8f5a;"></div>
+          <div class="area-label">Isla 2 — 342,81 m²</div>
+          <div class="area-badge ab-green">Pollo · Isla principal</div>
+          <div class="area-count" id="cnt-a2"></div>
+          <div class="area-chevron">▶</div>
+        </div>
+        <div class="area-body">
+          <div class="sec-label">Recepción ABPA</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mostrador · 2 banquetas · papelera · tomas de corriente</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Pantalla / TV grande (~2 m × 4 m) para videos en bucle</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Pasillo de acceso al área central del stand</label></div>
+          <div class="sec-label">Sala de reunión</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mesa 6 personas · 6 sillas · ventilador · perchero · toma de corriente · papelera</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>TV con entrada USB y HDMI · gabinete con llave y enchufe interior</label></div>
+          <div class="sec-label">Almacén</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Estanterías · 5 columnas de lockers · 2 percheros · papelera · caja central de corriente</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>3 soportes de bidones apilables</label></div>
+          <div class="sec-label">Pantry de bebidas</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Pileta con agua y desagüe · 2 heladeras</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Dispensador de agua + 60 bidones (entrega escalonada 2–3 días)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mesadas con alacenas · estanterías en todas las paredes</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 cafeteras · 1 pava eléctrica · 1 termo · 1 papelera 100 L</label></div>
+          <div class="sec-label">Cocina industrial — degustación &nbsp;<span class="area-badge ab-red">Normativa sanitaria francesa</span></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 piletas con terminación correcta entre mesada y pared</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 freezer vertical + 1 freezer horizontal + 4 heladeras</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mesada central para preparación y emplatado</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 cocinas de 4 hornallas (8 hornallas grandes en total)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 horno grande</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>3 arroceras eléctricas</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 freidoras eléctricas de 2 canastas + 1 extractor/campana por freidora</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>60 L aceite + recipiente para aceite usado (8–10 L)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 freidoras de aire jumbo · 1 parrilla estilo George Foreman · 1 licuadora · 1 batidora · 1 mixer</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Ventana pass-through con puerta hacia el restaurante</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 papeleras 50 L · gel antibacterial · alcohol 70% · botiquín básico</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Utensilios completos: cuchillos, ollas grandes/medianas, sartenes, tablas, bowls, recipientes plásticos, espátulas, ladles (ver lista detallada en TdR)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Consumibles de limpieza: esponjas, lana de acero, desengrasante, detergente, bolsas 130 L, balde, trapeador, papel de cocina</label></div>
+          <div class="sec-label">Restaurante central "GALETERÍA" &nbsp;<span class="area-badge ab-amber">Área emblema del stand</span></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mínimo 15 mesas con 4 sillas c/u · sillas soporte mín. 100 kg</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 TV grande con USB para videos en bucle</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 hornos giratorios tipo rotisería — 30 pollos enteros c/u con puertas de vidrio &nbsp;<span class="area-badge ab-red">Carga eléctrica alta</span></label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Hornos posicionados cerca de entrada a cocina para facilitar transporte de pollos</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Piso antideslizante y fácil de limpiar en zona de hornos</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Distribución en tableros eléctricos separados — evitar sobrecargas simultáneas</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Cumplimiento reglamento del recinto para hornos en zona de acceso público</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Cartel de neón: "BRAZILIAN CHICKEN" junto a los hornos</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Pasaje interior entre módulos de empresas y Galetería (sin salir del stand)</label></div>
+          <div class="sec-label">11 módulos empresariales</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 empresa c/2 mesas · 3 empresas c/3 mesas · 3 empresas c/4 mesas · 3 empresas c/5 mesas · 1 empresa c/6 mesas</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mostrador con logo + paneles visuales en todas las paredes (mín. 2 laterales) + toma de corriente + papelera</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Acceso individual de cada módulo al área central de la Galetería</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Tabique trasero con pasaje para mozo cargando bandeja con bebidas</label></div>
+        </div>
+      </div>
+
+      <!-- ISLA 3 -->
+      <div class="area-block open">
+        <div class="area-header" onclick="toggleArea(this)">
+          <div class="area-dot" style="background:#6a8fb0;"></div>
+          <div class="area-label">Isla 3 — 80 m²</div>
+          <div class="area-badge ab-blue">Huevos y pato</div>
+          <div class="area-count" id="cnt-a3"></div>
+          <div class="area-chevron">▶</div>
+        </div>
+        <div class="area-body">
+          <div class="sec-label">Recepción ABPA</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 banquetas · mostrador con toma embutida, estante y cerradura</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Toma de corriente libre · papelera · panel de comunicación visual</label></div>
+          <div class="sec-label">Sala de reunión</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mesa 6 personas · 6 sillas · ventilador · perchero · toma de corriente · papelera</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Gabinete con llave y enchufe interior</label></div>
+          <div class="sec-label">Despensa / Pantry</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Estanterías + mesada de apoyo para organizar catering</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 heladera · 1 cafetera · 1 termo · 1 pava eléctrica</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Soporte/dispensador bidones 20 L · tomas de corriente · 1 columna de lockers · papelera 100 L · caja central</label></div>
+          <div class="sec-label">3 módulos empresariales</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 empresa c/1 mesa · 2 empresas c/2 mesas (redondas + 4 sillas)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mostrador con logo · paneles visuales · señalización proteína · toma libre · papelera</label></div>
+        </div>
+      </div>
+
+      <!-- ISLA 4 -->
+      <div class="area-block open">
+        <div class="area-header" onclick="toggleArea(this)">
+          <div class="area-dot" style="background:#9b7fb0;"></div>
+          <div class="area-label">Isla 4 — 149,50 m²</div>
+          <div class="area-badge ab-muted">MBRF</div>
+          <div class="area-count" id="cnt-a4"></div>
+          <div class="area-chevron">▶</div>
+        </div>
+        <div class="area-body">
+          <div class="sec-label">Identidad visual</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Paneles de comunicación visual estándar ABPA · logo en mostrador · fascia estándar</label></div>
+          <div class="sec-label">Recepción + atención al cliente</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 banquetas · mostrador con toma embutida, estante y puertas con llave · papelera</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mesas redondas con 4 sillas c/u según espacio · tomas de corriente libres · papeleras · paneles visuales</label></div>
+          <div class="sec-label">2 salas de reunión combinables</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mesa 6 personas + 6 sillas + ventilador + perchero (cada sala)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Toma de corriente libre + gabinete con llave y enchufe interior (cada sala)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>TV con USB y HDMI (solo 1 de las 2 salas)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Arte decorativo en cada sala</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mampara retráctil para combinar ambas salas</label></div>
+          <div class="sec-label">Despensa + cocina MBRF</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Pileta con agua y desagüe · mesadas con alacenas · estanterías en todas las paredes</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 heladeras · dispensador de agua + 15 bidones (entrega escalonada)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 cafeteras · 1 pava eléctrica · 2 soportes de bidones apilables</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 freidora de aire jumbo · 1 freidora eléctrica de 2 canastas + 1 extractor · 1 horno · 1 parrilla George Foreman</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>3 columnas de lockers con llave · papelera 100 L · caja central de corriente</label></div>
+          <div class="sec-label">Insumos y consumibles &nbsp;<span class="area-badge ab-amber">Lista completa</span></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1.000 platos descartables · 1.000 tenedores + cuchillos de madera FSC en packaging individual</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1.000 servilletas FSC · 1.000 vasos de café · 1.000 vasos agua/gaseosa</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>800 palitos para café · 700 sobres azúcar · 700 sobres edulcorante · 6 kg café molido</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>50 saquitos de té · 500 porciones de leche · 5 bandejas para servir</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>40 L Coca-Cola · 100 L Coca-Cola Zero · 45 L 7-Up · 30 L agua con gas · 15 bidones 20 L</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Elementos de cocina: cuchillos, cucharas, bandejas para horno, esponjas, desengrasante, detergente, bolsas 130 L, balde, trapeador</label></div>
+        </div>
+      </div>
+
+      <!-- GENERAL -->
+      <div class="area-block open">
+        <div class="area-header" onclick="toggleArea(this)">
+          <div class="area-dot" style="background:#c0614a;"></div>
+          <div class="area-label">Servicios generales</div>
+          <div class="area-badge ab-red">Responsabilidad del contratado</div>
+          <div class="area-count" id="cnt-gen"></div>
+          <div class="area-chevron">▶</div>
+        </div>
+        <div class="area-body">
+
+          <!-- BLOQUE GALERIE -->
+          <div class="sec-label" style="background:rgba(200,185,122,0.08);color:var(--accent);border-left:2px solid var(--accent);">■ GALERIE contrata directamente — 5 recepcionistas trilingüe PT-FR-EN</div>
+          <div class="check-row" style="background:rgba(200,185,122,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label><strong style="color:var(--accent);font-weight:500;">Agencia seleccionada</strong> — Agence Bonjour / Exhibition Girls / Expo Stars (cotizar las 3 en paralelo)</label>
+          </div>
+          <div class="check-row" style="background:rgba(200,185,122,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>4 recepcionistas trilingüe PT-FR-EN — 2 área pollo · 1 cerdo · 1 huevos · desde 17/10</label>
+          </div>
+          <div class="check-row" style="background:rgba(200,185,122,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>1 recepcionista trilingüe PT-FR-EN — área MBRF · desde 17/10</label>
+          </div>
+          <div class="check-row" style="background:rgba(200,185,122,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>Briefing enviado a las recepcionistas (productos, empresas, protocolo del pabellón) — mín. 7 días antes</label>
+          </div>
+          <div class="check-row" style="background:rgba(200,185,122,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>Contrato firmado con agencia · seguros y empleabilidad legal en Francia verificados</label>
+          </div>
+
+          <!-- BLOQUE MONTADOR -->
+          <div class="sec-label" style="background:rgba(106,143,176,0.08);color:var(--blue);border-left:2px solid var(--blue);">■ MONTADOR gestiona — 38 personas restantes (cotizado como línea separada en el contrato)</div>
+          <div class="check-row" style="background:rgba(106,143,176,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>1 coordinador de stand — 16 al 21/10 · organización del equipo, stock, supervisión, gestión de turnos</label>
+          </div>
+          <div class="check-row" style="background:rgba(106,143,176,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>4 asistentes de cocina — 16 al 21/10</label>
+          </div>
+          <div class="check-row" style="background:rgba(106,143,176,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>1 persona para compras de mercado — días 16, 17 y 18/10</label>
+          </div>
+          <div class="check-row" style="background:rgba(106,143,176,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>4 asistentes de pantry/café — 2 área pollo · 1 cerdo · 1 huevos</label>
+          </div>
+          <div class="check-row" style="background:rgba(106,143,176,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>2 asistentes de pantry — área MBRF</label>
+          </div>
+          <div class="check-row" style="background:rgba(106,143,176,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>15 mozos — áreas pollo/cerdo/huevos</label>
+          </div>
+          <div class="check-row" style="background:rgba(106,143,176,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>5 mozos — área MBRF</label>
+          </div>
+          <div class="check-row" style="background:rgba(106,143,176,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>5 personas de limpieza — 2 pollo · 1 cerdo · 1 huevos · 1 rotativo para descansos</label>
+          </div>
+          <div class="check-row" style="background:rgba(106,143,176,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>1 persona de limpieza — área MBRF</label>
+          </div>
+          <div class="check-row" style="background:rgba(106,143,176,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>Staffing de servicio cotizado como línea desglosada y separada — no incluido en precio global de estructura</label>
+          </div>
+          <div class="check-row" style="background:rgba(106,143,176,0.04);">
+            <input type="checkbox" onchange="tick(this)">
+            <label>Último día 21/10: solo 50% del equipo de servicio opera</label>
+          </div>
+          <div class="sec-label">Infraestructura y servicios</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Wi-Fi: mín. 6 routers (2 en áreas grandes · 1 en áreas pequeñas) — 80 dispositivos simultáneos</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Instalación eléctrica completa + tableros separados (calcular carga de hornos + freidoras simultáneos)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Plomería completa: agua y desagüe para todas las piletas</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Conexión del sistema de extracción de cocina al hall del recinto</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mínimo 6 contenedores de residuos (armado, desmontaje, orgánicos, cajas)</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Limpieza diaria durante la feria + limpieza en día de montaje</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Todos los fees al organizador (electricidad, plomería, overtime, auditoría, internet, fascia) — 100% a cargo del contratado</label></div>
+          <div class="sec-label">Fechas límite no negociables</div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>■ 16 oct / 9:00 hs — Cocina operativa, heladeras encendidas y limpia. Inicia preparación de degustación</label></div>
+          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>■ 16 oct / 14:00 hs — Stand 100% completo, decorado y listo sin excepciones</label></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PRESUPUESTO ══ -->
+    <div id="panel-budget" class="panel">
+      <div class="panel-eyebrow">■ Estimación orientativa</div>
+      <div class="panel-title">Presupuesto estimado</div>
+      <div class="divider"></div>
+      <div class="panel-sub">Basado en tarifas de mercado europeo para stand a medida + pabellón nacional con cocina industrial en París. Rango 2025–2026.</div>
+
+      <div class="kpi-grid">
+        <div class="kpi-cell accent-border">
+          <div class="kpi-eyebrow">Rango estimado bajo</div>
+          <div class="kpi-val low">€ 850.000</div>
+          <div class="kpi-sub">~€ 1.255 / m²</div>
+        </div>
+        <div class="kpi-cell accent-border">
+          <div class="kpi-eyebrow">Rango estimado alto</div>
+          <div class="kpi-val high">€ 1.440.000</div>
+          <div class="kpi-sub">~€ 2.125 / m²</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="kpi-eyebrow">Referencia de mercado París</div>
+          <div class="kpi-val neutral" style="font-size:24px;">€ 1.300 – 2.200 / m²</div>
+          <div class="kpi-sub">Stand pabellón nacional con cocina industrial</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="kpi-eyebrow">Mayor driver de costo</div>
+          <div class="kpi-val neutral" style="font-size:22px;">Cocina + fees</div>
+          <div class="kpi-sub">Normativa sanitaria francesa + fees recinto París</div>
+        </div>
+      </div>
+
+      <div class="budget-table-wrap">
+        <table class="bt">
+          <tr><td>Diseño arquitectónico + renders 3D</td><td>€ 25.000 – 45.000</td></tr>
+          <tr><td>Construcción y montaje estructura (677 m²)</td><td>€ 380.000 – 600.000</td></tr>
+          <tr><td>Mobiliario (mostradores, mesas, sillas, lockers, mamparas)</td><td>€ 60.000 – 95.000</td></tr>
+          <tr class="driver"><td>Cocina industrial — equipamiento completo</td><td>€ 80.000 – 130.000</td></tr>
+          <tr class="driver"><td>2 hornos giratorios tipo rotisería</td><td>€ 20.000 – 35.000</td></tr>
+          <tr><td>Comunicación visual (paneles, impresiones, neón, banderas)</td><td>€ 45.000 – 75.000</td></tr>
+          <tr><td>Instalación eléctrica completa + tableros</td><td>€ 40.000 – 65.000</td></tr>
+          <tr><td>Instalación hidráulica (agua y desagüe)</td><td>€ 20.000 – 35.000</td></tr>
+          <tr><td>Wi-Fi (6 routers, 80 dispositivos simultáneos)</td><td>€ 8.000 – 15.000</td></tr>
+          <tr style="border-top:1px solid rgba(200,185,122,0.2);">
+            <td style="color:var(--accent);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;padding-top:14px;" colspan="2">■ Galerie contrata directamente</td>
+          </tr>
+          <tr><td>5 recepcionistas trilingüe PT-FR-EN (Agence Bonjour / Exhibition Girls) × 5 días</td><td style="color:var(--accent);">€ 9.000 – 14.000</td></tr>
+          <tr style="border-top:1px solid rgba(106,143,176,0.2);">
+            <td style="color:var(--blue);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;padding-top:14px;" colspan="2">■ Montador gestiona (línea desglosada en contrato)</td>
+          </tr>
+          <tr><td>38 personas de servicio (coordinador, cocina, mozos, pantry, limpieza) × 5–6 días</td><td>€ 65.000 – 110.000</td></tr>
+          <tr><td>Limpieza diaria + contenedores de residuos</td><td>€ 12.000 – 20.000</td></tr>
+          <tr class="driver"><td>Fees al organizador (electricidad, plomería, fascia, auditoría, etc.)</td><td>€ 50.000 – 90.000</td></tr>
+          <tr><td>Catering y consumibles (MBRF + cocina)</td><td>€ 20.000 – 35.000</td></tr>
+          <tr><td>Logística, transporte y almacenamiento</td><td>€ 25.000 – 40.000</td></tr>
+          <tr><td>Desmontaje</td><td>€ 18.000 – 30.000</td></tr>
+          <tr class="total-row"><td>Total estimado</td><td>€ 883.000 – € 1.439.000</td></tr>
+        </table>
+      </div>
+
+      <div class="callout">
+        <p>
+          <strong>Estrategia de contratación · Galerie</strong><br>
+          · <span style="color:var(--accent);">■ Galerie contrata directamente</span> las 5 recepcionistas trilingüe PT-FR-EN — son la cara del pabellón, el perfil más estratégico y el que el montador no tiene ventaja para conseguir mejor.<br>
+          · <span style="color:var(--blue);">■ El montador</span> gestiona los 38 perfiles restantes (mozos, cocina, pantry, limpieza) — exigir que ese ítem aparezca desglosado y cotizado por separado en el contrato, nunca mezclado con el precio de estructura.<br>
+          · Solicitar al montador que incluya un <strong>project manager dedicado</strong> como parte del contrato — no un vendedor, sino un técnico que sea punto de contacto durante el armado en París.<br>
+          · Los fees en París-Nord Villepinte representan el 8–15% del total. Incluirlos todos en el contrato del montador.<br>
+          · El 21/10 opera solo el 50% del equipo de servicio — negociar ese descuento explícitamente en la cotización de staffing.
+        </p>
+      </div>
+    </div>
+
+    <!-- ══ TIMELINE ══ -->
+    <div id="panel-timeline" class="panel">
+      <div class="panel-eyebrow">■ Gestión del proyecto</div>
+      <div class="panel-title">Camino crítico</div>
+      <div class="divider"></div>
+      <div class="panel-sub">Las tareas en rojo son bloqueantes. Con 677 m² y cocina industrial en París, no existe margen de atraso en las etapas iniciales.</div>
+
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">Marzo – Abril 2026</div>
+          <div class="tl-title tl-critical">Selección y contratación del montador &nbsp;<span class="area-badge ab-red">Crítico</span></div>
+          <div class="tl-desc">RFP, evaluación de 3+ propuestas, firma de contrato. Con 677 m² + cocina industrial, los montadores con capacidad suficiente en París tienen agenda muy limitada. Galerie debería enviar el brief en las próximas semanas.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">Abril – Mayo 2026</div>
+          <div class="tl-title tl-critical">Diseño arquitectónico + renders 3D &nbsp;<span class="area-badge ab-red">Crítico</span></div>
+          <div class="tl-desc">Galerie coordina el diseño. Debe contemplar: 4 islas como proyecto unificado, cocina con cumplimiento sanitario, Galetería visible, flujo de mozos sin salir del stand, y regulaciones de hornos en zona pública del recinto.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">Mayo 2026</div>
+          <div class="tl-title tl-critical">Aprobación del plano por el organizador SIAL &nbsp;<span class="area-badge ab-red">Crítico</span></div>
+          <div class="tl-desc">Obligatorio antes de iniciar producción. SIAL tiene normativas específicas para hornos en zonas accesibles al público y para la conexión del sistema de extracción al hall. Sin aprobación, no arranca fabricación.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--amber);"></div><div class="tl-thread"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">Mayo – Junio 2026</div>
+          <div class="tl-title">Pedido de servicios al organizador SIAL &nbsp;<span class="area-badge ab-amber">Urgente</span></div>
+          <div class="tl-desc">Reservar electricidad, plomería, internet, fascia y limpieza oficial. Los cupos y precios preferenciales cierran meses antes del evento.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">Junio 2026</div>
+          <div class="tl-title tl-critical">Inicio de producción de estructura y mobiliario &nbsp;<span class="area-badge ab-red">Crítico</span></div>
+          <div class="tl-desc">Fabricación de mostradores, mamparas, mesadas de cocina y mobiliario custom. Mínimo 3 meses de producción en taller para un stand de esta escala.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--amber);"></div><div class="tl-thread"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">Julio – Agosto 2026</div>
+          <div class="tl-title">Diseño y producción de comunicación visual &nbsp;<span class="area-badge ab-amber">Urgente</span></div>
+          <div class="tl-desc">Paneles, fascias, banderas de proteínas, cartel neón "Brazilian Chicken" e identidad visual unificada de las 4 islas. Artwork cerrado para imprenta.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--amber);"></div><div class="tl-thread"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">Agosto – Septiembre 2026</div>
+          <div class="tl-title">Contratación de personal — modelo split &nbsp;<span class="area-badge ab-amber">Urgente</span></div>
+          <div class="tl-desc"><span style="color:var(--accent);">Galerie contrata</span> las 5 recepcionistas trilingüe PT-FR-EN directamente (Agence Bonjour / Exhibition Girls). <span style="color:var(--blue);">El montador</span> gestiona los 38 perfiles restantes. Iniciar ambas búsquedas en simultáneo — las trilingües PT-FR-EN son el perfil más escaso en París.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--amber);"></div><div class="tl-thread"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">Septiembre – Octubre 2026</div>
+          <div class="tl-title">Validación eléctrica + aprobación sanitaria &nbsp;<span class="area-badge ab-amber">Urgente</span></div>
+          <div class="tl-desc">Verificar carga con hornos + freidoras simultáneos. Coordinar inspección sanitaria de cocina industrial según normativa francesa.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">12 – 15 octubre 2026</div>
+          <div class="tl-title tl-critical">Armado y montaje en recinto &nbsp;<span class="area-badge ab-red">Crítico</span></div>
+          <div class="tl-desc">Instalación eléctrica, hidráulica, estructura, mobiliario y comunicación visual. 677 m² con cocina industrial requiere mínimo 4 días. Coordinar ventanas de acceso con SIAL.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">16 octubre 2026 · 09:00 hs</div>
+          <div class="tl-title tl-critical">Cocina operativa &nbsp;<span class="area-badge ab-red">Deadline duro</span></div>
+          <div class="tl-desc">Heladeras encendidas, cocina limpia. Inicia preparación de degustación un día antes de la feria.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">16 octubre 2026 · 14:00 hs</div>
+          <div class="tl-title tl-critical">Stand 100% completo &nbsp;<span class="area-badge ab-red">Deadline duro</span></div>
+          <div class="tl-desc">Todo montado, decorado y listo. Condición contractual estricta especificada en los TdR.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--green);"></div><div class="tl-thread"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">17 – 21 octubre 2026</div>
+          <div class="tl-title" style="color:var(--green);">SIAL París 2026 — En operación</div>
+          <div class="tl-desc">43 personas activas. 21/10: solo 50% del equipo. 1 persona de compras los días 16, 17 y 18.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-spine"><div class="tl-node" style="background:var(--faint);"></div></div>
+        <div class="tl-body">
+          <div class="tl-date">22 – 23 octubre 2026</div>
+          <div class="tl-title" style="color:var(--muted);">Desmontaje</div>
+          <div class="tl-desc">Incluido en contrato del montador. Todos los fees de desmontaje a cargo del contratado.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PROVEEDORES ══ -->
+    <div id="panel-providers" class="panel">
+      <div class="panel-eyebrow">■ Red de montadores</div>
+      <div class="panel-title">Proveedores recomendados</div>
+      <div class="divider"></div>
+      <div class="panel-sub">Empresas con experiencia documentada en SIAL París y ferias de gran escala en Francia. Solicitar mínimo 3 cotizaciones en paralelo.</div>
+
+      <div class="provider-grid">
+        <div class="provider-card">
+          <div class="pc-num">01</div>
+          <div class="pc-name">Expomobilia</div>
+          <div class="pc-meta">Suiza / Europa · +50 años de experiencia · página específica SIAL París 2026 · solución 360° (diseño → desmontaje) · especialistas en pabellones nacionales</div>
+          <div class="pc-tags"><span class="area-badge ab-green">Pabellones nacionales</span><span class="area-badge ab-green">SIAL referenciado</span></div>
+          <a class="pc-link" href="https://www.expomobilia.com/en/lp/sialparis" target="_blank">expomobilia.com ↗</a>
+          <div class="pc-contact">+41 52 354 74 74</div>
+        </div>
+        <div class="provider-card">
+          <div class="pc-num">02</div>
+          <div class="pc-name">Decore Studio Events</div>
+          <div class="pc-meta">#1 ranking Francia 2026 · alta gama · Giselle Calderon · operación local París · 100% bespoke</div>
+          <div class="pc-tags"><span class="area-badge ab-amber">Premium</span><span class="area-badge ab-green">París local</span></div>
+          <a class="pc-link" href="https://www.decore-studio-events.com/en/exhibition-stand-builders-in-paris" target="_blank">decore-studio-events.com ↗</a>
+        </div>
+        <div class="provider-card">
+          <div class="pc-num">03</div>
+          <div class="pc-name">Messe Masters</div>
+          <div class="pc-meta">Pan-europeo · Alemania, Francia, España, Italia · cotiza en español · presencia directa SIAL 2026</div>
+          <div class="pc-tags"><span class="area-badge ab-amber">Habla español</span><span class="area-badge ab-blue">Pan-europeo</span></div>
+          <a class="pc-link" href="https://www.messemasters.com/es/shows/sial-paris/" target="_blank">messemasters.com/es ↗</a>
+        </div>
+        <div class="provider-card">
+          <div class="pc-num">04</div>
+          <div class="pc-name">Blueprint Exhibits</div>
+          <div class="pc-meta">París · especialistas SIAL + Anuga · cotización + render 3D gratis en 5 días · precio fijo sin sorpresas</div>
+          <div class="pc-tags"><span class="area-badge ab-green">Alimentos / SIAL</span><span class="area-badge ab-blue">3D gratis</span></div>
+          <a class="pc-link" href="https://www.blueprintexhibits.com/es/sial-paris/" target="_blank">blueprintexhibits.com ↗</a>
+          <div class="pc-contact">enquiry@blue-prints.org</div>
+        </div>
+        <div class="provider-card">
+          <div class="pc-num">05</div>
+          <div class="pc-name">oBooths</div>
+          <div class="pc-meta">París local · Philippe Dumont · 4.500 m² de taller con socios · trato directo · precio muy competitivo · maneja pabellones enteros</div>
+          <div class="pc-tags"><span class="area-badge ab-amber">Precio competitivo</span><span class="area-badge ab-green">París local</span></div>
+          <a class="pc-link" href="https://www.obooths.com/paris/" target="_blank">obooths.com ↗</a>
+        </div>
+        <div class="provider-card">
+          <div class="pc-num">06</div>
+          <div class="pc-name">Vissual Events</div>
+          <div class="pc-meta">Francia · 20 años de experiencia en montaje local · diseño y construcción completa</div>
+          <div class="pc-tags"><span class="area-badge ab-blue">20 años en Francia</span></div>
+          <a class="pc-link" href="https://vissualevents.com/en/exhibition-stands-design-paris/" target="_blank">vissualevents.com ↗</a>
+        </div>
+      </div>
+
+      <div class="provider-full">
+        <div class="pc-num">07 — COMPARADOR</div>
+        <div class="pc-name">nstand.com</div>
+        <div class="pc-meta">Plataforma para solicitar hasta 5 propuestas de montadores para SIAL en simultáneo, gratis y sin compromiso. Útil para obtener rango de precios rápido antes de comprometerse con un proveedor.</div>
+        <div class="pc-tags"><span class="area-badge ab-amber">Hasta 5 cotizaciones simultáneas</span><span class="area-badge ab-green">Gratis / sin compromiso</span></div>
+        <a class="pc-link" href="https://www.nstand.com/sial-francia-feria-alimentacion/" target="_blank">nstand.com/sial-francia ↗</a>
+      </div>
+
+      <div class="callout">
+        <p>
+          <strong>Consejo para Galerie al enviar el brief</strong><br>
+          Siempre destacar estos 3 puntos que definen el precio y que los montadores suelen subestimar en primera cotización: <strong>(1)</strong> cocina industrial con cumplimiento normativa sanitaria francesa, <strong>(2)</strong> 2 hornos giratorios en zona de acceso público — regulaciones especiales del recinto, <strong>(3)</strong> 4 islas independientes que funcionan como único proyecto arquitectónico integrado con flujo interno de personal entre ellas.
+        </p>
+      </div>
+    </div>
+
+    <!-- ══ DISEÑO ══ -->
+    <div id="panel-design" class="panel">
+      <div class="panel-eyebrow">■ Dirección creativa</div>
+      <div class="panel-title">Ideas de diseño</div>
+      <div class="divider"></div>
+      <div class="panel-sub">Tres conceptos para posicionar al Pabellón Brasileño como el stand más memorable de SIAL 2026.</div>
+
+      <div class="design-card">
+        <div class="dc-num">Concepto 01</div>
+        <div class="dc-title">"Brasil Vivo" — Mercado tropical con arquitectura verde</div>
+        <div class="dc-body">Inspirado en los mercados municipales de São Paulo y Belo Horizonte. Estructura con madera natural clara certificada FSC (pino o eucalipto), plantas tropicales reales (heliconias, bromelias, bambú) como separadores entre módulos. Techo con volúmenes irregulares que evocan techos de mercado cubierto. Los hornos giratorios se transforman en el fogón central visible desde los cuatro pasillos de circulación. La Galetería queda enmarcada por una pérgola de madera con iluminación LED cálida suspendida. Paleta: verde Brasil #009c3b + amarillo dorado + blanco roto. El cartel "Brazilian Chicken" en neón verde lima enmarca los hornos como pieza escultórica. Efecto: orgánico, cálido, aspiracional e instagrameable.</div>
+        <div class="dc-tags">
+          <span class="dc-tag">Orgánico</span>
+          <span class="dc-tag">Madera natural</span>
+          <span class="dc-tag">Verde / amarillo / blanco</span>
+          <span class="dc-tag">Plantas reales</span>
+          <span class="dc-tag">Sostenible FSC</span>
+          <span class="dc-tag">Instagrameable</span>
+        </div>
+      </div>
+
+      <div class="design-card featured">
+        <div class="dc-num">Concepto 02 — Recomendado por Galerie</div>
+        <div class="dc-title">"Proteína de Brasil" — Pabellón moderno e institucional</div>
+        <div class="dc-body">Arquitectura de líneas limpias y rectas, predominio del blanco lacado con franjas y detalles en los colores de la bandera brasileña. Comunicación visual de gran formato en todas las paredes: fotografías de campo, granjas, pollos enteros, proceso de producción. Carpintería lacada en blanco con perfilería en verde y amarillo. Cada módulo tiene identidad propia enmarcada en el sistema visual del pabellón. La Galetería se distingue con techo diferenciado: estructura de madera o malla metálica dorada suspendida, creando un ambiente "restaurante" dentro del stand. Este concepto es el más fácil de cotizar, producir y ejecutar en los plazos disponibles. Efecto: profesional, institucional, confiable.</div>
+        <div class="dc-tags">
+          <span class="dc-tag featured">Recomendado</span>
+          <span class="dc-tag">Blanco / verde / amarillo</span>
+          <span class="dc-tag">Foto gran formato</span>
+          <span class="dc-tag">Fácil de cotizar</span>
+          <span class="dc-tag">Institucional</span>
+          <span class="dc-tag">Producción segura</span>
+        </div>
+      </div>
+
+      <div class="design-card">
+        <div class="dc-num">Concepto 03 — Opción premium</div>
+        <div class="dc-title">"Amazônia Premium" — Stand oscuro de alto impacto</div>
+        <div class="dc-body">Alto contraste para diferenciarse radicalmente de los pabellones blancos de SIAL. Fondos en grafito oscuro o verde selva profundo, iluminación localizada y cálida sobre cada módulo y sobre la Galetería. Materiales: madera oscura laminada, perfilería en metal negro mate, luz LED muy cálida (2700K). Textos en dorado y fotografías retroiluminadas crean profundidad. Los hornos con pollos dorados girando bajo luz cálida se convierten en la pieza escultórica central. La Galetería opera visualmente como un restaurante de alta cocina. Advertencia: más complejo de ejecutar y considerablemente más costoso.</div>
+        <div class="dc-tags">
+          <span class="dc-tag">Alta gama</span>
+          <span class="dc-tag">Grafito / negro / dorado</span>
+          <span class="dc-tag">Máximo impacto visual</span>
+          <span class="dc-tag">Premium</span>
+          <span class="dc-tag">Mayor costo</span>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p>
+          <strong>Recomendación estratégica · Galerie</strong><br>
+          Proponer al cliente el <strong>Concepto 02</strong> como base — el más seguro en ejecución, presupuesto y plazos. Incorporar elementos del <strong>Concepto 01</strong> específicamente en la Galetería (maderas, plantas, iluminación cálida) para darle calidez en el punto más visible del stand. El <strong>Concepto 03</strong> es opción si el cliente dispone de presupuesto adicional. En todos los casos, el pasaje interior entre islas debe ser tratado como elemento de diseño — un arco o marquesina temática que refuerce la narrativa del pabellón y sea visible desde los pasillos de la feria.
+        </p>
+      </div>
+    </div>
+
+    <!-- ══ STAFFING ══ -->
+    <div id="panel-staffing" class="panel">
+      <div class="panel-eyebrow">■ Estrategia de contratación</div>
+      <div class="panel-title">Staffing — 43 personas</div>
+      <div class="divider"></div>
+      <div class="panel-sub">Modelo split recomendado: Galerie contrata directamente los perfiles estratégicos. El montador gestiona los perfiles de servicio como línea desglosada en el contrato.</div>
+
+      <div class="kpi-grid" style="margin-bottom:28px;">
+        <div class="kpi-cell" style="border-left:2px solid var(--accent);">
+          <div class="kpi-eyebrow" style="color:var(--accent);">■ Galerie contrata</div>
+          <div class="kpi-val" style="color:var(--accent);font-size:28px;">5</div>
+          <div class="kpi-sub">Recepcionistas trilingüe PT-FR-EN · €9K–14K estimado</div>
+        </div>
+        <div class="kpi-cell" style="border-left:2px solid var(--blue);">
+          <div class="kpi-eyebrow" style="color:var(--blue);">■ Montador gestiona</div>
+          <div class="kpi-val" style="color:var(--blue);font-size:28px;">38</div>
+          <div class="kpi-sub">Coordinador, cocina, mozos, pantry, limpieza · €65K–110K estimado</div>
+        </div>
+      </div>
+
+      <!-- BLOQUE GALERIE -->
+      <div style="border:1px solid rgba(200,185,122,0.25);border-radius:var(--r);overflow:hidden;margin-bottom:16px;">
+        <div style="background:rgba(200,185,122,0.08);padding:14px 18px;border-bottom:1px solid rgba(200,185,122,0.2);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <div style="font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px;font-family:'DM Mono',monospace;margin-bottom:3px;">■ Galerie contrata directamente</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;">5 recepcionistas trilingüe PT-FR-EN</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--accent);">€9K–14K</div>
+            <div style="font-size:11px;color:var(--faint);">estimado 5 días</div>
+          </div>
+        </div>
+        <div style="padding:16px 18px;background:var(--dark);">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7;">Son la <strong style="color:var(--white);font-weight:500;">cara visible del pabellón</strong> — el perfil más estratégico del proyecto y el más difícil de conseguir en París. Galerie los contrata directamente para tener control total sobre la calidad, sin pagar el margen del montador (~25–40% encima del costo real).</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+            <div style="background:var(--mid);border-radius:var(--r);padding:12px 14px;">
+              <div style="font-size:11px;color:var(--faint);margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;">Distribución</div>
+              <div style="font-size:12px;color:var(--white);line-height:1.9;">2 → área pollo<br>1 → área cerdo<br>1 → área huevos<br>1 → área MBRF</div>
+            </div>
+            <div style="background:var(--mid);border-radius:var(--r);padding:12px 14px;">
+              <div style="font-size:11px;color:var(--faint);margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;">Requisitos</div>
+              <div style="font-size:12px;color:var(--white);line-height:1.9;">Portugués · Francés · Inglés<br>Experiencia en ferias<br>Empleadas legalmente en FR<br>Disponibles 17–21/10</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:0.7px;font-family:'DM Mono',monospace;margin-bottom:10px;">Agencias recomendadas — cotizar las 3 en paralelo</div>
+          <div style="display:flex;flex-direction:column;gap:1px;border-radius:var(--r);overflow:hidden;">
+            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+              <div>
+                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Agence Bonjour</div>
+                <div style="font-size:11px;color:var(--muted);">París local · multilingüe · +10 años en salones · Paris-Nord Villepinte referenciado</div>
+              </div>
+              <a href="https://www.agencebonjour.fr" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(200,185,122,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">agencebonjour.fr ↗</a>
+            </div>
+            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+              <div>
+                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Exhibition Girls Limited</div>
+                <div style="font-size:11px;color:var(--muted);">Oficina local París · empleadas legalmente · Paris-Nord Villepinte referenciado</div>
+              </div>
+              <a href="https://www.exhibition-girls.com/paris-hostess-agency/" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(200,185,122,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">exhibition-girls.com ↗</a>
+            </div>
+            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+              <div>
+                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Expo Stars</div>
+                <div style="font-size:11px;color:var(--muted);">100 ciudades · 53 países · personal local bilingüe · opción más económica para este perfil</div>
+              </div>
+              <a href="https://expostars.com/service/booth-staffing/" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(200,185,122,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">expostars.com ↗</a>
+            </div>
+            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+              <div>
+                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Manon Gaimard</div>
+                <div style="font-size:11px;color:var(--muted);">Intérprete FR-EN-PT · red de intérpretes especializados en ferias en Villepinte</div>
+              </div>
+              <a href="https://www.manongaimard.com/en/trade-fairs/" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(200,185,122,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">manongaimard.com ↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BLOQUE MONTADOR -->
+      <div style="border:1px solid rgba(106,143,176,0.25);border-radius:var(--r);overflow:hidden;margin-bottom:16px;">
+        <div style="background:rgba(106,143,176,0.08);padding:14px 18px;border-bottom:1px solid rgba(106,143,176,0.2);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <div style="font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:0.8px;font-family:'DM Mono',monospace;margin-bottom:3px;">■ Montador gestiona — línea desglosada en contrato</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;">38 personas de servicio</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--blue);">€65K–110K</div>
+            <div style="font-size:11px;color:var(--faint);">estimado 5–6 días</div>
+          </div>
+        </div>
+        <div style="padding:16px 18px;background:var(--dark);">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7;">El montador tiene acceso a redes locales de personal de servicio en París. <strong style="color:var(--white);font-weight:500;">Condición no negociable:</strong> este ítem debe aparecer cotizado como línea separada — nunca mezclado en el precio global de estructura.</div>
+          <div style="background:var(--mid);border-radius:var(--r);padding:0 14px;margin-bottom:16px;">
+            <table style="width:100%;border-collapse:collapse;">
+              <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 0;font-size:12px;color:var(--muted);">1 coordinador de stand</td><td style="padding:8px 0;font-size:11px;color:var(--faint);text-align:right;font-family:'DM Mono',monospace;">16–21/10</td></tr>
+              <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 0;font-size:12px;color:var(--muted);">4 asistentes de cocina</td><td style="padding:8px 0;font-size:11px;color:var(--faint);text-align:right;font-family:'DM Mono',monospace;">16–21/10</td></tr>
+              <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 0;font-size:12px;color:var(--muted);">1 persona de compras de mercado</td><td style="padding:8px 0;font-size:11px;color:var(--faint);text-align:right;font-family:'DM Mono',monospace;">16, 17, 18/10</td></tr>
+              <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 0;font-size:12px;color:var(--muted);">6 asistentes de pantry/café (4 áreas + 2 MBRF)</td><td style="padding:8px 0;font-size:11px;color:var(--faint);text-align:right;font-family:'DM Mono',monospace;">17–21/10</td></tr>
+              <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 0;font-size:12px;color:var(--muted);">20 mozos (15 áreas + 5 MBRF)</td><td style="padding:8px 0;font-size:11px;color:var(--faint);text-align:right;font-family:'DM Mono',monospace;">17–21/10</td></tr>
+              <tr><td style="padding:8px 0;font-size:12px;color:var(--muted);">6 personas de limpieza (5 áreas + 1 MBRF)</td><td style="padding:8px 0;font-size:11px;color:var(--faint);text-align:right;font-family:'DM Mono',monospace;">17–21/10</td></tr>
+            </table>
+          </div>
+          <div style="font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:0.7px;font-family:'DM Mono',monospace;margin-bottom:10px;">Agencias que el montador puede usar (o que Galerie puede proponer)</div>
+          <div style="display:flex;flex-direction:column;gap:1px;border-radius:var(--r);overflow:hidden;">
+            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+              <div>
+                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Tendance Hôtesses</div>
+                <div style="font-size:11px;color:var(--muted);">+20.000 personas en Francia · servicio de mozos, restauración, limpieza y cocina</div>
+              </div>
+              <a href="https://www.tendance-hotesses.fr" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(106,143,176,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">tendance-hotesses.fr ↗</a>
+            </div>
+            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+              <div>
+                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Staff.Direct</div>
+                <div style="font-size:11px;color:var(--muted);">Alemania · márgenes bajos · régimen détachement EU · más económico para mozos y limpieza</div>
+              </div>
+              <a href="https://staff.direct/en" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(106,143,176,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">staff.direct ↗</a>
+            </div>
+            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+              <div>
+                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Profil Agency</div>
+                <div style="font-size:11px;color:var(--muted);">París · especialistas en stands de ferias · restauración y recepción</div>
+              </div>
+              <a href="https://www.profil.fr/en/reception-and-hospitality-staffing-agency-paris" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(106,143,176,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">profil.fr ↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p>
+          <strong>Cláusula clave para incluir en el contrato con el montador</strong><br>
+          "El servicio de personal operativo (coordinador, cocina, mozos, pantry y limpieza) se cotizará como línea independiente, con detalle de cantidad de personas por perfil, tarifa diaria por persona y número de días. Galerie se reserva el derecho de contratar este servicio por separado si el precio del montador no resulta competitivo."<br><br>
+          Esto te da poder de negociación real y visibilidad total sobre lo que cuesta cada cosa — sin sorpresas después de firma.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+function toggleArea(header) {
+  const block = header.closest('.area-block');
+  block.classList.toggle('open');
+  const body = block.querySelector('.area-body');
+  body.style.display = block.classList.contains('open') ? 'block' : 'none';
+}
+
+function tick(cb) {
+  cb.closest('.check-row').classList.toggle('done', cb.checked);
+  updateAll();
+}
+
+function updateAll() {
+  const all = document.querySelectorAll('#panel-checklist input[type=checkbox]');
+  const chk = document.querySelectorAll('#panel-checklist input[type=checkbox]:checked');
+  const pct = Math.round(chk.length / all.length * 100);
+  document.getElementById('prog-pct').textContent = pct + ' %';
+  document.getElementById('prog-fill').style.width = pct + '%';
+
+  const areas = [
+    { body: '.area-block:nth-child(1) .area-body', cnt: 'cnt-a1' },
+    { body: '.area-block:nth-child(2) .area-body', cnt: 'cnt-a2' },
+    { body: '.area-block:nth-child(3) .area-body', cnt: 'cnt-a3' },
+    { body: '.area-block:nth-child(4) .area-body', cnt: 'cnt-a4' },
+    { body: '.area-block:nth-child(5) .area-body', cnt: 'cnt-gen' },
+  ];
+  document.querySelectorAll('.area-block').forEach((block, i) => {
+    const cntId = ['cnt-a1','cnt-a2','cnt-a3','cnt-a4','cnt-gen'][i];
+    if (!cntId) return;
+    const a = block.querySelectorAll('input[type=checkbox]').length;
+    const c = block.querySelectorAll('input[type=checkbox]:checked').length;
+    const el = document.getElementById(cntId);
+    if (el) el.textContent = c + ' / ' + a;
+  });
+}
+
+document.querySelectorAll('.area-block').forEach(block => {
+  const body = block.querySelector('.area-body');
+  if (body) body.style.display = block.classList.contains('open') ? 'block' : 'none';
+});
+
+updateAll();
+</script>
+</body>
+</html>
