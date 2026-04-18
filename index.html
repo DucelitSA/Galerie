@@ -13,7 +13,7 @@
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
-      onSnapshot, query, orderBy, serverTimestamp }
+      onSnapshot, query, orderBy, serverTimestamp, getDocs }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -24,16 +24,14 @@
       messagingSenderId: "85043850171",
       appId: "1:85043850171:web:1d4c322cd6dcc3a698f29e"
     };
-
     let app, auth, db;
     try {
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
       db = getFirestore(app);
     } catch(e) { console.warn("Firebase init failed — demo mode"); }
-
     window.__fb = { auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged,
-      collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp };
+      collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs };
   </script>
 
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -41,244 +39,262 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body { background: #f0eeeb; font-family: 'Poppins', sans-serif; font-weight: 300; color: #262626; min-height: 100vh; }
-    #root { min-height: 100vh; }
-    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #f0eeeb; } ::-webkit-scrollbar-thumb { background: #b1ada2; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{background:#f0eeeb;font-family:'Poppins',sans-serif;font-weight:300;color:#262626;min-height:100vh;}
+    #root{min-height:100vh;}
+    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:#f0eeeb;}::-webkit-scrollbar-thumb{background:#b1ada2;}
 
-    /* STICKY SHELL */
-    .sticky-shell { position: sticky; top: 0; z-index: 200; }
-    .hdr { background: #262626; height: 60px; padding: 0 36px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #b1ada2; }
-    .hdr-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: 6px; color: #e5e3e0; text-transform: uppercase; cursor: pointer; }
-    .hdr-right { display: flex; align-items: center; gap: 14px; }
-    .hdr-pill { font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: #b1ada2; border: 1px solid #b1ada244; padding: 4px 12px; }
-    .hdr-user { font-size: 10px; color: #818181; }
-    .btn-logout { background: transparent; border: 1px solid #3a3a3a; color: #818181; padding: 5px 12px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; font-family: 'Poppins', sans-serif; transition: all .15s; }
-    .btn-logout:hover { border-color: #818181; color: #e5e3e0; }
-    .nav { background: #1e1e1e; border-bottom: 1px solid #2a2a2a; display: flex; overflow-x: auto; }
-    .nav-item { padding: 0 24px; height: 42px; display: flex; align-items: center; gap: 7px; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap; font-family: 'Poppins', sans-serif; }
-    .nav-item:hover { color: #b1ada2; }
-    .nav-item.active { color: #e5e3e0; border-bottom-color: #b1ada2; }
-    .nav-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    /* STICKY */
+    .sticky-shell{position:sticky;top:0;z-index:200;}
+    .hdr{background:#262626;height:58px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #b1ada2;}
+    .hdr-logo{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:16px;letter-spacing:6px;color:#e5e3e0;text-transform:uppercase;cursor:pointer;}
+    .hdr-right{display:flex;align-items:center;gap:12px;}
+    .hdr-pill{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#b1ada2;border:1px solid #b1ada244;padding:4px 10px;}
+    .hdr-user{font-size:10px;color:#818181;}
+    .btn-logout{background:transparent;border:1px solid #3a3a3a;color:#818181;padding:5px 11px;font-size:8px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:'Poppins',sans-serif;transition:all .15s;}
+    .btn-logout:hover{border-color:#818181;color:#e5e3e0;}
+    .nav{background:#1e1e1e;border-bottom:1px solid #2a2a2a;display:flex;overflow-x:auto;}
+    .nav-item{padding:0 20px;height:40px;display:flex;align-items:center;gap:6px;font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#818181;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;font-family:'Poppins',sans-serif;}
+    .nav-item:hover{color:#b1ada2;}
+    .nav-item.active{color:#e5e3e0;border-bottom-color:#b1ada2;}
+    .nav-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+
+    /* ALERT BELL */
+    .alert-bell{position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;transition:background .15s;}
+    .alert-bell:hover{background:rgba(255,255,255,.08);}
+    .alert-bell-icon{font-size:18px;line-height:1;}
+    .alert-bell.has-overdue .alert-bell-icon{animation:bellshake .5s ease infinite alternate;}
+    @keyframes bellshake{0%{transform:rotate(-12deg);}100%{transform:rotate(12deg);}}
+    .alert-bubble{position:absolute;top:2px;right:2px;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;padding:0 4px;border:2px solid #262626;line-height:1;}
+    .alert-bubble.overdue{background:#e74c3c;color:#fff;}
+    .alert-bubble.upcoming{background:#f39c12;color:#fff;}
+
+    /* ALERT BANNER */
+    .alert-banner{background:#f39c1215;border-bottom:2px solid #f39c12;padding:10px 32px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .15s;}
+    .alert-banner:hover{background:#f39c1225;}
+    .alert-icon{font-size:14px;}
+    .alert-text{font-size:11px;color:#262626;flex:1;}
+    .alert-text strong{color:#f39c12;font-family:'Plus Jakarta Sans',sans-serif;}
+    .alert-badge{background:#f39c12;color:#fff;font-size:8px;letter-spacing:2px;font-family:'Poppins',sans-serif;padding:3px 8px;border-radius:2px;white-space:nowrap;}
 
     /* LOGIN */
-    .login-wrap { min-height: 100vh; background: #262626; display: flex; align-items: center; justify-content: center; }
-    .login-box { width: 360px; }
-    .login-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: 8px; color: #e5e3e0; text-align: center; margin-bottom: 6px; }
-    .login-sub { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #818181; text-align: center; margin-bottom: 44px; }
-    .login-field { margin-bottom: 12px; }
-    .login-label { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; display: block; margin-bottom: 5px; }
-    .login-input { width: 100%; background: #1a1a1a; border: 1px solid #3a3a3a; color: #e5e3e0; padding: 12px 14px; font-family: 'Poppins', sans-serif; font-size: 13px; outline: none; border-radius: 0; }
-    .login-input:focus { border-color: #b1ada2; }
-    .login-btn { width: 100%; background: #e5e3e0; color: #262626; border: none; padding: 15px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; cursor: pointer; margin-top: 8px; transition: opacity .15s; }
-    .login-btn:hover { opacity: .88; }
-    .login-error { background: #3a1a1a; border: 1px solid #e74c3c44; color: #e74c3c; padding: 10px 14px; font-size: 11px; margin-top: 10px; text-align: center; }
+    .login-wrap{min-height:100vh;background:#262626;display:flex;align-items:center;justify-content:center;}
+    .login-box{width:360px;}
+    .login-logo{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:26px;letter-spacing:8px;color:#e5e3e0;text-align:center;margin-bottom:6px;}
+    .login-sub{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#818181;text-align:center;margin-bottom:44px;}
+    .login-field{margin-bottom:12px;}
+    .login-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#818181;display:block;margin-bottom:5px;}
+    .login-input{width:100%;background:#1a1a1a;border:1px solid #3a3a3a;color:#e5e3e0;padding:12px 14px;font-family:'Poppins',sans-serif;font-size:13px;outline:none;border-radius:0;}
+    .login-input:focus{border-color:#b1ada2;}
+    .login-btn{width:100%;background:#e5e3e0;color:#262626;border:none;padding:15px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:10px;letter-spacing:4px;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:opacity .15s;}
+    .login-btn:hover{opacity:.88;}
+    .login-error{background:#3a1a1a;border:1px solid #e74c3c44;color:#e74c3c;padding:10px 14px;font-size:11px;margin-top:10px;text-align:center;}
 
     /* LAYOUT */
-    .page { max-width: 1060px; margin: 0 auto; padding: 28px 20px 80px; }
-    .page-wide { max-width: 1280px; margin: 0 auto; padding: 28px 20px 80px; }
-    .hero { background: #262626; padding: 32px 36px 26px; }
-    .hero-ey { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #b1ada2; margin-bottom: 6px; }
-    .hero-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 28px; color: #e5e3e0; line-height: 1.1; }
-    .hero-sub { font-size: 11px; color: #818181; margin-top: 6px; }
+    .page{max-width:1060px;margin:0 auto;padding:24px 18px 80px;}
+    .page-wide{max-width:1280px;margin:0 auto;padding:24px 18px 80px;}
+    .hero{background:#262626;padding:28px 32px 22px;}
+    .hero-ey{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#b1ada2;margin-bottom:5px;}
+    .hero-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:26px;color:#e5e3e0;line-height:1.1;}
+    .hero-sub{font-size:11px;color:#818181;margin-top:5px;}
 
     /* CARDS */
-    .card { background: #fff; border: 1px solid #e5e3e0; margin-bottom: 14px; }
-    .card-hdr { background: #f0eeeb; padding: 13px 22px; border-bottom: 1px solid #e5e3e0; display: flex; align-items: center; justify-content: space-between; }
-    .card-hdr-left { display: flex; align-items: center; gap: 12px; }
-    .step { width: 24px; height: 24px; background: #262626; color: #e5e3e0; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .card-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: #262626; }
-    .card-body { padding: 20px 22px; }
+    .card{background:#fff;border:1px solid #e5e3e0;margin-bottom:12px;}
+    .card-hdr{background:#f0eeeb;padding:12px 20px;border-bottom:1px solid #e5e3e0;display:flex;align-items:center;justify-content:space-between;}
+    .card-hdr-left{display:flex;align-items:center;gap:10px;}
+    .step{width:22px;height:22px;background:#262626;color:#e5e3e0;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .card-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#262626;}
+    .card-body{padding:18px 20px;}
 
     /* STATS */
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
-    .stat-card { background: #fff; border: 1px solid #e5e3e0; padding: 18px 20px; }
-    .stat-lbl { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; margin-bottom: 8px; }
-    .stat-val { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 26px; color: #262626; line-height: 1; }
-    .stat-sub { font-size: 10px; color: #b1ada2; margin-top: 5px; }
-    .stat-card.dark { background: #262626; } .stat-card.dark .stat-lbl { color: #818181; } .stat-card.dark .stat-val { color: #e5e3e0; } .stat-card.dark .stat-sub { color: #818181; }
-    .stat-card.green { border-left: 3px solid #2ecc71; }
-    .stat-card.gold { border-left: 3px solid #f39c12; }
-    .stat-card.red { border-left: 3px solid #e74c3c; }
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+    .stat-card{background:#fff;border:1px solid #e5e3e0;padding:16px 18px;}
+    .stat-lbl{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#818181;margin-bottom:7px;}
+    .stat-val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:24px;color:#262626;line-height:1;}
+    .stat-sub{font-size:10px;color:#b1ada2;margin-top:4px;}
+    .stat-card.dark{background:#262626;}.stat-card.dark .stat-lbl{color:#818181;}.stat-card.dark .stat-val{color:#e5e3e0;}.stat-card.dark .stat-sub{color:#818181;}
+    .stat-card.green{border-left:3px solid #2ecc71;}.stat-card.gold{border-left:3px solid #f39c12;}.stat-card.red{border-left:3px solid #e74c3c;}
 
     /* FERIA CARDS */
-    .feria-card { background: #fff; border: 1px solid #e5e3e0; margin-bottom: 12px; overflow: hidden; }
-    .feria-hdr { background: #262626; padding: 14px 22px; display: flex; align-items: center; justify-content: space-between; }
-    .feria-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 14px; color: #e5e3e0; }
-    .feria-meta { font-size: 10px; color: #818181; margin-top: 2px; }
-    .feria-stats { display: flex; gap: 18px; align-items: center; }
-    .feria-stat { text-align: right; }
-    .feria-stat-lbl { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #818181; }
-    .feria-stat-val { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 13px; color: #e5e3e0; }
-    .feria-body { padding: 14px 22px; }
-    .clients-list { display: flex; flex-direction: column; gap: 7px; }
-    .client-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 13px; background: #f0eeeb; border: 1px solid #e5e3e0; }
-    .client-name-big { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 12px; }
-    .client-meta { font-size: 10px; color: #818181; margin-top: 2px; }
-    .client-amount { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 13px; }
-    .client-profit { font-size: 10px; color: #2ecc71; text-align: right; }
-    .saving-badge { background: #f39c1222; border: 1px solid #f39c1244; color: #f39c12; font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 9px; }
+    .feria-card{background:#fff;border:1px solid #e5e3e0;margin-bottom:10px;overflow:hidden;}
+    .feria-hdr{background:#262626;padding:13px 20px;display:flex;align-items:center;justify-content:space-between;}
+    .feria-name{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:13px;color:#e5e3e0;}
+    .feria-meta{font-size:10px;color:#818181;margin-top:2px;}
+    .feria-stats{display:flex;gap:16px;align-items:center;}
+    .feria-stat{text-align:right;}
+    .feria-stat-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#818181;}
+    .feria-stat-val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:12px;color:#e5e3e0;}
+    .feria-body{padding:12px 20px;}
+    .clients-list{display:flex;flex-direction:column;gap:6px;}
+    .client-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f0eeeb;border:1px solid #e5e3e0;}
+    .client-name-big{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:12px;}
+    .client-meta-sm{font-size:10px;color:#818181;margin-top:1px;}
+    .saving-badge{background:#f39c1222;border:1px solid #f39c1244;color:#f39c12;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 8px;}
+
+    /* CODE CHIP */
+    .code-chip{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;background:#262626;color:#e5e3e0;padding:3px 8px;display:inline-block;}
+    .code-chip.client{background:#e67e2222;color:#e67e22;border:1px solid #e67e2244;}
+    .code-chip.project{background:#3498db22;color:#3498db;border:1px solid #3498db44;}
+    .code-chip.supplier{background:#9b59b622;color:#9b59b6;border:1px solid #9b59b644;}
 
     /* PIPELINE */
-    .pipeline { display: flex; gap: 0; margin-bottom: 22px; overflow-x: auto; }
-    .pipe-stage { flex: 1; min-width: 110px; border: 1px solid #e5e3e0; border-right: none; background: #fff; padding: 12px 14px; position: relative; }
-    .pipe-stage:last-child { border-right: 1px solid #e5e3e0; }
-    .pipe-stage::after { content:'›'; position:absolute; right:-9px; top:50%; transform:translateY(-50%); font-size:14px; color:#b1ada2; z-index:1; }
-    .pipe-stage:last-child::after { display:none; }
-    .pipe-lbl { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #818181; margin-bottom: 4px; }
-    .pipe-count { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 22px; color: #262626; }
-    .pipe-sub { font-size: 9px; color: #b1ada2; margin-top: 2px; }
+    .pipeline{display:flex;gap:0;margin-bottom:20px;overflow-x:auto;}
+    .pipe-stage{flex:1;min-width:90px;border:1px solid #e5e3e0;border-right:none;background:#fff;padding:10px 12px;position:relative;}
+    .pipe-stage:last-child{border-right:1px solid #e5e3e0;}
+    .pipe-stage::after{content:'›';position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:13px;color:#b1ada2;z-index:1;}
+    .pipe-stage:last-child::after{display:none;}
+    .pipe-lbl{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:#818181;margin-bottom:3px;}
+    .pipe-count{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:20px;color:#262626;}
 
     /* TABLE */
-    .tbl { width: 100%; border-collapse: collapse; }
-    .tbl th { background: #f0eeeb; padding: 9px 13px; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #818181; text-align: left; border-bottom: 1px solid #e5e3e0; font-family: 'Poppins', sans-serif; font-weight: 500; }
-    .tbl td { padding: 11px 13px; border-bottom: 1px solid #f0eeeb; font-size: 12px; }
-    .tbl tr:hover td { background: #fafaf9; }
-    .tbl tr:last-child td { border-bottom: none; }
-    .tbl-actions { display: flex; gap: 6px; }
+    .tbl{width:100%;border-collapse:collapse;}
+    .tbl th{background:#f0eeeb;padding:8px 12px;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#818181;text-align:left;border-bottom:1px solid #e5e3e0;font-family:'Poppins',sans-serif;font-weight:500;}
+    .tbl td{padding:10px 12px;border-bottom:1px solid #f0eeeb;font-size:12px;}
+    .tbl tr:hover td{background:#fafaf9;}
+    .tbl tr:last-child td{border-bottom:none;}
+    .tbl-actions{display:flex;gap:5px;}
 
     /* BADGES */
-    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; font-family: 'Poppins', sans-serif; border: 1px solid; white-space: nowrap; }
-    .badge-exploracion { background:#f0eeeb; border-color:#b1ada2; color:#818181; }
-    .badge-contacto { background:#fff8e6; border-color:#f39c1266; color:#f39c12; }
-    .badge-diseno { background:#e6f0ff; border-color:#3498db44; color:#3498db; }
-    .badge-cotizacion { background:#f0e6ff; border-color:#9b59b644; color:#9b59b6; }
-    .badge-negociacion { background:#fff3e6; border-color:#e67e2244; color:#e67e22; }
-    .badge-aceptado { background:#e6ffe6; border-color:#2ecc7144; color:#2ecc71; }
-    .badge-produccion { background:#fff3e6; border-color:#e67e2244; color:#e67e22; }
-    .badge-completado { background:#262626; border-color:#262626; color:#e5e3e0; }
-    .badge-perdido { background:#ffe6e6; border-color:#e74c3c44; color:#e74c3c; }
+    .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;font-family:'Poppins',sans-serif;border:1px solid;white-space:nowrap;}
+    .badge-exploracion{background:#f0eeeb;border-color:#b1ada2;color:#818181;}
+    .badge-contacto{background:#fff8e6;border-color:#f39c1266;color:#f39c12;}
+    .badge-diseno{background:#e6f0ff;border-color:#3498db44;color:#3498db;}
+    .badge-planos{background:#f0e6ff;border-color:#8e44ad44;color:#8e44ad;}
+    .badge-cotizacion{background:#fef9e6;border-color:#d4ac0d44;color:#d4ac0d;}
+    .badge-negociacion{background:#fff3e6;border-color:#e67e2244;color:#e67e22;}
+    .badge-aceptado{background:#e6ffe6;border-color:#2ecc7144;color:#2ecc71;}
+    .badge-produccion{background:#fff3e6;border-color:#e67e2244;color:#e67e22;}
+    .badge-completado{background:#262626;border-color:#262626;color:#e5e3e0;}
+    .badge-no_aceptado{background:#ffe6e6;border-color:#e74c3c44;color:#e74c3c;}
 
     /* STAGE TRACKER */
-    .stage-track { display: flex; align-items: center; overflow-x: auto; padding-bottom: 4px; }
-    .stage-item { flex: 1; min-width: 70px; display: flex; flex-direction: column; align-items: center; gap: 5px; position: relative; cursor: pointer; }
-    .stage-item::after { content:''; position:absolute; top:10px; left:calc(50% + 11px); right:calc(-50% + 11px); height:2px; background:#e5e3e0; z-index:0; }
-    .stage-item:last-child::after { display:none; }
-    .stage-dot { width:20px; height:20px; border-radius:50%; border:2px solid #e5e3e0; background:#fff; z-index:1; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:700; transition:all .2s; flex-shrink:0; }
-    .stage-dot.done { background:#2ecc71; border-color:#2ecc71; color:#fff; }
-    .stage-dot.current { background:#262626; border-color:#262626; color:#fff; }
-    .stage-dot.failed { background:#e74c3c; border-color:#e74c3c; color:#fff; }
-    .stage-lbl { font-size: 7px; letter-spacing: 1px; text-transform: uppercase; color: #818181; text-align: center; }
-    .stage-item.done .stage-lbl { color:#2ecc71; }
-    .stage-item.current .stage-lbl { color:#262626; font-weight:600; }
+    .stage-track{display:flex;align-items:flex-start;overflow-x:auto;padding-bottom:4px;gap:0;}
+    .stage-item{flex:1;min-width:60px;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;cursor:pointer;}
+    .stage-item::after{content:'';position:absolute;top:9px;left:calc(50% + 10px);right:calc(-50% + 10px);height:2px;background:#e5e3e0;z-index:0;}
+    .stage-item:last-child::after{display:none;}
+    .stage-dot{width:18px;height:18px;border-radius:50%;border:2px solid #e5e3e0;background:#fff;z-index:1;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;transition:all .2s;flex-shrink:0;}
+    .stage-dot.done{background:#2ecc71;border-color:#2ecc71;color:#fff;}
+    .stage-dot.current{background:#262626;border-color:#262626;color:#fff;}
+    .stage-dot.failed{background:#e74c3c;border-color:#e74c3c;color:#fff;}
+    .stage-lbl{font-size:6px;letter-spacing:1px;text-transform:uppercase;color:#818181;text-align:center;line-height:1.3;}
+    .stage-item.done .stage-lbl{color:#2ecc71;}
+    .stage-item.current .stage-lbl{color:#262626;font-weight:600;}
 
     /* FORMS */
-    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    .g4 { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 12px; }
-    .fg { display: flex; flex-direction: column; gap: 4px; }
-    label { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; font-weight: 500; font-family: 'Poppins', sans-serif; }
-    input, select, textarea { font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 400; color: #262626; background: #f0eeeb; border: 1px solid #e5e3e0; padding: 9px 12px; width: 100%; outline: none; transition: border-color .15s, background .15s; -webkit-appearance: none; appearance: none; border-radius: 0; }
-    input:focus, select:focus, textarea:focus { border-color: #818181; background: #fff; }
-    textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
-    .pfx { display:flex; } .pfx-tag { background:#e5e3e0; border:1px solid #e5e3e0; border-right:none; padding:9px 11px; font-size:10px; color:#818181; display:flex; align-items:center; white-space:nowrap; font-family:'Poppins',sans-serif; flex-shrink:0; } .pfx input { border-left:none; }
-    .sfx { display:flex; } .sfx input { border-right:none; } .sfx-tag { background:#e5e3e0; border:1px solid #e5e3e0; border-left:none; padding:9px 11px; font-size:10px; color:#818181; display:flex; align-items:center; font-family:'Poppins',sans-serif; }
-    .hint { font-size: 10px; color: #b1ada2; font-style: italic; margin-top: 2px; }
-    .subtotal { font-size: 11px; color: #818181; font-style: italic; margin-top: 8px; }
-    .subtotal strong { color: #262626; font-style: normal; font-weight: 500; }
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+    .g4{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px;}
+    .fg{display:flex;flex-direction:column;gap:4px;}
+    label{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#818181;font-weight:500;font-family:'Poppins',sans-serif;}
+    input,select,textarea{font-family:'Poppins',sans-serif;font-size:13px;font-weight:400;color:#262626;background:#f0eeeb;border:1px solid #e5e3e0;padding:9px 11px;width:100%;outline:none;transition:border-color .15s,background .15s;-webkit-appearance:none;appearance:none;border-radius:0;}
+    input:focus,select:focus,textarea:focus{border-color:#818181;background:#fff;}
+    textarea{resize:vertical;min-height:76px;line-height:1.6;}
+    .pfx{display:flex;}.pfx-tag{background:#e5e3e0;border:1px solid #e5e3e0;border-right:none;padding:9px 10px;font-size:10px;color:#818181;display:flex;align-items:center;white-space:nowrap;font-family:'Poppins',sans-serif;flex-shrink:0;}.pfx input{border-left:none;}
+    .sfx{display:flex;}.sfx input{border-right:none;}.sfx-tag{background:#e5e3e0;border:1px solid #e5e3e0;border-left:none;padding:9px 10px;font-size:10px;color:#818181;display:flex;align-items:center;font-family:'Poppins',sans-serif;}
+    .hint{font-size:9px;color:#b1ada2;font-style:italic;margin-top:2px;}
 
     /* AUTOCOMPLETE */
-    .autocomplete-wrap { position: relative; }
-    .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #e5e3e0; border-top: none; z-index: 100; max-height: 200px; overflow-y: auto; }
-    .autocomplete-item { padding: 9px 13px; cursor: pointer; font-size: 12px; border-bottom: 1px solid #f0eeeb; transition: background .1s; }
-    .autocomplete-item:last-child { border-bottom: none; }
-    .autocomplete-item:hover { background: #f0eeeb; }
-    .autocomplete-item-sub { font-size: 10px; color: #818181; margin-top: 2px; }
+    .autocomplete-wrap{position:relative;}
+    .autocomplete-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e5e3e0;border-top:none;z-index:300;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);}
+    .autocomplete-item{padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #f0eeeb;transition:background .1s;}
+    .autocomplete-item:last-child{border-bottom:none;}
+    .autocomplete-item:hover,.autocomplete-item.selected{background:#f0eeeb;}
+    .autocomplete-item-sub{font-size:10px;color:#818181;margin-top:1px;}
 
     /* BUTTONS */
-    .btn-dark { background:#262626; color:#e5e3e0; border:none; padding:10px 22px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:9px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:background .15s; }
-    .btn-dark:hover { background:#1a1a1a; }
-    .btn-dark:disabled { background:#b1ada2; cursor:not-allowed; }
-    .btn-warm { background:#b1ada2; color:#fff; border:none; padding:10px 20px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:9px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:opacity .15s; }
-    .btn-warm:hover { opacity:.85; }
-    .btn-ghost { background:transparent; color:#818181; border:1px solid #e5e3e0; padding:9px 16px; font-family:'Poppins',sans-serif; font-size:9px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:border-color .15s; }
-    .btn-ghost:hover { border-color:#818181; color:#262626; }
-    .btn-danger { background:#e74c3c22; color:#e74c3c; border:1px solid #e74c3c44; padding:8px 14px; font-family:'Poppins',sans-serif; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:all .15s; }
-    .btn-danger:hover { background:#e74c3c; color:#fff; }
-    .btn-sm { padding:6px 12px !important; font-size:8px !important; }
+    .btn-dark{background:#262626;color:#e5e3e0;border:none;padding:9px 20px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;}
+    .btn-dark:hover{background:#1a1a1a;}
+    .btn-dark:disabled{background:#b1ada2;cursor:not-allowed;}
+    .btn-warm{background:#b1ada2;color:#fff;border:none;padding:9px 18px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:9px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:opacity .15s;}
+    .btn-warm:hover{opacity:.85;}
+    .btn-ghost{background:transparent;color:#818181;border:1px solid #e5e3e0;padding:8px 14px;font-family:'Poppins',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .15s;}
+    .btn-ghost:hover{border-color:#818181;color:#262626;}
+    .btn-danger{background:#e74c3c22;color:#e74c3c;border:1px solid #e74c3c44;padding:7px 13px;font-family:'Poppins',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;}
+    .btn-danger:hover{background:#e74c3c;color:#fff;}
+    .btn-sm{padding:5px 10px!important;font-size:8px!important;}
 
     /* MODAL */
-    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; }
-    .modal { background:#fff; width:100%; max-width:740px; max-height:92vh; overflow-y:auto; }
-    .modal-hdr { background:#262626; padding:18px 26px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
-    .modal-title { font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:13px; color:#e5e3e0; letter-spacing:2px; text-transform:uppercase; }
-    .modal-sub { font-size:10px; color:#818181; margin-top:2px; }
-    .modal-close { background:none; border:none; color:#818181; font-size:18px; cursor:pointer; padding:0 4px; line-height:1; }
-    .modal-close:hover { color:#e5e3e0; }
-    .modal-tabs { background:#1e1e1e; display:flex; border-bottom:1px solid #2a2a2a; }
-    .modal-tab { padding:9px 18px; font-size:8px; letter-spacing:2px; text-transform:uppercase; font-family:'Poppins',sans-serif; cursor:pointer; color:#818181; border-bottom:2px solid transparent; transition:all .15s; }
-    .modal-tab.active { color:#e5e3e0; border-bottom-color:#b1ada2; }
-    .modal-body { padding:24px; }
-    .modal-footer { padding:14px 24px; border-top:1px solid #e5e3e0; display:flex; gap:10px; justify-content:flex-end; background:#f0eeeb; }
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;}
+    .modal{background:#fff;width:100%;max-width:760px;max-height:94vh;overflow-y:auto;}
+    .modal-hdr{background:#262626;padding:16px 24px;display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;z-index:10;}
+    .modal-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:13px;color:#e5e3e0;letter-spacing:2px;text-transform:uppercase;}
+    .modal-sub{font-size:10px;color:#818181;margin-top:2px;}
+    .modal-close{background:none;border:none;color:#818181;font-size:18px;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0;}
+    .modal-close:hover{color:#e5e3e0;}
+    .modal-tabs{background:#1e1e1e;display:flex;border-bottom:1px solid #2a2a2a;overflow-x:auto;}
+    .modal-tab{padding:8px 16px;font-size:8px;letter-spacing:2px;text-transform:uppercase;font-family:'Poppins',sans-serif;cursor:pointer;color:#818181;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+    .modal-tab.active{color:#e5e3e0;border-bottom-color:#b1ada2;}
+    .modal-body{padding:22px;}
+    .modal-footer{padding:12px 22px;border-top:1px solid #e5e3e0;display:flex;gap:8px;justify-content:flex-end;background:#f0eeeb;}
 
     /* RESULTS */
-    .results { background:#262626; color:#e5e3e0; }
-    .res-top { padding:24px 32px 18px; border-bottom:1px solid #3a3a3a; }
-    .res-ey { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:#b1ada2; margin-bottom:5px; }
-    .res-title { font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:18px; line-height:1.3; }
-    .res-sub { font-size:11px; color:#818181; margin-top:3px; }
-    .res-body { padding:0 32px 24px; }
-    .res-sect { display:flex; justify-content:space-between; align-items:center; padding:12px 0 5px; border-bottom:1px solid #3a3a3a; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:8px; letter-spacing:2.5px; text-transform:uppercase; color:#b1ada2; }
-    .res-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #2a2a2a; font-size:11px; }
-    .res-row.ind { padding-left:14px; color:rgba(255,255,255,.45); font-size:10px; }
-    .res-amt { font-family:'Plus Jakarta Sans',sans-serif; font-weight:500; font-size:12px; }
-    .res-amt.neg { color:#e74c3c; }
-    .res-amt.pos { color:#2ecc71; }
-    .res-amt.gold { color:#f39c12; }
-    .res-neto { display:flex; justify-content:space-between; align-items:center; padding:9px 0; margin-top:6px; }
-    .res-neto span:first-child { font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:#e5e3e0; }
-    .big-box { margin:0 32px 22px; border:1px solid #3a3a3a; padding:24px; text-align:center; position:relative; overflow:hidden; }
-    .big-box::before { content:'GALERIE'; position:absolute; font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:72px; letter-spacing:10px; color:rgba(255,255,255,.025); top:50%; left:50%; transform:translate(-50%,-50%); white-space:nowrap; pointer-events:none; }
-    .big-lbl { font-size:8px; letter-spacing:4px; text-transform:uppercase; color:#b1ada2; font-family:'Poppins',sans-serif; margin-bottom:7px; }
-    .big-val { font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:46px; color:#e5e3e0; line-height:1; letter-spacing:-1px; }
-    .big-sub { font-size:10px; color:#818181; margin-top:5px; }
-    .res-tags { display:flex; gap:7px; flex-wrap:wrap; padding:0 32px 18px; }
-    .tag { background:rgba(255,255,255,.06); border:1px solid #3a3a3a; color:#b1ada2; font-family:'Poppins',sans-serif; font-size:9px; letter-spacing:1px; padding:3px 10px; }
-    .res-actions { padding:14px 32px 24px; border-top:1px solid #2a2a2a; display:flex; gap:10px; flex-wrap:wrap; }
-    .btn-ghost-inv { background:transparent; color:rgba(255,255,255,.5); border:1px solid #3a3a3a; padding:10px 18px; font-family:'Poppins',sans-serif; font-size:9px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; display:inline-flex; align-items:center; gap:7px; }
-    .btn-ghost-inv:hover { border-color:#818181; color:#e5e3e0; }
+    .results{background:#262626;color:#e5e3e0;}
+    .res-top{padding:22px 28px 16px;border-bottom:1px solid #3a3a3a;}
+    .res-ey{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:#b1ada2;margin-bottom:4px;}
+    .res-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:17px;line-height:1.3;}
+    .res-sub{font-size:10px;color:#818181;margin-top:2px;}
+    .res-body{padding:0 28px 22px;}
+    .res-sect{display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;border-bottom:1px solid #3a3a3a;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#b1ada2;}
+    .res-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #2a2a2a;font-size:11px;}
+    .res-row.ind{padding-left:12px;color:rgba(255,255,255,.45);font-size:10px;}
+    .res-amt{font-family:'Plus Jakarta Sans',sans-serif;font-weight:500;font-size:12px;}
+    .res-amt.neg{color:#e74c3c;}.res-amt.pos{color:#2ecc71;}.res-amt.gold{color:#f39c12;}
+    .res-neto{display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin-top:5px;}
+    .res-neto span:first-child{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#e5e3e0;}
+    .big-box{margin:0 28px 20px;border:1px solid #3a3a3a;padding:22px;text-align:center;position:relative;overflow:hidden;}
+    .big-box::before{content:'GALERIE';position:absolute;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:66px;letter-spacing:10px;color:rgba(255,255,255,.025);top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none;}
+    .big-lbl{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:#b1ada2;font-family:'Poppins',sans-serif;margin-bottom:6px;}
+    .big-val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:42px;color:#e5e3e0;line-height:1;letter-spacing:-1px;}
+    .big-sub{font-size:9px;color:#818181;margin-top:4px;}
+    .res-tags{display:flex;gap:6px;flex-wrap:wrap;padding:0 28px 16px;}
+    .tag{background:rgba(255,255,255,.06);border:1px solid #3a3a3a;color:#b1ada2;font-family:'Poppins',sans-serif;font-size:9px;letter-spacing:1px;padding:3px 9px;}
+    .res-actions{padding:12px 28px 22px;border-top:1px solid #2a2a2a;display:flex;gap:8px;flex-wrap:wrap;}
+    .btn-ghost-inv{background:transparent;color:rgba(255,255,255,.5);border:1px solid #3a3a3a;padding:9px 16px;font-family:'Poppins',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+    .btn-ghost-inv:hover{border-color:#818181;color:#e5e3e0;}
 
-    /* TRAVEL BADGES */
-    .tbadges { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:16px; }
-    .tbadge { border:1px solid #e5e3e0; padding:12px 14px; background:#f0eeeb; }
-    .tb-lbl { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:#818181; font-family:'Poppins',sans-serif; margin-bottom:5px; }
-    .tb-sub { font-size:9px; color:#b1ada2; margin-top:2px; }
+    /* TRAVEL */
+    .tbadges{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:14px;}
+    .tbadge{border:1px solid #e5e3e0;padding:11px 13px;background:#f0eeeb;}
+    .tb-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#818181;font-family:'Poppins',sans-serif;margin-bottom:4px;}
+    .tb-sub{font-size:9px;color:#b1ada2;margin-top:2px;}
 
     /* NOTE BOX */
-    .note-box { background:#f0eeeb; border-left:3px solid #b1ada2; padding:10px 14px; margin-top:10px; font-size:11px; color:#262626; line-height:1.6; }
-    .note-box strong { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:#b1ada2; display:block; margin-bottom:2px; font-family:'Plus Jakarta Sans',sans-serif; }
-    .note-box.savings { border-left-color:#f39c12; background:#fff9f0; }
-    .note-box.savings strong { color:#f39c12; }
-
-    /* DIVIDER */
-    .div-label { text-align:center; margin:24px 0; position:relative; }
-    .div-label::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:#e5e3e0; }
-    .div-label span { position:relative; background:#f0eeeb; padding:0 14px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:8px; letter-spacing:3px; text-transform:uppercase; color:#818181; }
+    .note-box{background:#f0eeeb;border-left:3px solid #b1ada2;padding:9px 13px;margin-top:9px;font-size:11px;color:#262626;line-height:1.6;}
+    .note-box strong{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#b1ada2;display:block;margin-bottom:2px;font-family:'Plus Jakarta Sans',sans-serif;}
+    .note-box.savings{border-left-color:#f39c12;background:#fff9f0;}.note-box.savings strong{color:#f39c12;}
+    .note-box.alert{border-left-color:#e74c3c;background:#fff5f5;}.note-box.alert strong{color:#e74c3c;}
 
     /* PACKLIST */
-    .packlist-wrap { background:#f0eeeb; border:1px solid #e5e3e0; padding:16px; margin-top:8px; }
-    .packlist-title { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:#818181; font-family:'Poppins',sans-serif; margin-bottom:10px; }
-    .packlist-text { font-size:12px; color:#262626; line-height:1.8; white-space:pre-wrap; }
+    .packlist-wrap{background:#f0eeeb;border:1px solid #e5e3e0;padding:13px;margin-top:6px;}
+    .packlist-text{font-size:12px;color:#262626;line-height:1.8;white-space:pre-wrap;}
 
-    /* EMPTY STATE */
-    .empty { text-align:center; padding:50px 20px; }
-    .empty-icon { font-size:36px; margin-bottom:14px; opacity:.3; }
-    .empty-title { font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:13px; color:#818181; margin-bottom:5px; }
-    .empty-sub { font-size:11px; color:#b1ada2; }
+    /* DIVIDER */
+    .div-label{text-align:center;margin:22px 0;position:relative;}
+    .div-label::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:#e5e3e0;}
+    .div-label span{position:relative;background:#f0eeeb;padding:0 12px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#818181;}
+
+    /* EMPTY */
+    .empty{text-align:center;padding:48px 20px;}
+    .empty-icon{font-size:32px;margin-bottom:12px;opacity:.3;}
+    .empty-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;color:#818181;margin-bottom:4px;}
+    .empty-sub{font-size:11px;color:#b1ada2;}
 
     /* FOOTER */
-    .footer { background:#262626; border-top:2px solid #b1ada2; padding:18px 36px; display:flex; justify-content:space-between; align-items:center; }
-    .footer-logo { font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:12px; letter-spacing:5px; color:#b1ada2; }
-    .footer-info { font-size:9px; color:#818181; text-align:right; line-height:1.6; }
+    .footer{background:#262626;border-top:2px solid #b1ada2;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;}
+    .footer-logo{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:11px;letter-spacing:5px;color:#b1ada2;}
+    .footer-info{font-size:9px;color:#818181;text-align:right;line-height:1.6;}
+
+    /* FILTER BAR */
+    .filter-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
 
     @media(max-width:768px){
-      .hdr,.hero{padding-left:16px;padding-right:16px;}
-      .hero-title{font-size:22px;}
-      .page,.page-wide{padding:16px 14px 60px;}
+      .hdr,.hero{padding-left:14px;padding-right:14px;}
+      .hero-title{font-size:20px;}
+      .page,.page-wide{padding:14px 12px 60px;}
       .stats-grid{grid-template-columns:1fr 1fr;}
       .g2,.g3,.g4,.tbadges{grid-template-columns:1fr;}
-      .footer{padding:14px 16px;flex-direction:column;gap:10px;text-align:center;}
+      .footer{padding:12px 14px;flex-direction:column;gap:8px;text-align:center;}
       .footer-info{text-align:center;}
     }
     @media(max-width:480px){.stats-grid{grid-template-columns:1fr;}}
@@ -287,112 +303,143 @@
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useEffect, useRef, useMemo } = React;
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-/* ── HELPERS ── */
+/* ─── HELPERS ─── */
 const fmt = (n,d=0) => n==null||isNaN(n)?"—":new Intl.NumberFormat("es-UY",{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
 const fc = (cur,n) => `${cur} ${fmt(n)}`;
-const today = () => new Date().toISOString().split("T")[0];
+const todayStr = () => new Date().toISOString().split("T")[0];
+const fmtDate = (s) => { if(!s)return"—"; const[y,m,d]=s.split("-"); return`${d}/${m}/${y}`; };
 
-/* ── STAGES ── */
+/* ─── STAGES (updated) ─── */
 const STAGES = [
   {id:"exploracion", label:"Exploración"},
   {id:"contacto",    label:"Contacto"},
   {id:"diseno",      label:"Diseño"},
+  {id:"planos",      label:"Planos"},
   {id:"cotizacion",  label:"Cotización"},
   {id:"negociacion", label:"Negociación"},
   {id:"aceptado",    label:"Aceptado"},
   {id:"produccion",  label:"Producción"},
   {id:"completado",  label:"Completado"},
 ];
+const ACCEPTED_STAGES = ["aceptado","produccion","completado"];
 const STAGE_BADGE = {
   exploracion:"badge-exploracion",contacto:"badge-contacto",diseno:"badge-diseno",
-  cotizacion:"badge-cotizacion",negociacion:"badge-negociacion",aceptado:"badge-aceptado",
-  produccion:"badge-produccion",completado:"badge-completado",perdido:"badge-perdido",
+  planos:"badge-planos",cotizacion:"badge-cotizacion",negociacion:"badge-negociacion",
+  aceptado:"badge-aceptado",produccion:"badge-produccion",completado:"badge-completado",
+  no_aceptado:"badge-no_aceptado",
 };
-// Only divide travel costs when project is Aceptado, Produccion, or Completado
-const ACCEPTED_STAGES = ["aceptado","produccion","completado"];
 
-/* ── FLIGHT ALGORITHM FROM MVD ── */
+/* ─── COUNTRIES ─── */
+const COUNTRIES = [
+  "Alemania","Arabia Saudita","Argelia","Argentina","Australia","Austria",
+  "Bélgica","Bolivia","Brasil","Canadá","Chile","China","Colombia","Corea del Sur",
+  "Costa Rica","Croacia","Dinamarca","Ecuador","Egipto","Emiratos Árabes Unidos",
+  "España","Estados Unidos","Finlandia","Francia","Grecia","Guatemala","Honduras",
+  "Hungría","India","Indonesia","Irlanda","Israel","Italia","Japón","Jordania",
+  "Kazajistán","Kuwait","Malasia","Marruecos","México","Noruega","Nueva Zelanda",
+  "Países Bajos","Panamá","Paraguay","Perú","Polonia","Portugal","Qatar",
+  "Reino Unido","República Checa","Rumania","Rusia","Singapur","Sudáfrica",
+  "Suecia","Suiza","Tailandia","Turquía","Ucrania","Uruguay","Venezuela",
+  "Vietnam","Otro",
+];
+function CountrySelect({value, onChange, placeholder="Seleccionar país..."}) {
+  return (
+    <select value={value||""} onChange={e=>onChange(e.target.value)}>
+      <option value="">{placeholder}</option>
+      {COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
+    </select>
+  );
+}
+
+/* ─── CODE GENERATORS ─── */
+// Project code: PR + MM + YYYY + - + seq  e.g. PR042026-001
+function genProjectCode(seq) {
+  const now = new Date();
+  const mm = String(now.getMonth()+1).padStart(2,"0");
+  const yyyy = now.getFullYear();
+  const s = String(seq).padStart(3,"0");
+  return `PR${mm}${yyyy}-${s}`;
+}
+// Client code: G00001, G00002...
+function genClientCode(seq) {
+  return `G${String(seq).padStart(5,"0")}`;
+}
+// Supplier code: S00001...
+function genSupplierCode(seq) {
+  return `S${String(seq).padStart(5,"0")}`;
+}
+
+/* ─── FLIGHT ALGORITHM ─── */
 const FERIA_FACTOR = 1.15;
 const REGION_BASE = {
-  sudamerica_cercana:{f:380,h:65,d:48}, sudamerica_norte:{f:520,h:72,d:55},
-  caribe_mexico:{f:620,h:95,d:68}, usa_este:{f:820,h:165,d:110},
-  usa_centro:{f:850,h:140,d:98}, usa_oeste:{f:880,h:160,d:108},
-  canada:{f:870,h:135,d:96}, europa_oeste_hub:{f:980,h:115,d:90},
-  europa_oeste:{f:1020,h:105,d:88}, europa_norte:{f:1050,h:120,d:100},
-  europa_central:{f:1000,h:90,d:78}, europa_este:{f:980,h:72,d:62},
-  europa_mediterraneo:{f:1010,h:85,d:80}, oriente_medio:{f:1050,h:125,d:95},
-  africa_norte:{f:1080,h:80,d:65}, asia_sur:{f:1280,h:88,d:65},
-  asia_sudeste:{f:1350,h:82,d:58}, asia_este:{f:1480,h:118,d:88},
-  oceania:{f:1650,h:145,d:105}, default:{f:980,h:95,d:80},
+  sudamerica_cercana:{f:380,h:65,d:48},sudamerica_norte:{f:520,h:72,d:55},
+  caribe_mexico:{f:620,h:95,d:68},usa_este:{f:820,h:165,d:110},
+  usa_centro:{f:850,h:140,d:98},usa_oeste:{f:880,h:160,d:108},
+  canada:{f:870,h:135,d:96},europa_oeste_hub:{f:980,h:115,d:90},
+  europa_oeste:{f:1020,h:105,d:88},europa_norte:{f:1050,h:120,d:100},
+  europa_central:{f:1000,h:90,d:78},europa_este:{f:980,h:72,d:62},
+  europa_mediterraneo:{f:1010,h:85,d:80},oriente_medio:{f:1050,h:125,d:95},
+  asia_sur:{f:1280,h:88,d:65},asia_sudeste:{f:1350,h:82,d:58},
+  asia_este:{f:1480,h:118,d:88},oceania:{f:1650,h:145,d:105},
+  default:{f:980,h:95,d:80},
 };
 const CITY_MAP = {
   "santiago":{r:"sudamerica_cercana",dF:0,dH:8,dD:5},"lima":{r:"sudamerica_cercana",dF:50,dH:5,dD:5},
-  "sao paulo":{r:"sudamerica_cercana",dF:40,dH:20,dD:15},"rio de janeiro":{r:"sudamerica_cercana",dF:50,dH:25,dD:18},
-  "buenos aires":{r:"sudamerica_cercana",dF:-80,dH:15,dD:12},"bogota":{r:"sudamerica_norte",dF:0,dH:-5,dD:-5},
-  "mexico city":{r:"caribe_mexico",dF:0,dH:0,dD:0},"cancun":{r:"caribe_mexico",dF:-10,dH:0,dD:0},
-  "panama":{r:"caribe_mexico",dF:-20,dH:5,dD:5},"new york":{r:"usa_este",dF:0,dH:35,dD:22},
-  "miami":{r:"usa_este",dF:-30,dH:5,dD:10},"boston":{r:"usa_este",dF:10,dH:20,dD:15},
-  "atlanta":{r:"usa_este",dF:-30,dH:5,dD:5},"washington":{r:"usa_este",dF:0,dH:15,dD:12},
-  "orlando":{r:"usa_este",dF:-40,dH:-5,dD:-5},"chicago":{r:"usa_centro",dF:0,dH:18,dD:12},
-  "dallas":{r:"usa_centro",dF:-20,dH:5,dD:3},"houston":{r:"usa_centro",dF:-20,dH:5,dD:3},
+  "sao paulo":{r:"sudamerica_cercana",dF:40,dH:20,dD:15},"buenos aires":{r:"sudamerica_cercana",dF:-80,dH:15,dD:12},
+  "bogota":{r:"sudamerica_norte",dF:0,dH:-5,dD:-5},"mexico city":{r:"caribe_mexico",dF:0,dH:0,dD:0},
+  "cancun":{r:"caribe_mexico",dF:-10,dH:0,dD:0},"new york":{r:"usa_este",dF:0,dH:35,dD:22},
+  "miami":{r:"usa_este",dF:-30,dH:5,dD:10},"atlanta":{r:"usa_este",dF:-30,dH:5,dD:5},
+  "chicago":{r:"usa_centro",dF:0,dH:18,dD:12},"dallas":{r:"usa_centro",dF:-20,dH:5,dD:3},
   "los angeles":{r:"usa_oeste",dF:-10,dH:20,dD:12},"san francisco":{r:"usa_oeste",dF:0,dH:30,dD:18},
-  "las vegas":{r:"usa_oeste",dF:-10,dH:0,dD:8},"seattle":{r:"usa_oeste",dF:0,dH:15,dD:8},
   "toronto":{r:"canada",dF:0,dH:5,dD:5},"montreal":{r:"canada",dF:0,dH:-5,dD:0},
-  "vancouver":{r:"canada",dF:5,dH:5,dD:5},"madrid":{r:"europa_oeste_hub",dF:-60,dH:-8,dD:-5},
-  "lisbon":{r:"europa_oeste_hub",dF:-50,dH:-5,dD:-5},"paris":{r:"europa_oeste_hub",dF:0,dH:22,dD:18},
-  "frankfurt":{r:"europa_oeste_hub",dF:0,dH:15,dD:10},"barcelona":{r:"europa_oeste",dF:-20,dH:-5,dD:0},
-  "rome":{r:"europa_oeste",dF:-10,dH:0,dD:5},"milan":{r:"europa_oeste",dF:-10,dH:15,dD:10},
-  "amsterdam":{r:"europa_oeste",dF:10,dH:15,dD:8},"brussels":{r:"europa_oeste",dF:10,dH:8,dD:5},
-  "cologne":{r:"europa_oeste",dF:5,dH:5,dD:3},"hamburg":{r:"europa_oeste",dF:10,dH:5,dD:3},
-  "munich":{r:"europa_oeste",dF:5,dH:18,dD:8},"berlin":{r:"europa_oeste",dF:10,dH:5,dD:3},
-  "dusseldorf":{r:"europa_oeste",dF:5,dH:8,dD:5},"hannover":{r:"europa_oeste",dF:5,dH:-2,dD:-2},
-  "bologna":{r:"europa_oeste",dF:-10,dH:-2,dD:-2},"florence":{r:"europa_oeste",dF:-10,dH:5,dD:5},
-  "venice":{r:"europa_oeste",dF:-10,dH:25,dD:12},"nice":{r:"europa_oeste",dF:0,dH:20,dD:12},
-  "cannes":{r:"europa_oeste",dF:0,dH:40,dD:20},"seville":{r:"europa_oeste",dF:-20,dH:-5,dD:-5},
-  "valencia":{r:"europa_oeste",dF:-20,dH:-8,dD:-5},"bilbao":{r:"europa_oeste",dF:-15,dH:-5,dD:-5},
-  "london":{r:"europa_norte",dF:0,dH:40,dD:28},"edinburgh":{r:"europa_norte",dF:10,dH:15,dD:10},
-  "manchester":{r:"europa_norte",dF:5,dH:10,dD:8},"copenhagen":{r:"europa_norte",dF:10,dH:20,dD:12},
-  "stockholm":{r:"europa_norte",dF:10,dH:18,dD:10},"oslo":{r:"europa_norte",dF:15,dH:25,dD:15},
-  "helsinki":{r:"europa_norte",dF:15,dH:15,dD:10},"dublin":{r:"europa_norte",dF:0,dH:18,dD:10},
+  "madrid":{r:"europa_oeste_hub",dF:-60,dH:-8,dD:-5},"lisbon":{r:"europa_oeste_hub",dF:-50,dH:-5,dD:-5},
+  "paris":{r:"europa_oeste_hub",dF:0,dH:22,dD:18},"frankfurt":{r:"europa_oeste_hub",dF:0,dH:15,dD:10},
+  "barcelona":{r:"europa_oeste",dF:-20,dH:-5,dD:0},"rome":{r:"europa_oeste",dF:-10,dH:0,dD:5},
+  "milan":{r:"europa_oeste",dF:-10,dH:15,dD:10},"amsterdam":{r:"europa_oeste",dF:10,dH:15,dD:8},
+  "brussels":{r:"europa_oeste",dF:10,dH:8,dD:5},"cologne":{r:"europa_oeste",dF:5,dH:5,dD:3},
+  "hamburg":{r:"europa_oeste",dF:10,dH:5,dD:3},"munich":{r:"europa_oeste",dF:5,dH:18,dD:8},
+  "berlin":{r:"europa_oeste",dF:10,dH:5,dD:3},"dusseldorf":{r:"europa_oeste",dF:5,dH:8,dD:5},
+  "hannover":{r:"europa_oeste",dF:5,dH:-2,dD:-2},"bologna":{r:"europa_oeste",dF:-10,dH:-2,dD:-2},
+  "florence":{r:"europa_oeste",dF:-10,dH:5,dD:5},"venice":{r:"europa_oeste",dF:-10,dH:25,dD:12},
+  "nice":{r:"europa_oeste",dF:0,dH:20,dD:12},"cannes":{r:"europa_oeste",dF:0,dH:40,dD:20},
+  "seville":{r:"europa_oeste",dF:-20,dH:-5,dD:-5},"london":{r:"europa_norte",dF:0,dH:40,dD:28},
+  "copenhagen":{r:"europa_norte",dF:10,dH:20,dD:12},"stockholm":{r:"europa_norte",dF:10,dH:18,dD:10},
+  "oslo":{r:"europa_norte",dF:15,dH:25,dD:15},"dublin":{r:"europa_norte",dF:0,dH:18,dD:10},
   "vienna":{r:"europa_central",dF:0,dH:12,dD:8},"prague":{r:"europa_central",dF:-5,dH:0,dD:-2},
   "budapest":{r:"europa_central",dF:-5,dH:-2,dD:-5},"warsaw":{r:"europa_central",dF:-5,dH:-2,dD:-5},
   "zurich":{r:"europa_central",dF:10,dH:65,dD:40},"geneva":{r:"europa_central",dF:10,dH:70,dD:42},
   "basel":{r:"europa_central",dF:10,dH:52,dD:30},"athens":{r:"europa_mediterraneo",dF:0,dH:0,dD:0},
-  "istanbul":{r:"europa_mediterraneo",dF:-20,dH:-5,dD:-5},"tel aviv":{r:"europa_mediterraneo",dF:10,dH:30,dD:15},
-  "dubai":{r:"oriente_medio",dF:0,dH:20,dD:10},"doha":{r:"oriente_medio",dF:0,dH:25,dD:10},
-  "abu dhabi":{r:"oriente_medio",dF:0,dH:15,dD:8},"tokyo":{r:"asia_este",dF:0,dH:20,dD:12},
-  "osaka":{r:"asia_este",dF:-10,dH:10,dD:8},"seoul":{r:"asia_este",dF:-20,dH:15,dD:5},
-  "shanghai":{r:"asia_este",dF:-20,dH:18,dD:5},"beijing":{r:"asia_este",dF:-20,dH:15,dD:5},
+  "istanbul":{r:"europa_mediterraneo",dF:-20,dH:-5,dD:-5},"dubai":{r:"oriente_medio",dF:0,dH:20,dD:10},
+  "doha":{r:"oriente_medio",dF:0,dH:25,dD:10},"tokyo":{r:"asia_este",dF:0,dH:20,dD:12},
+  "seoul":{r:"asia_este",dF:-20,dH:15,dD:5},"shanghai":{r:"asia_este",dF:-20,dH:18,dD:5},
   "hong kong":{r:"asia_este",dF:-30,dH:30,dD:15},"singapore":{r:"asia_sudeste",dF:0,dH:40,dD:18},
-  "bangkok":{r:"asia_sudeste",dF:-20,dH:-5,dD:-8},"kuala lumpur":{r:"asia_sudeste",dF:-20,dH:-5,dD:-8},
-  "jakarta":{r:"asia_sudeste",dF:-20,dH:-5,dD:-8},"bali":{r:"asia_sudeste",dF:-30,dH:5,dD:-8},
-  "delhi":{r:"asia_sur",dF:0,dH:5,dD:0},"mumbai":{r:"asia_sur",dF:0,dH:8,dD:5},
-  "sydney":{r:"oceania",dF:0,dH:10,dD:5},"melbourne":{r:"oceania",dF:0,dH:5,dD:0},
+  "bangkok":{r:"asia_sudeste",dF:-20,dH:-5,dD:-8},"delhi":{r:"asia_sur",dF:0,dH:5,dD:0},
+  "mumbai":{r:"asia_sur",dF:0,dH:8,dD:5},"sydney":{r:"oceania",dF:0,dH:10,dD:5},
 };
 function getDef(city) {
   const l=(city||"").toLowerCase().trim();
-  let entry=null;
-  for(const[k,v] of Object.entries(CITY_MAP)){if(l===k){entry=v;break;}}
-  if(!entry){for(const[k,v] of Object.entries(CITY_MAP)){if(l.includes(k)||k.includes(l)){entry=v;break;}}}
-  if(!entry) entry={r:"default",dF:0,dH:0,dD:0};
-  const base=REGION_BASE[entry.r]||REGION_BASE.default;
-  return {f:Math.round((base.f+(entry.dF||0))*FERIA_FACTOR),h:Math.round(base.h+(entry.dH||0)),d:Math.round(base.d+(entry.dD||0))};
+  let e=null;
+  for(const[k,v] of Object.entries(CITY_MAP)){if(l===k){e=v;break;}}
+  if(!e){for(const[k,v] of Object.entries(CITY_MAP)){if(l.includes(k)||k.includes(l)){e=v;break;}}}
+  if(!e)e={r:"default",dF:0,dH:0,dD:0};
+  const b=REGION_BASE[e.r]||REGION_BASE.default;
+  return{f:Math.round((b.f+(e.dF||0))*FERIA_FACTOR),h:Math.round(b.h+(e.dH||0)),d:Math.round(b.d+(e.dD||0))};
 }
 function rooms(pax){return pax<=2?1:pax<=4?2:3;}
 function nightsBetween(d1,d2){if(!d1||!d2)return 0;const diff=Math.round((new Date(d2)-new Date(d1))/86400000);return diff>0?diff:0;}
 
-/* ── FIREBASE HOOKS ── */
-function useCollection(colName) {
-  const [data, setData] = useState([]);
-  const [fbMode, setFbMode] = useState(false);
-  const fb = window.__fb;
+/* ─── FIREBASE HOOK ─── */
+function useCollection(colName, demoData=[]) {
+  const[data,setData]=useState(demoData);
+  const[fbMode,setFbMode]=useState(false);
+  const fb=window.__fb;
 
   useEffect(()=>{
-    if(!fb?.db) return;
-    try {
-      const {collection,query,orderBy,onSnapshot}=fb;
+    if(!fb?.db)return;
+    try{
+      const{collection,query,orderBy,onSnapshot}=fb;
       const q=query(collection(fb.db,colName),orderBy("updatedAt","desc"));
       const unsub=onSnapshot(q,snap=>{
         setData(snap.docs.map(d=>({id:d.id,...d.data(),
@@ -405,43 +452,39 @@ function useCollection(colName) {
     }catch(e){}
   },[colName]);
 
-  const add = async(doc) => {
-    if(fb?.db){
-      const{collection,addDoc,serverTimestamp}=fb;
-      await addDoc(collection(fb.db,colName),{...doc,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
-    } else setData(p=>[{id:"local_"+Date.now(),...doc,createdAt:new Date(),updatedAt:new Date()},...p]);
+  const add=async(doc)=>{
+    if(fb?.db){const{collection,addDoc,serverTimestamp}=fb;return await addDoc(collection(fb.db,colName),{...doc,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});}
+    else{const id="local_"+Date.now();setData(p=>[{id,...doc,createdAt:new Date(),updatedAt:new Date()},...p]);return{id};}
   };
-  const update = async(id,doc) => {
+  const update=async(id,doc)=>{
     if(fb?.db){const{doc:d,updateDoc,serverTimestamp}=fb;await updateDoc(d(fb.db,colName,id),{...doc,updatedAt:serverTimestamp()});}
     else setData(p=>p.map(x=>x.id===id?{...x,...doc,updatedAt:new Date()}:x));
   };
-  const remove = async(id) => {
+  const remove=async(id)=>{
     if(fb?.db){const{doc:d,deleteDoc}=fb;await deleteDoc(d(fb.db,colName,id));}
     else setData(p=>p.filter(x=>x.id!==id));
   };
-  return {data,fbMode,add,update,remove};
+  return{data,fbMode,add,update,remove};
 }
 
-function useAuth() {
-  const [user,setUser]=useState(null);
-  const [loading,setLoading]=useState(true);
+/* ─── AUTH ─── */
+function useAuth(){
+  const[user,setUser]=useState(null);
+  const[loading,setLoading]=useState(true);
   const fb=window.__fb;
   useEffect(()=>{
     if(!fb?.auth){setLoading(false);return;}
     return fb.onAuthStateChanged(fb.auth,u=>{setUser(u);setLoading(false);});
   },[]);
   const login=async(email,pass)=>{
-    if(!fb?.auth){
-      if(email==="info@galerie-expo.com"&&pass==="Galerie270925")setUser({email});
-      else throw new Error("Credenciales incorrectas");return;
-    }
+    if(!fb?.auth){if(email==="info@galerie-expo.com"&&pass==="Galerie270925")setUser({email});else throw new Error("Credenciales incorrectas");return;}
     await fb.signInWithEmailAndPassword(fb.auth,email,pass);
   };
   const logout=async()=>{if(!fb?.auth){setUser(null);return;}await fb.signOut(fb.auth);};
   return{user,loading,login,logout};
 }
 
-/* ── LOGIN ── */
+/* ─── LOGIN ─── */
 function LoginScreen({onLogin}){
   const[email,setEmail]=useState("info@galerie-expo.com");
   const[pass,setPass]=useState("");
@@ -453,8 +496,8 @@ function LoginScreen({onLogin}){
       <div className="login-box">
         <div className="login-logo">GALERIE</div>
         <div className="login-sub">Sistema de Gestión de Proyectos</div>
-        <div className="login-field"><label className="login-label">Email</label><input className="login-input" type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} /></div>
-        <div className="login-field"><label className="login-label">Contraseña</label><input className="login-input" type="password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} /></div>
+        <div className="login-field"><label className="login-label">Email</label><input className="login-input" type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/></div>
+        <div className="login-field"><label className="login-label">Contraseña</label><input className="login-input" type="password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/></div>
         <button className="login-btn" onClick={submit} disabled={loading}>{loading?"INGRESANDO...":"INGRESAR"}</button>
         {error&&<div className="login-error">{error}</div>}
       </div>
@@ -462,10 +505,10 @@ function LoginScreen({onLogin}){
   );
 }
 
-/* ── STAGE TRACKER ── */
+/* ─── STAGE TRACKER ─── */
 function StageTracker({currentStage,onStageClick}){
   const idx=STAGES.findIndex(s=>s.id===currentStage);
-  const isLost=currentStage==="perdido";
+  const isLost=currentStage==="no_aceptado";
   return(
     <div className="stage-track">
       {STAGES.map((s,i)=>{
@@ -478,32 +521,31 @@ function StageTracker({currentStage,onStageClick}){
           </div>
         );
       })}
-      {isLost&&<div className="stage-item failed"><div className="stage-dot failed">✕</div><div className="stage-lbl" style={{color:"#e74c3c"}}>Perdido</div></div>}
     </div>
   );
 }
 
-/* ── CLIENT AUTOCOMPLETE ── */
-function ClientSearch({clients, value, onSelect, placeholder="Buscar cliente..."}){
+/* ─── AUTOCOMPLETE ─── */
+function Autocomplete({items,value,onSelect,placeholder,renderItem,getKey,getLabel,getSubLabel}){
   const[q,setQ]=useState(value||"");
   const[open,setOpen]=useState(false);
+  useEffect(()=>{setQ(value||"");},[value]);
   const filtered=useMemo(()=>{
-    if(!q.trim()) return clients.slice(0,8);
+    if(!q.trim())return items.slice(0,10);
     const l=q.toLowerCase();
-    return clients.filter(c=>c.empresa?.toLowerCase().includes(l)||c.contacto?.toLowerCase().includes(l)).slice(0,8);
-  },[q,clients]);
-  const select=(c)=>{setQ(c.empresa);setOpen(false);onSelect(c);};
+    return items.filter(it=>getLabel(it)?.toLowerCase().includes(l)||(getSubLabel&&getSubLabel(it)?.toLowerCase().includes(l))).slice(0,10);
+  },[q,items]);
   return(
     <div className="autocomplete-wrap">
       <input value={q} placeholder={placeholder}
         onChange={e=>{setQ(e.target.value);setOpen(true);if(!e.target.value)onSelect(null);}}
-        onFocus={()=>setOpen(true)} onBlur={()=>setTimeout(()=>setOpen(false),150)} />
+        onFocus={()=>setOpen(true)} onBlur={()=>setTimeout(()=>setOpen(false),160)}/>
       {open&&filtered.length>0&&(
         <div className="autocomplete-list">
-          {filtered.map(c=>(
-            <div key={c.id} className="autocomplete-item" onMouseDown={()=>select(c)}>
-              <div style={{fontWeight:500}}>{c.empresa}</div>
-              <div className="autocomplete-item-sub">{c.contacto}{c.cargo?` · ${c.cargo}`:""}</div>
+          {filtered.map(it=>(
+            <div key={getKey(it)} className="autocomplete-item" onMouseDown={()=>{onSelect(it);setQ(getLabel(it));setOpen(false);}}>
+              <div style={{fontWeight:500}}>{getLabel(it)}</div>
+              {getSubLabel&&<div className="autocomplete-item-sub">{getSubLabel(it)}</div>}
             </div>
           ))}
         </div>
@@ -512,38 +554,10 @@ function ClientSearch({clients, value, onSelect, placeholder="Buscar cliente..."
   );
 }
 
-/* ── FERIA SEARCH ── */
-function FeriaSearch({ferias, value, onSelect, placeholder="Buscar feria..."}){
-  const[q,setQ]=useState(value||"");
-  const[open,setOpen]=useState(false);
-  const filtered=useMemo(()=>{
-    if(!q.trim()) return ferias.slice(0,8);
-    const l=q.toLowerCase();
-    return ferias.filter(f=>f.nombre?.toLowerCase().includes(l)||f.ciudad?.toLowerCase().includes(l)).slice(0,8);
-  },[q,ferias]);
-  const select=(f)=>{setQ(f.nombre);setOpen(false);onSelect(f);};
-  return(
-    <div className="autocomplete-wrap">
-      <input value={q} placeholder={placeholder}
-        onChange={e=>{setQ(e.target.value);setOpen(true);if(!e.target.value)onSelect(null);}}
-        onFocus={()=>setOpen(true)} onBlur={()=>setTimeout(()=>setOpen(false),150)} />
-      {open&&filtered.length>0&&(
-        <div className="autocomplete-list">
-          {filtered.map(f=>(
-            <div key={f.id} className="autocomplete-item" onMouseDown={()=>select(f)}>
-              <div style={{fontWeight:500}}>{f.nombre}</div>
-              <div className="autocomplete-item-sub">{f.ciudad}{f.pais?`, ${f.pais}`:""}{f.fechaInicio?` · ${f.fechaInicio}`:""}</div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── BUDGET CALCULATOR ── */
-function BudgetCalc({onSave,initialData={},allProjects=[],clients=[],ferias=[]}){
+/* ─── NEW/EDIT PROJECT MODAL (quick create) ─── */
+function ProjectFormModal({onClose,onSave,clients,ferias,projects,initialData={},title="Nuevo Proyecto"}){
   const[form,setForm]=useState({
+    codigo:initialData.codigo||"",
     proyecto:initialData.proyecto||"",
     clienteId:initialData.clienteId||"",
     clienteNombre:initialData.clienteNombre||"",
@@ -552,16 +566,124 @@ function BudgetCalc({onSave,initialData={},allProjects=[],clients=[],ferias=[]})
     destino:initialData.destino||"",
     llegada:initialData.llegada||"",
     partida:initialData.partida||"",
-    personas:String(initialData.personas||"2"),
+    etapa:initialData.etapa||"exploracion",
+    moneda:initialData.moneda||"USD",
+    m2:initialData.m2||"",
+    notas:initialData.notas||"",
+    alertaFecha:initialData.alertaFecha||"",
+    alertaTexto:initialData.alertaTexto||"",
+    personas:String(initialData.personas||2),
+  });
+  const[saving,setSaving]=useState(false);
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+
+  const selectCliente=(c)=>{if(!c){set("clienteId","");set("clienteNombre","");return;}set("clienteId",c.id);set("clienteNombre",c.empresa);if(!form.proyecto)set("proyecto",c.empresa);};
+  const selectFeria=(f)=>{if(!f){set("feriaId","");set("feria","");set("destino","");return;}set("feriaId",f.id);set("feria",f.nombre);if(f.ciudad)set("destino",f.ciudad);if(f.fechaInicio)set("llegada",f.fechaInicio);if(f.fechaFin)set("partida",f.fechaFin);};
+  const selectProyecto=(p)=>{if(!p){return;}set("proyecto",p.proyecto);set("clienteId",p.clienteId||"");set("clienteNombre",p.clienteNombre||"");set("feriaId",p.feriaId||"");set("feria",p.feria||"");};
+
+  const save=async()=>{
+    setSaving(true);
+    await onSave({...form,personas:parseInt(form.personas)||2,m2:parseFloat(form.m2)||0});
+    setSaving(false);
+    onClose();
+  };
+
+  return(
+    <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{maxWidth:640}}>
+        <div className="modal-hdr">
+          <div>
+            <div className="modal-title">{title}</div>
+            {form.codigo&&<div className="modal-sub"><span className="code-chip project">{form.codigo}</span></div>}
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div className="g2" style={{marginBottom:14}}>
+            <div className="fg">
+              <label>Cliente</label>
+              <Autocomplete items={clients} value={form.clienteNombre} onSelect={selectCliente}
+                placeholder="Buscar cliente..." getKey={c=>c.id} getLabel={c=>c.empresa}
+                getSubLabel={c=>`${c.contacto||""}${c.pais?" · "+c.pais:""}`}/>
+            </div>
+            <div className="fg"><label>Nombre del Proyecto</label><input value={form.proyecto} onChange={e=>set("proyecto",e.target.value)} placeholder="ej. BILBOSA — Seafood 2026"/></div>
+            <div className="fg">
+              <label>Feria</label>
+              <Autocomplete items={ferias} value={form.feria} onSelect={selectFeria}
+                placeholder="Buscar feria..." getKey={f=>f.id} getLabel={f=>f.nombre}
+                getSubLabel={f=>`${f.ciudad||""}${f.pais?", "+f.pais:""}${f.fechaInicio?" · "+fmtDate(f.fechaInicio):""}`}/>
+            </div>
+            <div className="fg"><label>Destino</label><input value={form.destino} onChange={e=>set("destino",e.target.value)} placeholder="Ciudad"/></div>
+            <div className="fg"><label>Llegada</label><input type="date" value={form.llegada} onChange={e=>set("llegada",e.target.value)}/></div>
+            <div className="fg"><label>Partida</label><input type="date" value={form.partida} onChange={e=>set("partida",e.target.value)}/></div>
+            <div className="fg">
+              <label>Etapa Inicial</label>
+              <select value={form.etapa} onChange={e=>set("etapa",e.target.value)}>
+                {STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
+                <option value="no_aceptado">No Aceptado</option>
+              </select>
+            </div>
+            <div className="fg">
+              <label>Moneda</label>
+              <select value={form.moneda} onChange={e=>set("moneda",e.target.value)}>
+                <option value="USD">USD</option><option value="EUR">EUR</option><option value="UYU">UYU</option>
+              </select>
+            </div>
+            <div className="fg"><label>Personas</label>
+              <select value={form.personas} onChange={e=>set("personas",e.target.value)}>
+                {[1,2,3,4,5,6].map(x=><option key={x} value={x}>{x} pax</option>)}
+              </select>
+            </div>
+            <div className="fg"><label>Superficie (m²)</label>
+              <div className="sfx"><input type="number" value={form.m2} onChange={e=>set("m2",e.target.value)} placeholder="0"/><span className="sfx-tag">m²</span></div>
+            </div>
+          </div>
+          <div className="fg" style={{marginBottom:14}}>
+            <label>Packlist / Observaciones del Stand</label>
+            <textarea value={form.notas} onChange={e=>set("notas",e.target.value)} rows={3} placeholder="Sillas, barras, mesas, pantallas..."/>
+          </div>
+          <div style={{background:"#fff9f0",border:"1px solid #f39c1244",padding:"14px 16px",borderLeft:"3px solid #f39c12"}}>
+            <div style={{fontSize:"8px",letterSpacing:"2px",textTransform:"uppercase",color:"#f39c12",fontFamily:"'Plus Jakarta Sans',sans-serif",marginBottom:10}}>⏰ Alerta de Seguimiento</div>
+            <div className="g2">
+              <div className="fg"><label>Fecha de Alerta</label><input type="date" value={form.alertaFecha} onChange={e=>set("alertaFecha",e.target.value)}/></div>
+              <div className="fg"><label>Recordatorio</label><input value={form.alertaTexto} onChange={e=>set("alertaTexto",e.target.value)} placeholder="ej. Llamar a María para confirmar stand"/></div>
+            </div>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn-dark" onClick={save} disabled={saving||!form.proyecto}>{saving?"Guardando...":"Guardar Proyecto"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── BUDGET CALCULATOR ─── */
+function BudgetCalc({onSave,initialData={},allProjects=[],clients=[],ferias=[],suppliers=[]}){
+  const[form,setForm]=useState({
+    proyectoId:initialData.proyectoId||"",
+    proyecto:initialData.proyecto||"",
+    clienteId:initialData.clienteId||"",
+    clienteNombre:initialData.clienteNombre||"",
+    feriaId:initialData.feriaId||"",
+    feria:initialData.feria||"",
+    destino:initialData.destino||"",
+    llegada:initialData.llegada||"",
+    partida:initialData.partida||"",
+    personas:String(initialData.personas||2),
     m2:initialData.m2||"",
     costoStand:initialData.costoStand||"",
     costoCatering:initialData.costoCatering||"",
     costoServicios:initialData.costoServicios||"",
+    proveedorId:initialData.proveedorId||"",
+    proveedorNombre:initialData.proveedorNombre||"",
     moneda:initialData.moneda||"USD",
     gastosAdminPct:initialData.gastosAdminPct?String(initialData.gastosAdminPct*100):"5",
     resultadoEsperado:"",
     notas:initialData.notas||"",
     etapa:initialData.etapa||"exploracion",
+    codigo:initialData.codigo||"",
   });
   const[travel,setTravel]=useState({
     flight:initialData.flightCostPax?String(initialData.flightCostPax):"",
@@ -571,123 +693,90 @@ function BudgetCalc({onSave,initialData={},allProjects=[],clients=[],ferias=[]})
   const[result,setResult]=useState(null);
   const resRef=useRef(null);
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
-
   const n=nightsBetween(form.llegada,form.partida);
   const pax=parseInt(form.personas)||1;
   const m2=parseFloat(form.m2)||0;
 
-  // Only count projects in ACCEPTED_STAGES for cost sharing
-  const sameFeraAccepted=allProjects.filter(p=>
-    p.feria===form.feria&&
-    p.destino?.toLowerCase()===form.destino?.toLowerCase()&&
-    ACCEPTED_STAGES.includes(p.etapa)&&
-    p.id!==initialData.id
-  );
-  const divisor=ACCEPTED_STAGES.includes(form.etapa)?sameFeraAccepted.length+1:1;
+  const sameFeraAcep=allProjects.filter(p=>p.feria===form.feria&&p.destino?.toLowerCase()===form.destino?.toLowerCase()&&ACCEPTED_STAGES.includes(p.etapa)&&p.proyectoId!==form.proyectoId);
+  const divisor=ACCEPTED_STAGES.includes(form.etapa)?sameFeraAcep.length+1:1;
 
-  const onDestinoBlur=()=>{
-    if(!form.destino)return;
-    const d=getDef(form.destino);
-    setTravel({flight:String(d.f),hotel:String(d.h),daily:String(d.d)});
-  };
+  const onDestinoChange=(v)=>{set("destino",v);};
+  const onDestinoBlur=()=>{if(form.destino){const d=getDef(form.destino);setTravel({flight:String(d.f),hotel:String(d.h),daily:String(d.d)});}};
 
-  const selectCliente=(c)=>{
-    if(!c){set("clienteId","");set("clienteNombre","");return;}
-    set("clienteId",c.id);set("clienteNombre",c.empresa);
-    if(!form.proyecto)set("proyecto",c.empresa);
+  const selectProject=(p)=>{
+    if(!p){set("proyectoId","");set("proyecto","");return;}
+    set("proyectoId",p.id);set("proyecto",p.proyecto);
+    set("clienteId",p.clienteId||"");set("clienteNombre",p.clienteNombre||"");
+    set("feriaId",p.feriaId||"");set("feria",p.feria||"");
+    set("destino",p.destino||"");set("codigo",p.codigo||"");
+    set("etapa",p.etapa||"exploracion");set("notas",p.notas||"");
+    set("personas",String(p.personas||2));set("m2",p.m2||"");
+    if(p.llegada)set("llegada",p.llegada);if(p.partida)set("partida",p.partida);
+    if(p.destino){const d=getDef(p.destino);setTravel({flight:String(d.f),hotel:String(d.h),daily:String(d.d)});}
   };
-  const selectFeria=(f)=>{
-    if(!f){set("feriaId","");set("feria","");set("destino","");return;}
-    set("feriaId",f.id);set("feria",f.nombre);
-    if(f.ciudad){
-      set("destino",f.ciudad);
-      const d=getDef(f.ciudad);
-      setTravel({flight:String(d.f),hotel:String(d.h),daily:String(d.d)});
-    }
-    if(f.fechaInicio)set("llegada",f.fechaInicio);
-    if(f.fechaFin)set("partida",f.fechaFin);
-  };
+  const selectFeria=(f)=>{if(!f){set("feriaId","");set("feria","");set("destino","");return;}set("feriaId",f.id);set("feria",f.nombre);if(f.ciudad){set("destino",f.ciudad);const d=getDef(f.ciudad);setTravel({flight:String(d.f),hotel:String(d.h),daily:String(d.d)});}if(f.fechaInicio)set("llegada",f.fechaInicio);if(f.fechaFin)set("partida",f.fechaFin);};
+  const selectSupplier=(s)=>{if(!s){set("proveedorId","");set("proveedorNombre","");return;}set("proveedorId",s.id);set("proveedorNombre",s.empresa);};
 
   const calcular=()=>{
-    const cs=parseFloat(form.costoStand)||0;
-    const cc=parseFloat(form.costoCatering)||0;
-    const cv=parseFloat(form.costoServicios)||0;
-    const top=cs+cc+cv;
-    const ft=(parseFloat(travel.flight)||0)*pax/divisor;
-    const ht=(parseFloat(travel.hotel)||0)*n*rooms(pax)/divisor;
-    const dt=(parseFloat(travel.daily)||0)*n*pax/divisor;
-    const trep=ft+ht+dt;
-    const pct=(parseFloat(form.gastosAdminPct)/100)||0.05;
-    const neto=parseFloat(form.resultadoEsperado)||0;
-    const costos=top+trep;
-    const rb=neto/0.75;
-    const ingresos=costos+rb/(1-pct);
-    const ga=(ingresos-costos)*pct;
-    const rbc=ingresos-costos-ga;
-    const irae=rbc*0.25;
-    const costoViajeFull=(parseFloat(travel.flight)||0)*pax+(parseFloat(travel.hotel)||0)*n*rooms(pax)+(parseFloat(travel.daily)||0)*n*pax;
-    setResult({
-      ingresos,costoStand:cs,costoCatering:cc,costoServicios:cv,totalOperativos:top,
-      flightTotal:ft,hotelTotal:ht,dailyTotal:dt,totalRepresentacion:trep,
-      flightCostPax:parseFloat(travel.flight)||0,hotelCostNight:parseFloat(travel.hotel)||0,dailyCostPax:parseFloat(travel.daily)||0,
-      gastosAdminPct:pct,gastosAdmin:ga,rentaBruta:rbc,irae,neto:rbc-irae,
-      moneda:form.moneda,personas:pax,nights:n,divisor,costoViajeFull,
-      m2,costoM2:m2>0?cs/m2:0,
-    });
+    const cs=parseFloat(form.costoStand)||0,cc=parseFloat(form.costoCatering)||0,cv=parseFloat(form.costoServicios)||0,top=cs+cc+cv;
+    const ft=(parseFloat(travel.flight)||0)*pax/divisor,ht=(parseFloat(travel.hotel)||0)*n*rooms(pax)/divisor,dt=(parseFloat(travel.daily)||0)*n*pax/divisor,trep=ft+ht+dt;
+    const pct=(parseFloat(form.gastosAdminPct)/100)||0.05,neto=parseFloat(form.resultadoEsperado)||0,costos=top+trep;
+    const rb=neto/0.75,ingresos=costos+rb/(1-pct),ga=(ingresos-costos)*pct,rbc=ingresos-costos-ga,irae=rbc*0.25;
+    const cvf=(parseFloat(travel.flight)||0)*pax+(parseFloat(travel.hotel)||0)*n*rooms(pax)+(parseFloat(travel.daily)||0)*n*pax;
+    setResult({ingresos,costoStand:cs,costoCatering:cc,costoServicios:cv,totalOperativos:top,flightTotal:ft,hotelTotal:ht,dailyTotal:dt,totalRepresentacion:trep,flightCostPax:parseFloat(travel.flight)||0,hotelCostNight:parseFloat(travel.hotel)||0,dailyCostPax:parseFloat(travel.daily)||0,gastosAdminPct:pct,gastosAdmin:ga,rentaBruta:rbc,irae,neto:rbc-irae,moneda:form.moneda,personas:pax,nights:n,divisor,costoViajeFull:cvf,m2,costoM2:m2>0?cs/m2:0});
     setTimeout(()=>resRef.current?.scrollIntoView({behavior:"smooth"}),100);
   };
-
   const canCalc=form.costoStand&&form.resultadoEsperado&&travel.flight&&travel.hotel&&travel.daily&&n>0;
 
   const handleSave=()=>{
     if(!result||!onSave)return;
-    onSave({...form,personas:pax,gastosAdminPct:result.gastosAdminPct,
-      ingresos:result.ingresos,costoStand:result.costoStand,costoCatering:result.costoCatering,
-      costoServicios:result.costoServicios,flightTotal:result.flightTotal,hotelTotal:result.hotelTotal,
-      dailyTotal:result.dailyTotal,flightCostPax:result.flightCostPax,hotelCostNight:result.hotelCostNight,
-      dailyCostPax:result.dailyCostPax,gastosAdmin:result.gastosAdmin,rentaBruta:result.rentaBruta,
-      irae:result.irae,neto:result.neto,totalRepresentacion:result.totalRepresentacion,
-      totalOperativos:result.totalOperativos,m2:result.m2,costoM2:result.costoM2,
-    });
+    onSave({...form,personas:pax,gastosAdminPct:result.gastosAdminPct,ingresos:result.ingresos,costoStand:result.costoStand,costoCatering:result.costoCatering,costoServicios:result.costoServicios,flightTotal:result.flightTotal,hotelTotal:result.hotelTotal,dailyTotal:result.dailyTotal,flightCostPax:result.flightCostPax,hotelCostNight:result.hotelCostNight,dailyCostPax:result.dailyCostPax,gastosAdmin:result.gastosAdmin,rentaBruta:result.rentaBruta,irae:result.irae,neto:result.neto,totalRepresentacion:result.totalRepresentacion,totalOperativos:result.totalOperativos,m2:result.m2,costoM2:result.costoM2});
   };
 
   return(
     <div>
       {/* 1 — Proyecto */}
       <div className="card">
-        <div className="card-hdr"><div className="card-hdr-left"><span className="step">1</span><span className="card-title">Información del Proyecto</span></div></div>
+        <div className="card-hdr"><div className="card-hdr-left"><span className="step">1</span><span className="card-title">Proyecto</span></div></div>
         <div className="card-body">
-          <div className="g2" style={{marginBottom:14}}>
+          <div className="g2" style={{marginBottom:12}}>
             <div className="fg">
-              <label>Cliente</label>
-              <ClientSearch clients={clients} value={form.clienteNombre} onSelect={selectCliente} placeholder="Buscar cliente registrado..." />
-              {form.clienteId&&<span className="hint">✓ Cliente vinculado</span>}
+              <label>Seleccionar Proyecto Existente</label>
+              <Autocomplete items={allProjects} value={form.proyecto} onSelect={selectProject}
+                placeholder="Buscar proyecto..." getKey={p=>p.id} getLabel={p=>p.proyecto}
+                getSubLabel={p=>`${p.codigo||""} · ${p.feria||""} · ${STAGES.find(s=>s.id===p.etapa)?.label||p.etapa}`}/>
+              <span className="hint">Al seleccionar, se autocompletan los datos del proyecto</span>
             </div>
-            <div className="fg"><label>Nombre del Proyecto</label><input placeholder="ej. BILBOSA — Seafood 2026" value={form.proyecto} onChange={e=>set("proyecto",e.target.value)} /></div>
+            <div className="fg">
+              <label>Proveedor (Stand/Montaje)</label>
+              <Autocomplete items={suppliers} value={form.proveedorNombre} onSelect={selectSupplier}
+                placeholder="Buscar proveedor..." getKey={s=>s.id} getLabel={s=>s.empresa}
+                getSubLabel={s=>`${s.codigo||""} · ${s.contacto||""}`}/>
+            </div>
             <div className="fg">
               <label>Feria</label>
-              <FeriaSearch ferias={ferias} value={form.feria} onSelect={selectFeria} placeholder="Buscar feria registrada..." />
-              {!form.feriaId&&<span className="hint">O escribí el nombre manualmente</span>}
+              <Autocomplete items={ferias} value={form.feria} onSelect={selectFeria}
+                placeholder="Buscar feria..." getKey={f=>f.id} getLabel={f=>f.nombre}
+                getSubLabel={f=>`${f.ciudad||""}${f.pais?", "+f.pais:""}${f.fechaInicio?" · "+fmtDate(f.fechaInicio):""}`}/>
             </div>
             <div className="fg">
               <label>Moneda</label>
               <select value={form.moneda} onChange={e=>set("moneda",e.target.value)}>
-                <option value="USD">USD — Dólar</option><option value="EUR">EUR — Euro</option><option value="UYU">UYU — Peso</option>
+                <option value="USD">USD</option><option value="EUR">EUR</option><option value="UYU">UYU</option>
               </select>
             </div>
             <div className="fg">
               <label>Etapa</label>
               <select value={form.etapa} onChange={e=>set("etapa",e.target.value)}>
                 {STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
-                <option value="perdido">Perdido</option>
+                <option value="no_aceptado">No Aceptado</option>
               </select>
             </div>
-            {onSave&&<div className="fg"><label>Packlist / Observaciones del Stand</label><textarea value={form.notas} onChange={e=>set("notas",e.target.value)} rows={3} placeholder="Ej: 2 sillas, 1 barra, mesa de reunión, folletería, pantalla LED..." /></div>}
           </div>
-          {sameFeraAccepted.length>0&&ACCEPTED_STAGES.includes(form.etapa)&&(
+          {sameFeraAcep.length>0&&ACCEPTED_STAGES.includes(form.etapa)&&(
             <div className="note-box savings">
-              <strong>⚡ Licuación de Costos</strong>
-              {sameFeraAccepted.length} proyecto{sameFeraAccepted.length>1?"s aceptados":"aceptado"} más en {form.feria}: {sameFeraAccepted.map(p=>p.proyecto).join(", ")}. Los costos de viaje se dividirán en {divisor} partes.
+              <strong>⚡ Licuación de Costos Activa</strong>
+              {sameFeraAcep.length} proyecto{sameFeraAcep.length>1?"s aceptados":"aceptado"} más en {form.feria}: {sameFeraAcep.map(p=>p.proyecto).join(", ")}. Viaje ÷{divisor}.
             </div>
           )}
         </div>
@@ -695,81 +784,42 @@ function BudgetCalc({onSave,initialData={},allProjects=[],clients=[],ferias=[]})
 
       {/* 2 — Costos */}
       <div className="card">
-        <div className="card-hdr"><div className="card-hdr-left"><span className="step">2</span><span className="card-title">Costos Operativos del Stand</span></div></div>
+        <div className="card-hdr"><div className="card-hdr-left"><span className="step">2</span><span className="card-title">Costos Operativos</span></div></div>
         <div className="card-body">
-          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:12,marginBottom:12}}>
-            <div className="fg">
-              <label>Stand / Montaje</label>
-              <div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoStand} onChange={e=>set("costoStand",e.target.value)} /></div>
-            </div>
-            <div className="fg">
-              <label>Superficie (m²)</label>
-              <div className="sfx"><input type="number" placeholder="0" value={form.m2} onChange={e=>set("m2",e.target.value)} /><span className="sfx-tag">m²</span></div>
-            </div>
-            <div className="fg">
-              <label>Catering</label>
-              <div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoCatering} onChange={e=>set("costoCatering",e.target.value)} /></div>
-            </div>
-            <div className="fg">
-              <label>Servicios</label>
-              <div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoServicios} onChange={e=>set("costoServicios",e.target.value)} /></div>
-            </div>
+          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:12,marginBottom:10}}>
+            <div className="fg"><label>Stand / Montaje{form.proveedorNombre?` — ${form.proveedorNombre}`:""}</label><div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoStand} onChange={e=>set("costoStand",e.target.value)}/></div></div>
+            <div className="fg"><label>m²</label><div className="sfx"><input type="number" placeholder="0" value={form.m2} onChange={e=>set("m2",e.target.value)}/><span className="sfx-tag">m²</span></div></div>
+            <div className="fg"><label>Catering</label><div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoCatering} onChange={e=>set("costoCatering",e.target.value)}/></div></div>
+            <div className="fg"><label>Servicios</label><div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoServicios} onChange={e=>set("costoServicios",e.target.value)}/></div></div>
           </div>
-          {form.costoStand&&m2>0&&(
-            <div className="note-box"><strong>Costo por m²</strong>
-              Stand: {fc(form.moneda,(parseFloat(form.costoStand)||0)/m2)}/m² · Total operativos: {fc(form.moneda,(parseFloat(form.costoStand)||0)+(parseFloat(form.costoCatering)||0)+(parseFloat(form.costoServicios)||0))}
-            </div>
-          )}
+          {form.costoStand&&m2>0&&<div className="note-box"><strong>Costo/m²</strong>Stand: {fc(form.moneda,(parseFloat(form.costoStand)||0)/m2)}/m²</div>}
         </div>
       </div>
 
       {/* 3 — Representación */}
       <div className="card">
         <div className="card-hdr">
-          <div className="card-hdr-left"><span className="step">3</span><span className="card-title">Costos de Representación</span></div>
+          <div className="card-hdr-left"><span className="step">3</span><span className="card-title">Representación</span></div>
           {divisor>1&&<span className="saving-badge">÷{divisor} proyectos aceptados</span>}
-          {divisor===1&&ACCEPTED_STAGES.includes(form.etapa)&&<span style={{fontSize:9,color:"#818181"}}>Solo se divide si hay otros aceptados</span>}
-          {!ACCEPTED_STAGES.includes(form.etapa)&&<span style={{fontSize:9,color:"#b1ada2",fontStyle:"italic"}}>Se prorrateará al aceptar el proyecto</span>}
+          {!ACCEPTED_STAGES.includes(form.etapa)&&<span style={{fontSize:8,color:"#b1ada2",fontStyle:"italic"}}>Se prorrateará al aceptar</span>}
         </div>
         <div className="card-body">
           <div className="g4">
-            <div className="fg">
-              <label>Ciudad destino</label>
-              <input placeholder="ej. Barcelona, Cologne..." value={form.destino} onChange={e=>set("destino",e.target.value)} onBlur={onDestinoBlur} />
-            </div>
-            <div className="fg">
-              <label>Personas</label>
-              <select value={form.personas} onChange={e=>set("personas",e.target.value)}>
-                {[1,2,3,4,5,6].map(x=><option key={x} value={x}>{x} pax</option>)}
-              </select>
-            </div>
-            <div className="fg"><label>Llegada</label><input type="date" value={form.llegada} onChange={e=>set("llegada",e.target.value)} /></div>
-            <div className="fg"><label>Partida</label><input type="date" value={form.partida} onChange={e=>set("partida",e.target.value)} /></div>
+            <div className="fg"><label>Ciudad</label><input value={form.destino} onChange={e=>onDestinoChange(e.target.value)} onBlur={onDestinoBlur} placeholder="ej. Cologne"/></div>
+            <div className="fg"><label>Personas</label><select value={form.personas} onChange={e=>set("personas",e.target.value)}>{[1,2,3,4,5,6].map(x=><option key={x} value={x}>{x} pax</option>)}</select></div>
+            <div className="fg"><label>Llegada</label><input type="date" value={form.llegada} onChange={e=>set("llegada",e.target.value)}/></div>
+            <div className="fg"><label>Partida</label><input type="date" value={form.partida} onChange={e=>set("partida",e.target.value)}/></div>
           </div>
-          {n>0&&<p className="subtotal" style={{marginTop:10}}><strong>{n} noches · {pax} persona{pax>1?"s":""}</strong>{divisor>1&&<span style={{color:"#f39c12"}}> · Viaje ÷{divisor}</span>}</p>}
+          {n>0&&<p style={{fontSize:10,color:"#818181",fontStyle:"italic",marginTop:8}}><strong style={{fontStyle:"normal"}}>{n} noches · {pax} persona{pax>1?"s":""}</strong>{divisor>1&&<span style={{color:"#f39c12"}}> · Viaje ÷{divisor}</span>}</p>}
           <div className="tbadges">
-            {[
-              {k:"flight",lbl:"Pasaje/pax I+V",sub:"ida y vuelta total"},
-              {k:"hotel",lbl:"Hotel/noche/hab",sub:`${rooms(pax)} hab. para ${pax} pax`},
-              {k:"daily",lbl:"Viáticos/día/pax",sub:"comida + transporte"},
-            ].map(({k,lbl,sub})=>(
+            {[{k:"flight",lbl:"Pasaje/pax I+V",sub:"ida y vuelta"},{k:"hotel",lbl:"Hotel/noche/hab",sub:`${rooms(pax)} hab.`},{k:"daily",lbl:"Viáticos/día/pax",sub:"comida+transporte"}].map(({k,lbl,sub})=>(
               <div className="tbadge" key={k}>
                 <div className="tb-lbl">{lbl}</div>
-                <div className="pfx" style={{marginTop:5}}>
-                  <span className="pfx-tag">{form.moneda}</span>
-                  <input type="number" value={travel[k]} onChange={e=>setTravel(t=>({...t,[k]:e.target.value}))} />
-                </div>
+                <div className="pfx" style={{marginTop:4}}><span className="pfx-tag">{form.moneda}</span><input type="number" value={travel[k]} onChange={e=>setTravel(t=>({...t,[k]:e.target.value}))}/></div>
                 <div className="tb-sub">{sub}</div>
               </div>
             ))}
           </div>
-          {travel.flight&&divisor>1&&(
-            <div className="note-box savings" style={{marginTop:12}}>
-              <strong>Ahorro por licuación</strong>
-              Costo viaje completo sin compartir: {fc(form.moneda,(parseFloat(travel.flight)||0)*pax+(parseFloat(travel.hotel)||0)*n*rooms(pax)+(parseFloat(travel.daily)||0)*n*pax)}.
-              Este proyecto absorbe: {fc(form.moneda,((parseFloat(travel.flight)||0)*pax+(parseFloat(travel.hotel)||0)*n*rooms(pax)+(parseFloat(travel.daily)||0)*n*pax)/divisor)}
-            </div>
-          )}
         </div>
       </div>
 
@@ -778,22 +828,14 @@ function BudgetCalc({onSave,initialData={},allProjects=[],clients=[],ferias=[]})
         <div className="card-hdr"><div className="card-hdr-left"><span className="step">4</span><span className="card-title">Parámetros Financieros</span></div></div>
         <div className="card-body">
           <div className="g2">
-            <div className="fg">
-              <label>Gastos Administrativos</label>
-              <div className="sfx"><input type="number" step="0.5" min="0" max="100" value={form.gastosAdminPct} onChange={e=>set("gastosAdminPct",e.target.value)} /><span className="sfx-tag">%</span></div>
-              <p className="hint">Pre-cargado en 5% — política interna Galerie</p>
-            </div>
-            <div className="fg">
-              <label>Resultado esperado neto ({form.moneda})</label>
-              <div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="ej. 1500" value={form.resultadoEsperado} onChange={e=>set("resultadoEsperado",e.target.value)} /></div>
-              <p className="hint">IRAE Uruguay = 25% sobre renta bruta</p>
-            </div>
+            <div className="fg"><label>Gastos Admin %</label><div className="sfx"><input type="number" step="0.5" min="0" max="100" value={form.gastosAdminPct} onChange={e=>set("gastosAdminPct",e.target.value)}/><span className="sfx-tag">%</span></div><p className="hint">Pre-cargado 5% — política Galerie</p></div>
+            <div className="fg"><label>Resultado esperado neto ({form.moneda})</label><div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="ej. 1500" value={form.resultadoEsperado} onChange={e=>set("resultadoEsperado",e.target.value)}/></div><p className="hint">IRAE Uruguay 25% sobre renta bruta</p></div>
           </div>
         </div>
       </div>
 
       <div style={{display:"flex",justifyContent:"center",marginTop:8}}>
-        <button className="btn-dark" style={{padding:"14px 44px",fontSize:10,letterSpacing:4}} onClick={calcular} disabled={!canCalc}>
+        <button className="btn-dark" style={{padding:"13px 40px",fontSize:10,letterSpacing:4}} onClick={calcular} disabled={!canCalc}>
           {canCalc?"◆  CALCULAR PRESUPUESTO":"COMPLETÁ TODOS LOS CAMPOS"}
         </button>
       </div>
@@ -804,42 +846,39 @@ function BudgetCalc({onSave,initialData={},allProjects=[],clients=[],ferias=[]})
           <div className="results">
             <div className="res-top">
               <div className="res-ey">Presupuesto calculado</div>
-              <div className="res-title">{result.feria||"Feria Internacional"}{result.destino?` — ${result.destino}`:""}</div>
-              {result.proyecto&&<div className="res-sub">{result.proyecto}{result.clienteNombre?` · ${result.clienteNombre}`:""}</div>}
-              {result.divisor>1&&<div className="res-sub" style={{color:"#f39c12",marginTop:3}}>⚡ Costos de viaje ÷{result.divisor} proyectos aceptados</div>}
+              <div className="res-title">{form.feria||"Feria Internacional"}{form.destino?` — ${form.destino}`:""}</div>
+              <div className="res-sub">{form.proyecto}{form.clienteNombre?` · ${form.clienteNombre}`:""}{result.divisor>1?` · ⚡ Viaje ÷${result.divisor}`:""}</div>
             </div>
             <div className="res-body">
               <div className="res-sect"><span>Costos Operativos</span><span>{fc(result.moneda,result.totalOperativos)}</span></div>
-              {result.costoStand>0&&<div className="res-row ind"><span>Stand / Montaje{result.m2>0?` (${result.m2}m² · ${fc(result.moneda,result.costoM2)}/m²)`:""}  </span><span className="res-amt">{fc(result.moneda,result.costoStand)}</span></div>}
+              {result.costoStand>0&&<div className="res-row ind"><span>Stand{result.m2>0?` (${result.m2}m² · ${fc(result.moneda,result.costoM2)}/m²)`:""}</span><span className="res-amt">{fc(result.moneda,result.costoStand)}</span></div>}
               {result.costoCatering>0&&<div className="res-row ind"><span>Catering</span><span className="res-amt">{fc(result.moneda,result.costoCatering)}</span></div>}
               {result.costoServicios>0&&<div className="res-row ind"><span>Servicios</span><span className="res-amt">{fc(result.moneda,result.costoServicios)}</span></div>}
-              <div className="res-sect"><span>Costos de Representación{result.divisor>1?` (1/${result.divisor} del viaje)`:""}</span><span>{fc(result.moneda,result.totalRepresentacion)}</span></div>
+              <div className="res-sect"><span>Representación{result.divisor>1?` (1/${result.divisor})`:""}</span><span>{fc(result.moneda,result.totalRepresentacion)}</span></div>
               <div className="res-row ind"><span>Pasajes ({result.personas} pax)</span><span className="res-amt">{fc(result.moneda,result.flightTotal)}</span></div>
-              <div className="res-row ind"><span>Hotel ({result.nights} noches × {rooms(result.personas)} hab.)</span><span className="res-amt">{fc(result.moneda,result.hotelTotal)}</span></div>
-              <div className="res-row ind"><span>Viáticos ({result.nights} días × {result.personas} pax)</span><span className="res-amt">{fc(result.moneda,result.dailyTotal)}</span></div>
+              <div className="res-row ind"><span>Hotel ({result.nights}n × {rooms(result.personas)}hab.)</span><span className="res-amt">{fc(result.moneda,result.hotelTotal)}</span></div>
+              <div className="res-row ind"><span>Viáticos</span><span className="res-amt">{fc(result.moneda,result.dailyTotal)}</span></div>
               {result.divisor>1&&<div className="res-row ind" style={{color:"#f39c12"}}><span>Ahorro vs. sin compartir</span><span className="res-amt gold">−{fc(result.moneda,result.costoViajeFull-result.totalRepresentacion)}</span></div>}
-              <div className="res-sect"><span>Gastos Admin ({(result.gastosAdminPct*100).toFixed(1)}%)</span><span>{fc(result.moneda,result.gastosAdmin)}</span></div>
-              <div className="res-sect"><span>Renta Bruta antes de IRAE</span><span>{fc(result.moneda,result.rentaBruta)}</span></div>
+              <div className="res-sect"><span>Admin ({(result.gastosAdminPct*100).toFixed(0)}%)</span><span>{fc(result.moneda,result.gastosAdmin)}</span></div>
+              <div className="res-sect"><span>Renta Bruta antes IRAE</span><span>{fc(result.moneda,result.rentaBruta)}</span></div>
               <div className="res-row ind"><span>IRAE (25%)</span><span className="res-amt neg">({fc(result.moneda,result.irae)})</span></div>
-              <div className="res-neto"><span>Resultado Neto después de Impuestos</span><span className="res-amt pos">{fc(result.moneda,result.neto)}</span></div>
+              <div className="res-neto"><span>Resultado Neto</span><span className="res-amt pos">{fc(result.moneda,result.neto)}</span></div>
             </div>
             <div className="big-box">
               <div className="big-lbl">Ingreso Operativo a Cotizar</div>
               <div className="big-val">{fc(result.moneda,result.ingresos)}</div>
-              <div className="big-sub">Valor mínimo a cobrar por el stand{result.m2>0?` · ${fc(result.moneda,result.ingresos/result.m2)}/m²`:""}</div>
+              <div className="big-sub">Mínimo a cobrar{result.m2>0?` · ${fc(result.moneda,result.ingresos/result.m2)}/m²`:""}</div>
             </div>
             <div className="res-tags">
-              {result.destino&&<span className="tag">{result.destino}</span>}
-              <span className="tag">{result.nights} noches</span>
-              <span className="tag">{result.personas} pax</span>
+              {form.destino&&<span className="tag">{form.destino}</span>}
+              <span className="tag">{result.nights}n</span><span className="tag">{result.personas}pax</span>
               {result.m2>0&&<span className="tag">{result.m2}m²</span>}
-              <span className="tag">IRAE 25%</span>
-              <span className="tag">Admin {(result.gastosAdminPct*100).toFixed(0)}%</span>
+              <span className="tag">IRAE 25%</span><span className="tag">Admin {(result.gastosAdminPct*100).toFixed(0)}%</span>
               <span className="tag">{result.moneda}</span>
-              {result.divisor>1&&<span className="tag" style={{borderColor:"#f39c1244",color:"#f39c12"}}>÷{result.divisor} proyectos</span>}
+              {result.divisor>1&&<span className="tag" style={{borderColor:"#f39c1244",color:"#f39c12"}}>÷{result.divisor}</span>}
             </div>
             <div className="res-actions">
-              {onSave&&<button className="btn-dark" onClick={handleSave}>◆  GUARDAR PROYECTO</button>}
+              {onSave&&<button className="btn-dark" onClick={handleSave}>◆ GUARDAR EN PROYECTO</button>}
               <button className="btn-ghost-inv" onClick={()=>{setResult(null);window.scrollTo({top:0,behavior:"smooth"});}}>Nuevo cálculo</button>
             </div>
           </div>
@@ -849,13 +888,15 @@ function BudgetCalc({onSave,initialData={},allProjects=[],clients=[],ferias=[]})
   );
 }
 
-/* ── PROJECT MODAL ── */
-function ProjectModal({project,onClose,onUpdate,onDelete,allProjects,clients,ferias}){
+/* ─── PROJECT MODAL (view/edit) ─── */
+function ProjectModal({project,onClose,onUpdate,onDelete,allProjects,clients,ferias,suppliers}){
   const[mode,setMode]=useState("view");
   const[saving,setSaving]=useState(false);
   const[confirm,setConfirm]=useState(false);
   const[newStage,setNewStage]=useState(project.etapa);
   const[notas,setNotas]=useState(project.notas||"");
+  const[alertaFecha,setAlertaFecha]=useState(project.alertaFecha||"");
+  const[alertaTexto,setAlertaTexto]=useState(project.alertaTexto||"");
   const[qResult,setQResult]=useState(null);
   const[qForm,setQForm]=useState({
     proyecto:project.proyecto||"",clienteId:project.clienteId||"",clienteNombre:project.clienteNombre||"",
@@ -863,7 +904,8 @@ function ProjectModal({project,onClose,onUpdate,onDelete,allProjects,clients,fer
     llegada:project.llegada||"",partida:project.partida||"",personas:String(project.personas||2),
     m2:String(project.m2||""),costoStand:String(project.costoStand||""),costoCatering:String(project.costoCatering||""),
     costoServicios:String(project.costoServicios||""),moneda:project.moneda||"USD",
-    gastosAdminPct:String((project.gastosAdminPct||0.05)*100),
+    gastosAdminPct:String((project.gastosAdminPct||0.05)*100),proveedorId:project.proveedorId||"",
+    proveedorNombre:project.proveedorNombre||"",
   });
   const[qTravel,setQTravel]=useState({
     flight:String(project.flightCostPax||Math.round((project.flightTotal||0)/(project.personas||2))||""),
@@ -875,37 +917,40 @@ function ProjectModal({project,onClose,onUpdate,onDelete,allProjects,clients,fer
   const qPax=parseInt(qForm.personas)||1;
   const sameFeraCount=allProjects.filter(p=>p.feria===project.feria&&p.id!==project.id&&ACCEPTED_STAGES.includes(p.etapa)).length;
   const divisor=ACCEPTED_STAGES.includes(project.etapa)?sameFeraCount+1:1;
+  const cur=project.moneda;
 
-  const saveStage=async()=>{setSaving(true);await onUpdate(project.id,{etapa:newStage,notas});setSaving(false);setMode("view");};
+  const saveStage=async()=>{setSaving(true);await onUpdate(project.id,{etapa:newStage,notas,alertaFecha,alertaTexto});setSaving(false);setMode("view");};
   const recalcular=()=>{
     const cs=parseFloat(qForm.costoStand)||0,cc=parseFloat(qForm.costoCatering)||0,cv=parseFloat(qForm.costoServicios)||0,top=cs+cc+cv;
-    const qDiv=ACCEPTED_STAGES.includes(qForm.etapa||project.etapa)?sameFeraCount+1:1;
+    const qDiv=ACCEPTED_STAGES.includes(project.etapa)?sameFeraCount+1:1;
     const ft=(parseFloat(qTravel.flight)||0)*qPax/qDiv,ht=(parseFloat(qTravel.hotel)||0)*qN*rooms(qPax)/qDiv,dt=(parseFloat(qTravel.daily)||0)*qN*qPax/qDiv,trep=ft+ht+dt;
     const pct=(parseFloat(qForm.gastosAdminPct)/100)||0.05,neto=parseFloat(resultadoEsp)||0,costos=top+trep;
     const rb=neto/0.75,ingresos=costos+rb/(1-pct),ga=(ingresos-costos)*pct,rbc=ingresos-costos-ga,irae=rbc*0.25;
     const m2=parseFloat(qForm.m2)||0;
     setQResult({ingresos,costoStand:cs,costoCatering:cc,costoServicios:cv,totalOperativos:top,flightTotal:ft,hotelTotal:ht,dailyTotal:dt,totalRepresentacion:trep,flightCostPax:parseFloat(qTravel.flight)||0,hotelCostNight:parseFloat(qTravel.hotel)||0,dailyCostPax:parseFloat(qTravel.daily)||0,gastosAdminPct:pct,gastosAdmin:ga,rentaBruta:rbc,irae,neto:rbc-irae,moneda:qForm.moneda,m2,costoM2:m2>0?cs/m2:0});
   };
-  const saveQuote=async()=>{
-    if(!qResult)return;setSaving(true);
-    await onUpdate(project.id,{...qForm,personas:qPax,gastosAdminPct:qResult.gastosAdminPct,...qResult,notas});
-    setSaving(false);setMode("view");
-  };
-  const cur=project.moneda;
+  const saveQuote=async()=>{if(!qResult)return;setSaving(true);await onUpdate(project.id,{...qForm,personas:qPax,gastosAdminPct:qResult.gastosAdminPct,...qResult,notas,alertaFecha,alertaTexto});setSaving(false);setMode("view");};
+
+  const today=todayStr();
+  const isOverdue=project.alertaFecha&&project.alertaFecha<=today;
+  const isUpcoming=project.alertaFecha&&project.alertaFecha>today;
 
   return(
     <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal" style={{maxWidth:800}}>
+      <div className="modal" style={{maxWidth:820}}>
         <div className="modal-hdr">
           <div>
-            <div className="modal-title">{project.proyecto}</div>
+            <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+              {project.codigo&&<span className="code-chip project">{project.codigo}</span>}
+              <div className="modal-title">{project.proyecto}</div>
+            </div>
             <div className="modal-sub">{project.feria}{project.destino?` · ${project.destino}`:""}{project.clienteNombre?` · ${project.clienteNombre}`:""}</div>
           </div>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-tabs">
-          {[{id:"view",label:"Resumen"},{id:"edit-stage",label:"Etapa"},{id:"edit-quote",label:"Editar Cotización"}].map(t=>(
-            <div key={t.id} className={`modal-tab${mode===t.id?" active":""}`} onClick={()=>setMode(t.id)}>{t.label}</div>
+          {[{id:"view",l:"Resumen"},{id:"edit-stage",l:"Etapa / Alerta"},{id:"edit-quote",l:"Cotización"}].map(t=>(
+            <div key={t.id} className={`modal-tab${mode===t.id?" active":""}`} onClick={()=>setMode(t.id)}>{t.l}</div>
           ))}
         </div>
         <div className="modal-body">
@@ -913,72 +958,77 @@ function ProjectModal({project,onClose,onUpdate,onDelete,allProjects,clients,fer
           {/* VIEW */}
           {mode==="view"&&(
             <>
-              <div style={{marginBottom:20}}>
-                <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Etapa Actual</div>
-                <StageTracker currentStage={project.etapa} />
-              </div>
-              <div className="g2" style={{marginBottom:18}}>
-                <div>
-                  <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:3,fontFamily:"'Poppins',sans-serif"}}>Stand</div>
-                  <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>{project.cliente||project.clienteNombre||"—"}</div>
-                  <div style={{fontSize:"11px",color:"#818181"}}>{project.llegada||"—"} → {project.partida||"—"} · {project.personas||2} pax{project.m2?` · ${project.m2}m²`:""}</div>
-                  {project.m2>0&&project.costoStand>0&&<div style={{fontSize:"11px",color:"#b1ada2",marginTop:2}}>{fc(cur,project.costoStand/project.m2)}/m² de stand</div>}
-                </div>
-                <div>
-                  <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:3,fontFamily:"'Poppins',sans-serif"}}>Notas / Packlist</div>
-                  {project.notas
-                    ?<div className="packlist-wrap"><div className="packlist-text">{project.notas}</div></div>
-                    :<div style={{fontSize:"12px",color:"#b1ada2",fontStyle:"italic"}}>Sin packlist registrado</div>
-                  }
-                </div>
-              </div>
-              {sameFeraCount>0&&ACCEPTED_STAGES.includes(project.etapa)&&(
-                <div className="note-box savings" style={{marginBottom:14}}>
-                  <strong>⚡ Costos de viaje compartidos</strong>
-                  {sameFeraCount} proyecto{sameFeraCount>1?"s aceptados":"aceptado"} más en {project.feria}. Viaje ÷{divisor}.
+              {(isOverdue||isUpcoming)&&(
+                <div className={`note-box ${isOverdue?"alert":"savings"}`} style={{marginBottom:14}}>
+                  <strong>{isOverdue?"⚠️ Alerta vencida":"⏰ Recordatorio pendiente"} — {fmtDate(project.alertaFecha)}</strong>
+                  {project.alertaTexto||"Sin descripción"}
                 </div>
               )}
-              <div className="results">
-                <div className="res-body" style={{paddingTop:14}}>
-                  <div className="res-sect"><span>Costos Operativos</span><span>{fc(cur,project.totalOperativos)}</span></div>
-                  {project.costoStand>0&&<div className="res-row ind"><span>Stand{project.m2>0?` (${project.m2}m² · ${fc(cur,project.costoStand/project.m2)}/m²)`:""}  </span><span className="res-amt">{fc(cur,project.costoStand)}</span></div>}
-                  {project.costoCatering>0&&<div className="res-row ind"><span>Catering</span><span className="res-amt">{fc(cur,project.costoCatering)}</span></div>}
-                  {project.costoServicios>0&&<div className="res-row ind"><span>Servicios</span><span className="res-amt">{fc(cur,project.costoServicios)}</span></div>}
-                  <div className="res-sect"><span>Representación{divisor>1?` (÷${divisor})`:""}</span><span>{fc(cur,project.totalRepresentacion)}</span></div>
-                  <div className="res-row ind"><span>Pasajes</span><span className="res-amt">{fc(cur,project.flightTotal)}</span></div>
-                  <div className="res-row ind"><span>Hotel</span><span className="res-amt">{fc(cur,project.hotelTotal)}</span></div>
-                  <div className="res-row ind"><span>Viáticos</span><span className="res-amt">{fc(cur,project.dailyTotal)}</span></div>
-                  <div className="res-sect"><span>Admin + IRAE</span><span>{fc(cur,(project.gastosAdmin||0)+(project.irae||0))}</span></div>
-                  <div className="res-neto"><span>Resultado Neto</span><span className="res-amt pos">{fc(cur,project.neto)}</span></div>
+              <div style={{marginBottom:18}}>
+                <div style={{fontSize:"8px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:8,fontFamily:"'Poppins',sans-serif"}}>Etapa</div>
+                <StageTracker currentStage={project.etapa}/>
+              </div>
+              <div className="g2" style={{marginBottom:16}}>
+                <div>
+                  <div style={{fontSize:"8px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:3}}>Stand / Detalles</div>
+                  <div style={{fontWeight:600,fontSize:13}}>{project.clienteNombre||"—"}</div>
+                  <div style={{fontSize:"11px",color:"#818181"}}>{fmtDate(project.llegada)} → {fmtDate(project.partida)} · {project.personas||2}pax{project.m2?` · ${project.m2}m²`:""}</div>
+                  {project.m2>0&&project.costoStand>0&&<div style={{fontSize:"10px",color:"#b1ada2",marginTop:1}}>{fc(cur,project.costoStand/project.m2)}/m² de stand</div>}
+                  {project.proveedorNombre&&<div style={{fontSize:"10px",color:"#9b59b6",marginTop:2}}>Proveedor: {project.proveedorNombre}</div>}
                 </div>
-                <div className="big-box" style={{margin:"0 22px 16px"}}>
-                  <div className="big-lbl">Ingreso a Cotizar</div>
-                  <div className="big-val" style={{fontSize:34}}>{fc(cur,project.ingresos)}</div>
-                  {project.m2>0&&project.ingresos>0&&<div className="big-sub">{fc(cur,project.ingresos/project.m2)}/m²</div>}
+                <div>
+                  <div style={{fontSize:"8px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:3}}>Packlist / Observaciones</div>
+                  {project.notas?<div className="packlist-wrap"><div className="packlist-text">{project.notas}</div></div>:<div style={{fontSize:"11px",color:"#b1ada2",fontStyle:"italic"}}>Sin packlist</div>}
                 </div>
               </div>
+              {project.ingresos>0&&(
+                <div className="results">
+                  <div className="res-body" style={{paddingTop:12}}>
+                    <div className="res-sect"><span>Operativos</span><span>{fc(cur,project.totalOperativos)}</span></div>
+                    {project.costoStand>0&&<div className="res-row ind"><span>Stand{project.m2>0?` · ${fc(cur,project.costoStand/project.m2)}/m²`:""}</span><span className="res-amt">{fc(cur,project.costoStand)}</span></div>}
+                    <div className="res-sect"><span>Representación{divisor>1?` (÷${divisor})`:""}</span><span>{fc(cur,project.totalRepresentacion)}</span></div>
+                    <div className="res-sect"><span>Admin + IRAE</span><span>{fc(cur,(project.gastosAdmin||0)+(project.irae||0))}</span></div>
+                    <div className="res-neto"><span>Resultado Neto</span><span className="res-amt pos">{fc(cur,project.neto)}</span></div>
+                  </div>
+                  <div className="big-box" style={{margin:"0 20px 14px"}}>
+                    <div className="big-lbl">Ingreso a Cotizar</div>
+                    <div className="big-val" style={{fontSize:30}}>{fc(cur,project.ingresos)}</div>
+                    {project.m2>0&&project.ingresos>0&&<div className="big-sub">{fc(cur,project.ingresos/project.m2)}/m²</div>}
+                  </div>
+                </div>
+              )}
             </>
           )}
 
           {/* EDIT STAGE */}
           {mode==="edit-stage"&&(
             <>
-              <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Hacé click en la etapa para cambiarla</div>
-              <StageTracker currentStage={newStage} onStageClick={setNewStage} />
-              <div style={{marginTop:16}}>
-                <div style={{marginBottom:12}}>
-                  <label style={{display:"block",marginBottom:6}}>O seleccioná directamente</label>
+              <div style={{fontSize:"8px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:8}}>Hacé click en la etapa para cambiarla</div>
+              <StageTracker currentStage={newStage} onStageClick={setNewStage}/>
+              <div style={{marginTop:12}}>
+                <div className="fg" style={{marginBottom:12}}>
+                  <label>Etapa</label>
                   <select value={newStage} onChange={e=>setNewStage(e.target.value)}>
                     {STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
-                    <option value="perdido">Perdido</option>
+                    <option value="no_aceptado">No Aceptado</option>
                   </select>
                 </div>
                 {ACCEPTED_STAGES.includes(newStage)&&!ACCEPTED_STAGES.includes(project.etapa)&&(
-                  <div className="note-box savings"><strong>⚡ Al aceptar</strong>Los costos de viaje se prorratearán con otros proyectos aceptados en la misma feria.</div>
+                  <div className="note-box savings" style={{marginBottom:12}}>
+                    <strong>⚡ Al aceptar</strong>Los costos de viaje se prorratearán con otros proyectos aceptados en la misma feria.
+                  </div>
                 )}
-                <label style={{display:"block",marginBottom:6,marginTop:12}}>Packlist / Observaciones del Stand</label>
-                <textarea value={notas} onChange={e=>setNotas(e.target.value)} rows={5}
-                  placeholder="Ej: 2 sillas tapizadas, 1 barra alta, mesa de reunión 4 personas, 2 pantallas LED, folletería, heladera..." />
+                <div className="fg" style={{marginBottom:14}}>
+                  <label>Packlist / Observaciones</label>
+                  <textarea value={notas} onChange={e=>setNotas(e.target.value)} rows={4} placeholder="Sillas, barras, mesas, pantallas..."/>
+                </div>
+                <div style={{background:"#fff9f0",border:"1px solid #f39c1244",padding:"13px 15px",borderLeft:"3px solid #f39c12"}}>
+                  <div style={{fontSize:"8px",letterSpacing:"2px",textTransform:"uppercase",color:"#f39c12",fontFamily:"'Plus Jakarta Sans',sans-serif",marginBottom:10}}>⏰ Alerta de Seguimiento</div>
+                  <div className="g2">
+                    <div className="fg"><label>Fecha de Alerta</label><input type="date" value={alertaFecha} onChange={e=>setAlertaFecha(e.target.value)}/></div>
+                    <div className="fg"><label>Recordatorio</label><input value={alertaTexto} onChange={e=>setAlertaTexto(e.target.value)} placeholder="ej. Llamar a María en mayo"/></div>
+                  </div>
+                </div>
               </div>
             </>
           )}
@@ -986,48 +1036,46 @@ function ProjectModal({project,onClose,onUpdate,onDelete,allProjects,clients,fer
           {/* EDIT QUOTE */}
           {mode==="edit-quote"&&(
             <>
-              <div className="note-box" style={{marginBottom:18}}>Editá los valores y recalculá para actualizar el presupuesto.</div>
-              <div className="g2" style={{marginBottom:14}}>
-                <div className="fg"><label>Proyecto</label><input value={qForm.proyecto} onChange={e=>setQ("proyecto",e.target.value)} /></div>
-                <div className="fg"><label>Moneda</label><select value={qForm.moneda} onChange={e=>setQ("moneda",e.target.value)}><option value="USD">USD</option><option value="EUR">EUR</option><option value="UYU">UYU</option></select></div>
-                <div className="fg"><label>Feria</label><input value={qForm.feria} onChange={e=>setQ("feria",e.target.value)} /></div>
+              <div className="note-box" style={{marginBottom:14}}>Editá y recalculá para actualizar el presupuesto.</div>
+              <div className="g2" style={{marginBottom:12}}>
+                <div className="fg"><label>Feria</label><input value={qForm.feria} onChange={e=>setQ("feria",e.target.value)}/></div>
                 <div className="fg"><label>Destino</label><input value={qForm.destino} onChange={e=>setQ("destino",e.target.value)} onBlur={()=>{if(qForm.destino){const d=getDef(qForm.destino);setQTravel({flight:String(d.f),hotel:String(d.h),daily:String(d.d)});}}}/></div>
-                <div className="fg"><label>Llegada</label><input type="date" value={qForm.llegada} onChange={e=>setQ("llegada",e.target.value)} /></div>
-                <div className="fg"><label>Partida</label><input type="date" value={qForm.partida} onChange={e=>setQ("partida",e.target.value)} /></div>
+                <div className="fg"><label>Llegada</label><input type="date" value={qForm.llegada} onChange={e=>setQ("llegada",e.target.value)}/></div>
+                <div className="fg"><label>Partida</label><input type="date" value={qForm.partida} onChange={e=>setQ("partida",e.target.value)}/></div>
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:12,marginBottom:14}}>
-                <div className="fg"><label>Stand/Montaje</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoStand} onChange={e=>setQ("costoStand",e.target.value)} /></div></div>
-                <div className="fg"><label>m²</label><div className="sfx"><input type="number" value={qForm.m2} onChange={e=>setQ("m2",e.target.value)} /><span className="sfx-tag">m²</span></div></div>
-                <div className="fg"><label>Catering</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoCatering} onChange={e=>setQ("costoCatering",e.target.value)} /></div></div>
-                <div className="fg"><label>Servicios</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoServicios} onChange={e=>setQ("costoServicios",e.target.value)} /></div></div>
+              <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:12,marginBottom:12}}>
+                <div className="fg"><label>Stand/Montaje</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoStand} onChange={e=>setQ("costoStand",e.target.value)}/></div></div>
+                <div className="fg"><label>m²</label><div className="sfx"><input type="number" value={qForm.m2} onChange={e=>setQ("m2",e.target.value)}/><span className="sfx-tag">m²</span></div></div>
+                <div className="fg"><label>Catering</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoCatering} onChange={e=>setQ("costoCatering",e.target.value)}/></div></div>
+                <div className="fg"><label>Servicios</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoServicios} onChange={e=>setQ("costoServicios",e.target.value)}/></div></div>
               </div>
-              <div className="g3" style={{marginBottom:14}}>
-                <div className="fg"><label>Pasaje/pax I+V</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.flight} onChange={e=>setQTravel(t=>({...t,flight:e.target.value}))} /></div></div>
-                <div className="fg"><label>Hotel/noche/hab</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.hotel} onChange={e=>setQTravel(t=>({...t,hotel:e.target.value}))} /></div></div>
-                <div className="fg"><label>Viáticos/día/pax</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.daily} onChange={e=>setQTravel(t=>({...t,daily:e.target.value}))} /></div></div>
+              <div className="g3" style={{marginBottom:12}}>
+                <div className="fg"><label>Pasaje/pax I+V</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.flight} onChange={e=>setQTravel(t=>({...t,flight:e.target.value}))}/></div></div>
+                <div className="fg"><label>Hotel/noche</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.hotel} onChange={e=>setQTravel(t=>({...t,hotel:e.target.value}))}/></div></div>
+                <div className="fg"><label>Viáticos/día/pax</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.daily} onChange={e=>setQTravel(t=>({...t,daily:e.target.value}))}/></div></div>
               </div>
-              <div className="g2" style={{marginBottom:16}}>
-                <div className="fg"><label>Admin %</label><div className="sfx"><input type="number" step="0.5" value={qForm.gastosAdminPct} onChange={e=>setQ("gastosAdminPct",e.target.value)} /><span className="sfx-tag">%</span></div></div>
-                <div className="fg"><label>Resultado esperado neto ({qForm.moneda})</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={resultadoEsp} onChange={e=>setResultadoEsp(e.target.value)} /></div></div>
+              <div className="g2" style={{marginBottom:12}}>
+                <div className="fg"><label>Admin %</label><div className="sfx"><input type="number" step="0.5" value={qForm.gastosAdminPct} onChange={e=>setQ("gastosAdminPct",e.target.value)}/><span className="sfx-tag">%</span></div></div>
+                <div className="fg"><label>Resultado esperado neto</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={resultadoEsp} onChange={e=>setResultadoEsp(e.target.value)}/></div></div>
               </div>
-              <div className="fg" style={{marginBottom:16}}>
+              <div className="fg" style={{marginBottom:14}}>
                 <label>Packlist / Observaciones</label>
-                <textarea value={notas} onChange={e=>setNotas(e.target.value)} rows={4} placeholder="Ej: 2 sillas tapizadas, 1 barra alta, mesa de reunión..." />
+                <textarea value={notas} onChange={e=>setNotas(e.target.value)} rows={3} placeholder="Sillas, barras, mesas..."/>
               </div>
-              <div style={{display:"flex",justifyContent:"center",marginBottom:16}}>
+              <div style={{display:"flex",justifyContent:"center",marginBottom:14}}>
                 <button className="btn-dark" onClick={recalcular} disabled={!qForm.costoStand||!resultadoEsp||!qTravel.flight||qN<=0}>◆ RECALCULAR</button>
               </div>
               {qResult&&(
                 <div className="results">
-                  <div className="res-body" style={{paddingTop:14}}>
+                  <div className="res-body" style={{paddingTop:12}}>
                     <div className="res-sect"><span>Operativos</span><span>{fc(qResult.moneda,qResult.totalOperativos)}</span></div>
                     <div className="res-sect"><span>Representación</span><span>{fc(qResult.moneda,qResult.totalRepresentacion)}</span></div>
-                    <div className="res-neto"><span>Resultado Neto</span><span className="res-amt pos">{fc(qResult.moneda,qResult.neto)}</span></div>
+                    <div className="res-neto"><span>Neto</span><span className="res-amt pos">{fc(qResult.moneda,qResult.neto)}</span></div>
                   </div>
-                  <div className="big-box" style={{margin:"0 22px 14px"}}>
-                    <div className="big-lbl">Nuevo Ingreso a Cotizar</div>
-                    <div className="big-val" style={{fontSize:30}}>{fc(qResult.moneda,qResult.ingresos)}</div>
-                    <div className="big-sub">Δ vs anterior: {qResult.ingresos>project.ingresos?"+":""}{fc(qResult.moneda,qResult.ingresos-(project.ingresos||0))}{qResult.m2>0?` · ${fc(qResult.moneda,qResult.ingresos/qResult.m2)}/m²`:""}</div>
+                  <div className="big-box" style={{margin:"0 20px 12px"}}>
+                    <div className="big-lbl">Nuevo Ingreso</div>
+                    <div className="big-val" style={{fontSize:28}}>{fc(qResult.moneda,qResult.ingresos)}</div>
+                    <div className="big-sub">Δ: {qResult.ingresos>project.ingresos?"+":""}{fc(qResult.moneda,qResult.ingresos-(project.ingresos||0))}{qResult.m2>0?` · ${fc(qResult.moneda,qResult.ingresos/qResult.m2)}/m²`:""}</div>
                   </div>
                 </div>
               )}
@@ -1037,7 +1085,7 @@ function ProjectModal({project,onClose,onUpdate,onDelete,allProjects,clients,fer
         <div className="modal-footer">
           {!confirm?<button className="btn-danger" onClick={()=>setConfirm(true)}>Eliminar</button>:<button className="btn-danger" onClick={()=>{onDelete(project.id);onClose();}}>¿Confirmar?</button>}
           <button className="btn-ghost" onClick={onClose}>Cerrar</button>
-          {mode==="edit-stage"&&<button className="btn-dark" onClick={saveStage} disabled={saving}>{saving?"...":"Guardar Etapa"}</button>}
+          {mode==="edit-stage"&&<button className="btn-dark" onClick={saveStage} disabled={saving}>{saving?"...":"Guardar"}</button>}
           {mode==="edit-quote"&&qResult&&<button className="btn-dark" onClick={saveQuote} disabled={saving}>{saving?"...":"Guardar Cotización"}</button>}
         </div>
       </div>
@@ -1045,157 +1093,151 @@ function ProjectModal({project,onClose,onUpdate,onDelete,allProjects,clients,fer
   );
 }
 
-/* ── CLIENTS SECTION ── */
-function ClientsSection({clients}){
-  const[modal,setModal]=useState(null); // null | {mode:"new"|"edit", data?}
-  const[confirm,setConfirm]=useState(null);
+/* ─── PROJECTS LIST ─── */
+function ProjectsList({projects,onUpdate,onDelete,onAdd,clients,ferias,suppliers}){
+  const[selected,setSelected]=useState(null);
+  const[showNew,setShowNew]=useState(false);
+  const[filter,setFilter]=useState("todos");
   const[search,setSearch]=useState("");
-  const filtered=clients.data.filter(c=>!search||c.empresa?.toLowerCase().includes(search.toLowerCase())||c.contacto?.toLowerCase().includes(search.toLowerCase())||c.mail?.toLowerCase().includes(search.toLowerCase()));
 
-  const blankForm={empresa:"",contacto:"",cargo:"",telefono:"",mail:""};
-  const[form,setForm]=useState(blankForm);
-  const setF=(k,v)=>setForm(f=>({...f,[k]:v}));
-
-  const openNew=()=>{setForm(blankForm);setModal({mode:"new"});};
-  const openEdit=(c)=>{setForm({empresa:c.empresa||"",contacto:c.contacto||"",cargo:c.cargo||"",telefono:c.telefono||"",mail:c.mail||""});setModal({mode:"edit",id:c.id});};
-  const save=async()=>{
-    if(modal.mode==="new")await clients.add({...form});
-    else await clients.update(modal.id,{...form});
-    setModal(null);
-  };
-  const del=async(id)=>{await clients.remove(id);setConfirm(null);};
+  const filtered=projects.filter(p=>{
+    const mS=filter==="todos"||p.etapa===filter;
+    const mQ=!search||p.proyecto?.toLowerCase().includes(search.toLowerCase())||p.feria?.toLowerCase().includes(search.toLowerCase())||p.codigo?.toLowerCase().includes(search.toLowerCase())||p.clienteNombre?.toLowerCase().includes(search.toLowerCase());
+    return mS&&mQ;
+  });
 
   return(
     <div className="page-wide">
-      <div style={{display:"flex",gap:12,marginBottom:20,alignItems:"center",flexWrap:"wrap"}}>
-        <input placeholder="Buscar empresa, contacto o mail..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:1,minWidth:200,maxWidth:360}} />
-        <button className="btn-dark" onClick={openNew}>+ Nuevo Cliente</button>
+      <div className="filter-bar">
+        <input placeholder="Buscar código, proyecto, feria, cliente..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:1,minWidth:200,maxWidth:340}}/>
+        <select value={filter} onChange={e=>setFilter(e.target.value)} style={{width:"auto",minWidth:150}}>
+          <option value="todos">Todas las etapas</option>
+          {STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
+          <option value="no_aceptado">No Aceptado</option>
+        </select>
+        <button className="btn-dark" onClick={()=>setShowNew(true)}>+ Nuevo Proyecto</button>
       </div>
 
       {filtered.length===0
-        ?<div className="empty"><div className="empty-icon">👤</div><div className="empty-title">Sin clientes{search?" encontrados":""}</div><div className="empty-sub">{search?"Ajustá la búsqueda":"Agregá tu primer cliente"}</div></div>
+        ?<div className="empty"><div className="empty-icon">📁</div><div className="empty-title">Sin proyectos</div><div className="empty-sub">Ajustá el filtro o creá un nuevo proyecto</div></div>
         :(
           <div className="card"><div className="card-body" style={{padding:0}}>
             <table className="tbl">
-              <thead><tr>
-                <th>Empresa</th><th>Contacto</th><th>Cargo</th><th>Teléfono</th><th>Mail</th><th style={{width:80}}></th>
-              </tr></thead>
+              <thead><tr><th>Código</th><th>Proyecto</th><th>Cliente</th><th>Feria</th><th>m²</th><th>Etapa</th><th>Ingreso</th><th>€/m²</th><th>Neto</th><th>Alerta</th></tr></thead>
               <tbody>
-                {filtered.map(c=>(
-                  <tr key={c.id}>
-                    <td><div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>{c.empresa}</div></td>
-                    <td>{c.contacto||"—"}</td>
-                    <td><span style={{fontSize:10,color:"#818181"}}>{c.cargo||"—"}</span></td>
-                    <td style={{fontSize:11}}>{c.telefono||"—"}</td>
-                    <td style={{fontSize:11}}>{c.mail||"—"}</td>
-                    <td>
-                      <div className="tbl-actions">
-                        <button className="btn-ghost btn-sm" onClick={()=>openEdit(c)}>Editar</button>
-                        <button className="btn-danger btn-sm" onClick={()=>setConfirm(c.id)}>✕</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map(p=>{
+                  const isOv=p.alertaFecha&&p.alertaFecha<=todayStr();
+                  const isUp=p.alertaFecha&&p.alertaFecha>todayStr();
+                  return(
+                    <tr key={p.id} style={{cursor:"pointer"}} onClick={()=>setSelected(p)}>
+                      <td><span className="code-chip project">{p.codigo||"—"}</span></td>
+                      <td><div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:12}}>{p.proyecto}</div></td>
+                      <td style={{fontSize:11,color:"#818181"}}>{p.clienteNombre||"—"}</td>
+                      <td><div style={{fontWeight:500,fontSize:11}}>{p.feria}</div><div style={{fontSize:10,color:"#818181"}}>{p.destino}</div></td>
+                      <td style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,fontSize:12}}>{p.m2>0?`${p.m2}m²`:"—"}</td>
+                      <td><span className={`badge ${STAGE_BADGE[p.etapa]||""}`}>{STAGES.find(s=>s.id===p.etapa)?.label||p.etapa}</span></td>
+                      <td style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,fontSize:12}}>{p.ingresos>0?fc(p.moneda,p.ingresos):"—"}</td>
+                      <td style={{fontSize:10,color:"#b1ada2"}}>{p.m2>0&&p.ingresos>0?fc(p.moneda,p.ingresos/p.m2):"—"}</td>
+                      <td style={{color:"#2ecc71",fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,fontSize:12}}>{p.neto>0?fc(p.moneda,p.neto):"—"}</td>
+                      <td>{isOv&&<span style={{fontSize:9,color:"#e74c3c",fontWeight:600}}>⚠️ {fmtDate(p.alertaFecha)}</span>}{isUp&&<span style={{fontSize:9,color:"#f39c12"}}>⏰ {fmtDate(p.alertaFecha)}</span>}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div></div>
         )
       }
 
-      {/* Client modal */}
-      {modal&&(
-        <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
-          <div className="modal" style={{maxWidth:520}}>
-            <div className="modal-hdr">
-              <div className="modal-title">{modal.mode==="new"?"Nuevo Cliente":"Editar Cliente"}</div>
-              <button className="modal-close" onClick={()=>setModal(null)}>✕</button>
-            </div>
-            <div className="modal-body">
-              <div className="g2">
-                <div className="fg" style={{gridColumn:"1/-1"}}><label>Empresa / Razón Social</label><input value={form.empresa} onChange={e=>setF("empresa",e.target.value)} placeholder="ej. BILBOSA S.A." /></div>
-                <div className="fg"><label>Nombre de Contacto</label><input value={form.contacto} onChange={e=>setF("contacto",e.target.value)} placeholder="ej. María García" /></div>
-                <div className="fg"><label>Cargo</label><input value={form.cargo} onChange={e=>setF("cargo",e.target.value)} placeholder="ej. Gerente de Marketing" /></div>
-                <div className="fg"><label>Teléfono / WhatsApp</label><input value={form.telefono} onChange={e=>setF("telefono",e.target.value)} placeholder="ej. +598 99 123 456" /></div>
-                <div className="fg"><label>Mail</label><input type="email" value={form.mail} onChange={e=>setF("mail",e.target.value)} placeholder="ej. maria@empresa.com" /></div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn-ghost" onClick={()=>setModal(null)}>Cancelar</button>
-              <button className="btn-dark" onClick={save} disabled={!form.empresa}>Guardar</button>
-            </div>
-          </div>
-        </div>
+      {showNew&&(
+        <ProjectFormModal
+          title="Nuevo Proyecto"
+          clients={clients} ferias={ferias} projects={projects}
+          onClose={()=>setShowNew(false)}
+          onSave={onAdd}
+        />
       )}
 
-      {/* Delete confirm */}
-      {confirm&&(
-        <div className="modal-backdrop" onClick={()=>setConfirm(null)}>
-          <div className="modal" style={{maxWidth:360}} onClick={e=>e.stopPropagation()}>
-            <div className="modal-hdr"><div className="modal-title">Confirmar eliminación</div></div>
-            <div className="modal-body"><p style={{fontSize:13}}>¿Eliminás este cliente? Esta acción no se puede deshacer.</p></div>
-            <div className="modal-footer"><button className="btn-ghost" onClick={()=>setConfirm(null)}>Cancelar</button><button className="btn-danger" onClick={()=>del(confirm)}>Eliminar</button></div>
-          </div>
-        </div>
+      {selected&&(
+        <ProjectModal
+          project={selected}
+          onClose={()=>setSelected(null)}
+          onUpdate={async(id,data)=>{await onUpdate(id,data);setSelected(p=>({...p,...data}));}}
+          onDelete={onDelete}
+          allProjects={projects}
+          clients={clients} ferias={ferias} suppliers={suppliers}
+        />
       )}
     </div>
   );
 }
 
-/* ── FERIAS SECTION ── */
-function FeriasSection({ferias,projects}){
+/* ─── ENTITY SECTION (Clients / Suppliers) ─── */
+function EntitySection({title,icon,collection,codePrefix,genCode,extraFields=[],nameField="empresa"}){
   const[modal,setModal]=useState(null);
   const[confirm,setConfirm]=useState(null);
   const[search,setSearch]=useState("");
-  const filtered=ferias.data.filter(f=>!search||f.nombre?.toLowerCase().includes(search.toLowerCase())||f.ciudad?.toLowerCase().includes(search.toLowerCase())||f.pais?.toLowerCase().includes(search.toLowerCase()));
 
-  const blankForm={nombre:"",ciudad:"",pais:"",fechaInicio:"",fechaFin:"",notas:""};
+  const baseFields={empresa:"",contacto:"",cargo:"",pais:"",telefono:"",mail:"",notas:"",alertaFecha:"",alertaTexto:""};
+  const extraDefaults={};extraFields.forEach(f=>{extraDefaults[f.key]="";});
+  const blankForm={...baseFields,...extraDefaults};
   const[form,setForm]=useState(blankForm);
   const setF=(k,v)=>setForm(f=>({...f,[k]:v}));
 
+  const filtered=collection.data.filter(c=>!search||
+    c[nameField]?.toLowerCase().includes(search.toLowerCase())||
+    c.contacto?.toLowerCase().includes(search.toLowerCase())||
+    c.mail?.toLowerCase().includes(search.toLowerCase())||
+    c.pais?.toLowerCase().includes(search.toLowerCase())||
+    c.codigo?.toLowerCase().includes(search.toLowerCase())
+  );
+
   const openNew=()=>{setForm(blankForm);setModal({mode:"new"});};
-  const openEdit=(f)=>{setForm({nombre:f.nombre||"",ciudad:f.ciudad||"",pais:f.pais||"",fechaInicio:f.fechaInicio||"",fechaFin:f.fechaFin||"",notas:f.notas||""});setModal({mode:"edit",id:f.id});};
+  const openEdit=(c)=>{setForm({empresa:c.empresa||"",contacto:c.contacto||"",cargo:c.cargo||"",pais:c.pais||"",telefono:c.telefono||"",mail:c.mail||"",notas:c.notas||"",alertaFecha:c.alertaFecha||"",alertaTexto:c.alertaTexto||"",...Object.fromEntries(extraFields.map(f=>[f.key,c[f.key]||""]))});setModal({mode:"edit",id:c.id,codigo:c.codigo});};
+
   const save=async()=>{
-    if(modal.mode==="new")await ferias.add({...form});
-    else await ferias.update(modal.id,{...form});
+    if(modal.mode==="new"){
+      const seq=collection.data.length+1;
+      const codigo=genCode(seq);
+      await collection.add({...form,codigo});
+    } else {
+      await collection.update(modal.id,{...form});
+    }
     setModal(null);
   };
-  const del=async(id)=>{await ferias.remove(id);setConfirm(null);};
+  const del=async(id)=>{await collection.remove(id);setConfirm(null);};
 
-  const getProjectCount=(feriaId,nombre)=>projects.filter(p=>p.feriaId===feriaId||p.feria===nombre).length;
-  const getRevenue=(feriaId,nombre)=>projects.filter(p=>(p.feriaId===feriaId||p.feria===nombre)&&!["perdido"].includes(p.etapa)).reduce((a,p)=>a+(p.ingresos||0),0);
+  const today=todayStr();
 
   return(
     <div className="page-wide">
-      <div style={{display:"flex",gap:12,marginBottom:20,alignItems:"center",flexWrap:"wrap"}}>
-        <input placeholder="Buscar feria o ciudad..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:1,minWidth:200,maxWidth:360}} />
-        <button className="btn-dark" onClick={openNew}>+ Nueva Feria</button>
+      <div className="filter-bar">
+        <input placeholder={`Buscar ${title.toLowerCase()}...`} value={search} onChange={e=>setSearch(e.target.value)} style={{flex:1,minWidth:200,maxWidth:360}}/>
+        <button className="btn-dark" onClick={openNew}>+ Nuevo {title.slice(0,-1)}</button>
       </div>
 
       {filtered.length===0
-        ?<div className="empty"><div className="empty-icon">🎪</div><div className="empty-title">Sin ferias{search?" encontradas":""}</div><div className="empty-sub">{search?"Ajustá la búsqueda":"Registrá tu primera feria"}</div></div>
+        ?<div className="empty"><div className="empty-icon">{icon}</div><div className="empty-title">Sin {title.toLowerCase()}{search?" encontrados":""}</div><div className="empty-sub">{search?"Ajustá la búsqueda":"Registrá el primero"}</div></div>
         :(
           <div className="card"><div className="card-body" style={{padding:0}}>
             <table className="tbl">
               <thead><tr>
-                <th>Feria</th><th>Ciudad / País</th><th>Fechas</th><th>Proyectos</th><th>Revenue</th><th style={{width:80}}></th>
+                <th>Código</th><th>Empresa</th><th>Contacto</th><th>País</th><th>Teléfono</th><th>Mail</th><th>Alerta</th><th style={{width:90}}></th>
               </tr></thead>
               <tbody>
-                {filtered.map(f=>{
-                  const pc=getProjectCount(f.id,f.nombre);
-                  const rev=getRevenue(f.id,f.nombre);
+                {filtered.map(c=>{
+                  const isOv=c.alertaFecha&&c.alertaFecha<=today;
+                  const isUp=c.alertaFecha&&c.alertaFecha>today;
                   return(
-                    <tr key={f.id}>
-                      <td><div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>{f.nombre}</div>{f.notas&&<div style={{fontSize:10,color:"#818181",marginTop:2}}>{f.notas}</div>}</td>
-                      <td><div style={{fontWeight:500}}>{f.ciudad||"—"}</div><div style={{fontSize:10,color:"#818181"}}>{f.pais||""}</div></td>
-                      <td style={{fontSize:11}}>{f.fechaInicio||"—"}<br/>{f.fechaFin||""}</td>
-                      <td><span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:16}}>{pc}</span><span style={{fontSize:10,color:"#818181"}}> proyecto{pc!==1?"s":""}</span></td>
-                      <td style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,color:rev>0?"#2ecc71":"#818181"}}>{rev>0?`USD ${fmt(rev)}`:"—"}</td>
-                      <td>
-                        <div className="tbl-actions">
-                          <button className="btn-ghost btn-sm" onClick={()=>openEdit(f)}>Editar</button>
-                          <button className="btn-danger btn-sm" onClick={()=>setConfirm(f.id)}>✕</button>
-                        </div>
-                      </td>
+                    <tr key={c.id}>
+                      <td><span className={`code-chip ${codePrefix==="G"?"client":"supplier"}`}>{c.codigo||"—"}</span></td>
+                      <td><div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>{c[nameField]}</div>{c.cargo&&<div style={{fontSize:10,color:"#818181"}}>{c.cargo}</div>}</td>
+                      <td style={{fontSize:11}}>{c.contacto||"—"}</td>
+                      <td style={{fontSize:11}}>{c.pais||"—"}</td>
+                      <td style={{fontSize:11}}>{c.telefono||"—"}</td>
+                      <td style={{fontSize:11}}>{c.mail||"—"}</td>
+                      <td>{isOv&&<span style={{fontSize:9,color:"#e74c3c",fontWeight:600}}>⚠️ {fmtDate(c.alertaFecha)}</span>}{isUp&&<span style={{fontSize:9,color:"#f39c12"}}>⏰ {fmtDate(c.alertaFecha)}</span>}</td>
+                      <td><div className="tbl-actions"><button className="btn-ghost btn-sm" onClick={()=>openEdit(c)}>Editar</button><button className="btn-danger btn-sm" onClick={()=>setConfirm(c.id)}>✕</button></div></td>
                     </tr>
                   );
                 })}
@@ -1207,24 +1249,38 @@ function FeriasSection({ferias,projects}){
 
       {modal&&(
         <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
-          <div className="modal" style={{maxWidth:540}}>
+          <div className="modal" style={{maxWidth:580}}>
             <div className="modal-hdr">
-              <div className="modal-title">{modal.mode==="new"?"Nueva Feria":"Editar Feria"}</div>
+              <div>
+                <div className="modal-title">{modal.mode==="new"?`Nuevo ${title.slice(0,-1)}`:`Editar ${title.slice(0,-1)}`}</div>
+                {modal.codigo&&<div className="modal-sub"><span className={`code-chip ${codePrefix==="G"?"client":"supplier"}`}>{modal.codigo}</span></div>}
+              </div>
               <button className="modal-close" onClick={()=>setModal(null)}>✕</button>
             </div>
             <div className="modal-body">
-              <div className="g2">
-                <div className="fg" style={{gridColumn:"1/-1"}}><label>Nombre de la Feria</label><input value={form.nombre} onChange={e=>setF("nombre",e.target.value)} placeholder="ej. Anuga Cologne 2026" /></div>
-                <div className="fg"><label>Ciudad</label><input value={form.ciudad} onChange={e=>setF("ciudad",e.target.value)} placeholder="ej. Cologne" /></div>
-                <div className="fg"><label>País</label><input value={form.pais} onChange={e=>setF("pais",e.target.value)} placeholder="ej. Alemania" /></div>
-                <div className="fg"><label>Fecha Inicio</label><input type="date" value={form.fechaInicio} onChange={e=>setF("fechaInicio",e.target.value)} /></div>
-                <div className="fg"><label>Fecha Fin</label><input type="date" value={form.fechaFin} onChange={e=>setF("fechaFin",e.target.value)} /></div>
-                <div className="fg" style={{gridColumn:"1/-1"}}><label>Notas / Descripción</label><textarea value={form.notas} onChange={e=>setF("notas",e.target.value)} rows={2} placeholder="Sector, descripción, link al manual del expositor..." /></div>
+              <div className="g2" style={{marginBottom:12}}>
+                <div className="fg" style={{gridColumn:"1/-1"}}><label>Empresa / Razón Social</label><input value={form.empresa} onChange={e=>setF("empresa",e.target.value)} placeholder="ej. BILBOSA S.A."/></div>
+                <div className="fg"><label>Contacto</label><input value={form.contacto} onChange={e=>setF("contacto",e.target.value)} placeholder="Nombre completo"/></div>
+                <div className="fg"><label>Cargo</label><input value={form.cargo} onChange={e=>setF("cargo",e.target.value)} placeholder="ej. Gerente de Marketing"/></div>
+                <div className="fg"><label>País</label><CountrySelect value={form.pais} onChange={v=>setF("pais",v)}/></div>
+                <div className="fg"><label>Teléfono / WhatsApp</label><input value={form.telefono} onChange={e=>setF("telefono",e.target.value)} placeholder="+598 99 123 456"/></div>
+                <div className="fg" style={{gridColumn:"1/-1"}}><label>Mail</label><input type="email" value={form.mail} onChange={e=>setF("mail",e.target.value)} placeholder="email@empresa.com"/></div>
+                {extraFields.map(f=>(
+                  <div key={f.key} className="fg" style={f.full?{gridColumn:"1/-1"}:{}}><label>{f.label}</label><input value={form[f.key]||""} onChange={e=>setF(f.key,e.target.value)} placeholder={f.placeholder||""}/></div>
+                ))}
+                <div className="fg" style={{gridColumn:"1/-1"}}><label>Notas</label><textarea value={form.notas} onChange={e=>setF("notas",e.target.value)} rows={2} placeholder="Observaciones generales..."/></div>
+              </div>
+              <div style={{background:"#fff9f0",border:"1px solid #f39c1244",padding:"13px 15px",borderLeft:"3px solid #f39c12"}}>
+                <div style={{fontSize:"8px",letterSpacing:"2px",textTransform:"uppercase",color:"#f39c12",fontFamily:"'Plus Jakarta Sans',sans-serif",marginBottom:10}}>⏰ Alerta / Recordatorio de Contacto</div>
+                <div className="g2">
+                  <div className="fg"><label>Fecha</label><input type="date" value={form.alertaFecha} onChange={e=>setF("alertaFecha",e.target.value)}/></div>
+                  <div className="fg"><label>Recordatorio</label><input value={form.alertaTexto} onChange={e=>setF("alertaTexto",e.target.value)} placeholder="ej. Contactar en mayo para Anuga 2026"/></div>
+                </div>
               </div>
             </div>
             <div className="modal-footer">
               <button className="btn-ghost" onClick={()=>setModal(null)}>Cancelar</button>
-              <button className="btn-dark" onClick={save} disabled={!form.nombre}>Guardar</button>
+              <button className="btn-dark" onClick={save} disabled={!form.empresa}>Guardar</button>
             </div>
           </div>
         </div>
@@ -1234,7 +1290,7 @@ function FeriasSection({ferias,projects}){
         <div className="modal-backdrop" onClick={()=>setConfirm(null)}>
           <div className="modal" style={{maxWidth:360}} onClick={e=>e.stopPropagation()}>
             <div className="modal-hdr"><div className="modal-title">Confirmar eliminación</div></div>
-            <div className="modal-body"><p style={{fontSize:13}}>¿Eliminás esta feria del registro?</p></div>
+            <div className="modal-body"><p style={{fontSize:13}}>¿Eliminás este registro?</p></div>
             <div className="modal-footer"><button className="btn-ghost" onClick={()=>setConfirm(null)}>Cancelar</button><button className="btn-danger" onClick={()=>del(confirm)}>Eliminar</button></div>
           </div>
         </div>
@@ -1243,39 +1299,151 @@ function FeriasSection({ferias,projects}){
   );
 }
 
-/* ── DASHBOARD ── */
-function Dashboard({projects,ferias}){
-  const active=projects.filter(p=>!["completado","perdido"].includes(p.etapa));
-  const completed=projects.filter(p=>p.etapa==="completado");
-  const lost=projects.filter(p=>p.etapa==="perdido");
+/* ─── FERIAS SECTION ─── */
+function FeriasSection({ferias,projects}){
+  const[modal,setModal]=useState(null);
+  const[confirm,setConfirm]=useState(null);
+  const[search,setSearch]=useState("");
+  const blank={nombre:"",ciudad:"",pais:"",fechaInicio:"",fechaFin:"",notas:""};
+  const[form,setForm]=useState(blank);
+  const setF=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const filtered=ferias.data.filter(f=>!search||f.nombre?.toLowerCase().includes(search.toLowerCase())||f.ciudad?.toLowerCase().includes(search.toLowerCase())||f.pais?.toLowerCase().includes(search.toLowerCase()));
+  const openEdit=(f)=>{setForm({nombre:f.nombre||"",ciudad:f.ciudad||"",pais:f.pais||"",fechaInicio:f.fechaInicio||"",fechaFin:f.fechaFin||"",notas:f.notas||""});setModal({mode:"edit",id:f.id});};
+  const save=async()=>{if(modal.mode==="new")await ferias.add({...form});else await ferias.update(modal.id,{...form});setModal(null);};
+  const del=async(id)=>{await ferias.remove(id);setConfirm(null);};
+  const pc=(id,nombre)=>projects.filter(p=>p.feriaId===id||p.feria===nombre).length;
+  const rev=(id,nombre)=>projects.filter(p=>(p.feriaId===id||p.feria===nombre)&&!["no_aceptado"].includes(p.etapa)).reduce((a,p)=>a+(p.ingresos||0),0);
+  return(
+    <div className="page-wide">
+      <div className="filter-bar">
+        <input placeholder="Buscar feria o ciudad..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:1,minWidth:200,maxWidth:360}}/>
+        <button className="btn-dark" onClick={()=>{setForm(blank);setModal({mode:"new"});}}>+ Nueva Feria</button>
+      </div>
+      {filtered.length===0
+        ?<div className="empty"><div className="empty-icon">🎪</div><div className="empty-title">Sin ferias</div><div className="empty-sub">Registrá tu primera feria</div></div>
+        :(
+          <div className="card"><div className="card-body" style={{padding:0}}>
+            <table className="tbl">
+              <thead><tr><th>Feria</th><th>Ciudad / País</th><th>Fechas</th><th>Proyectos</th><th>Revenue</th><th style={{width:90}}></th></tr></thead>
+              <tbody>
+                {filtered.map(f=>{const p=pc(f.id,f.nombre),r=rev(f.id,f.nombre);return(
+                  <tr key={f.id}>
+                    <td><div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>{f.nombre}</div>{f.notas&&<div style={{fontSize:10,color:"#818181"}}>{f.notas}</div>}</td>
+                    <td><div style={{fontWeight:500}}>{f.ciudad||"—"}</div><div style={{fontSize:10,color:"#818181"}}>{f.pais||""}</div></td>
+                    <td style={{fontSize:11}}>{fmtDate(f.fechaInicio)}<br/>{fmtDate(f.fechaFin)}</td>
+                    <td><span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:15}}>{p}</span><span style={{fontSize:10,color:"#818181"}}> proy.</span></td>
+                    <td style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,color:r>0?"#2ecc71":"#818181"}}>{r>0?`USD ${fmt(r)}`:"—"}</td>
+                    <td><div className="tbl-actions"><button className="btn-ghost btn-sm" onClick={()=>openEdit(f)}>Editar</button><button className="btn-danger btn-sm" onClick={()=>setConfirm(f.id)}>✕</button></div></td>
+                  </tr>
+                );})}
+              </tbody>
+            </table>
+          </div></div>
+        )
+      }
+      {modal&&(
+        <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
+          <div className="modal" style={{maxWidth:520}}>
+            <div className="modal-hdr"><div className="modal-title">{modal.mode==="new"?"Nueva Feria":"Editar Feria"}</div><button className="modal-close" onClick={()=>setModal(null)}>✕</button></div>
+            <div className="modal-body">
+              <div className="g2">
+                <div className="fg" style={{gridColumn:"1/-1"}}><label>Nombre de la Feria</label><input value={form.nombre} onChange={e=>setF("nombre",e.target.value)} placeholder="ej. Anuga Cologne 2026"/></div>
+                <div className="fg"><label>Ciudad</label><input value={form.ciudad} onChange={e=>setF("ciudad",e.target.value)} placeholder="ej. Cologne"/></div>
+                <div className="fg"><label>País</label><CountrySelect value={form.pais} onChange={v=>setF("pais",v)}/></div>
+                <div className="fg"><label>Fecha Inicio</label><input type="date" value={form.fechaInicio} onChange={e=>setF("fechaInicio",e.target.value)}/></div>
+                <div className="fg"><label>Fecha Fin</label><input type="date" value={form.fechaFin} onChange={e=>setF("fechaFin",e.target.value)}/></div>
+                <div className="fg" style={{gridColumn:"1/-1"}}><label>Notas</label><textarea value={form.notas} onChange={e=>setF("notas",e.target.value)} rows={2} placeholder="Sector, descripción..."/></div>
+              </div>
+            </div>
+            <div className="modal-footer"><button className="btn-ghost" onClick={()=>setModal(null)}>Cancelar</button><button className="btn-dark" onClick={save} disabled={!form.nombre}>Guardar</button></div>
+          </div>
+        </div>
+      )}
+      {confirm&&(<div className="modal-backdrop" onClick={()=>setConfirm(null)}><div className="modal" style={{maxWidth:360}} onClick={e=>e.stopPropagation()}><div className="modal-hdr"><div className="modal-title">Confirmar eliminación</div></div><div className="modal-body"><p style={{fontSize:13}}>¿Eliminás esta feria?</p></div><div className="modal-footer"><button className="btn-ghost" onClick={()=>setConfirm(null)}>Cancelar</button><button className="btn-danger" onClick={()=>del(confirm)}>Eliminar</button></div></div></div>)}
+    </div>
+  );
+}
+
+/* ─── DASHBOARD ─── */
+function Dashboard({projects,ferias,onTabChange}){
+  const[filterFeria,setFilterFeria]=useState("todas");
+  const[filterYear,setFilterYear]=useState("todos");
+
+  const years=[...new Set(projects.map(p=>p.createdAt?new Date(p.createdAt).getFullYear():new Date().getFullYear()).filter(Boolean))].sort((a,b)=>b-a);
+  const feriaNames=[...new Set(projects.map(p=>p.feria).filter(Boolean))].sort();
+
+  const filtered=projects.filter(p=>{
+    const fOk=filterFeria==="todas"||p.feria===filterFeria;
+    const yr=p.createdAt?new Date(p.createdAt).getFullYear():new Date().getFullYear();
+    const yOk=filterYear==="todos"||String(yr)===filterYear;
+    return fOk&&yOk;
+  });
+
+  const active=filtered.filter(p=>!["completado","no_aceptado"].includes(p.etapa));
+  const completed=filtered.filter(p=>p.etapa==="completado");
+  const lost=filtered.filter(p=>p.etapa==="no_aceptado");
   const revenue=completed.reduce((a,p)=>a+(p.ingresos||0),0);
   const netProfit=completed.reduce((a,p)=>a+(p.neto||0),0);
-  const stageCounts={};STAGES.forEach(s=>{stageCounts[s.id]=projects.filter(p=>p.etapa===s.id).length;});
+
+  const stageCounts={};STAGES.forEach(s=>{stageCounts[s.id]=filtered.filter(p=>p.etapa===s.id).length;});
+
+  // Alerts across ALL projects
+  const today=todayStr();
+  const alertas=projects.filter(p=>p.alertaFecha).map(p=>({...p,overdue:p.alertaFecha<=today})).sort((a,b)=>a.alertaFecha.localeCompare(b.alertaFecha));
 
   const byFeria={};
-  projects.forEach(p=>{if(!p.feria)return;if(!byFeria[p.feria])byFeria[p.feria]={ps:[],destino:p.destino};byFeria[p.feria].ps.push(p);});
+  filtered.forEach(p=>{if(!p.feria)return;if(!byFeria[p.feria])byFeria[p.feria]={ps:[],destino:p.destino};byFeria[p.feria].ps.push(p);});
   const feriaData=Object.entries(byFeria).map(([name,{ps,destino}])=>{
-    const activos=ps.filter(p=>!["perdido"].includes(p.etapa));
+    const activos=ps.filter(p=>!["no_aceptado"].includes(p.etapa));
     const aceptados=ps.filter(p=>ACCEPTED_STAGES.includes(p.etapa));
     const totalIngresos=activos.reduce((a,p)=>a+(p.ingresos||0),0);
     const totalNeto=activos.reduce((a,p)=>a+(p.neto||0),0);
-    const travelFull=ps[0]?((ps[0].flightCostPax||0)*2*(ps[0].personas||2)+(ps[0].hotelCostNight||0)*nightsBetween(ps[0].llegada,ps[0].partida)*rooms(ps[0].personas||2)+(ps[0].dailyCostPax||0)*nightsBetween(ps[0].llegada,ps[0].partida)*(ps[0].personas||2)):0;
-    const travelSaved=aceptados.length>1?travelFull*(aceptados.length-1)/aceptados.length:0;
-    return{name,destino,ps:activos,aceptados,totalIngresos,totalNeto,travelSaved};
+    return{name,destino,ps:activos,aceptados,totalIngresos,totalNeto};
   }).sort((a,b)=>b.totalIngresos-a.totalIngresos);
 
   return(
     <div className="page-wide">
-      <div className="stats-grid">
-        <div className="stat-card dark"><div className="stat-lbl">Activos</div><div className="stat-val">{active.length}</div><div className="stat-sub">{projects.length} proyectos en total</div></div>
-        <div className="stat-card green"><div className="stat-lbl">Completados</div><div className="stat-val">{completed.length}</div><div className="stat-sub">Tasa éxito: {projects.length?Math.round(completed.length/projects.length*100):0}%</div></div>
-        <div className="stat-card gold"><div className="stat-lbl">Revenue (Completados)</div><div className="stat-val" style={{fontSize:18}}>USD {fmt(revenue)}</div><div className="stat-sub">Neto: USD {fmt(netProfit)}</div></div>
-        <div className="stat-card red"><div className="stat-lbl">Perdidos</div><div className="stat-val">{lost.length}</div><div className="stat-sub">{projects.length?Math.round(lost.length/projects.length*100):0}% tasa de pérdida</div></div>
+      {/* Alerts banner */}
+      {alertas.length>0&&(
+        <div style={{marginBottom:16}}>
+          {alertas.slice(0,3).map(a=>(
+            <div key={a.id} className="alert-banner" onClick={()=>onTabChange("proyectos")}>
+              <div className="alert-icon">{a.overdue?"⚠️":"⏰"}</div>
+              <div className="alert-text">
+                <strong>{a.overdue?"ALERTA VENCIDA":"Recordatorio"} — {fmtDate(a.alertaFecha)}</strong>
+                {a.proyecto}: {a.alertaTexto||"Sin descripción"}
+              </div>
+              <div className="alert-badge">{a.overdue?"VENCIDO":"PENDIENTE"}</div>
+            </div>
+          ))}
+          {alertas.length>3&&<div style={{fontSize:10,color:"#818181",textAlign:"center",padding:"6px 0"}}>+{alertas.length-3} alertas más en Proyectos</div>}
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="filter-bar" style={{marginBottom:16}}>
+        <select value={filterFeria} onChange={e=>setFilterFeria(e.target.value)} style={{minWidth:200}}>
+          <option value="todas">Todas las ferias</option>
+          {feriaNames.map(f=><option key={f} value={f}>{f}</option>)}
+        </select>
+        <select value={filterYear} onChange={e=>setFilterYear(e.target.value)} style={{minWidth:120}}>
+          <option value="todos">Todos los años</option>
+          {years.map(y=><option key={y} value={y}>{y}</option>)}
+        </select>
+        {(filterFeria!=="todas"||filterYear!=="todos")&&<button className="btn-ghost" onClick={()=>{setFilterFeria("todas");setFilterYear("todos");}}>✕ Limpiar</button>}
       </div>
-      <div style={{marginBottom:20}}>
-        <div style={{fontSize:"9px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#818181",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Pipeline</div>
+
+      <div className="stats-grid">
+        <div className="stat-card dark"><div className="stat-lbl">Activos</div><div className="stat-val">{active.length}</div><div className="stat-sub">{filtered.length} proyectos filtrados</div></div>
+        <div className="stat-card green"><div className="stat-lbl">Completados</div><div className="stat-val">{completed.length}</div><div className="stat-sub">Éxito: {filtered.length?Math.round(completed.length/filtered.length*100):0}%</div></div>
+        <div className="stat-card gold"><div className="stat-lbl">Revenue Completados</div><div className="stat-val" style={{fontSize:17}}>USD {fmt(revenue)}</div><div className="stat-sub">Neto: USD {fmt(netProfit)}</div></div>
+        <div className="stat-card red"><div className="stat-lbl">No Aceptados</div><div className="stat-val">{lost.length}</div><div className="stat-sub">{filtered.length?Math.round(lost.length/filtered.length*100):0}% tasa</div></div>
+      </div>
+
+      <div style={{marginBottom:18}}>
+        <div style={{fontSize:"8px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#818181",marginBottom:8,fontFamily:"'Poppins',sans-serif"}}>Pipeline</div>
         <div className="pipeline">
-          {STAGES.slice(0,6).map(s=>(
+          {STAGES.slice(0,7).map(s=>(
             <div key={s.id} className="pipe-stage">
               <div className="pipe-lbl">{s.label}</div>
               <div className="pipe-count">{stageCounts[s.id]||0}</div>
@@ -1283,14 +1451,14 @@ function Dashboard({projects,ferias}){
           ))}
         </div>
       </div>
-      <div style={{fontSize:"9px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#818181",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Potencial por Feria</div>
-      {feriaData.length===0&&<div className="empty"><div className="empty-icon">📊</div><div className="empty-title">Sin datos aún</div><div className="empty-sub">Creá proyectos para ver el análisis por feria</div></div>}
+
+      <div style={{fontSize:"8px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#818181",marginBottom:8,fontFamily:"'Poppins',sans-serif"}}>Por Feria</div>
+      {feriaData.length===0&&<div className="empty"><div className="empty-icon">📊</div><div className="empty-title">Sin datos</div><div className="empty-sub">Creá proyectos para ver el análisis</div></div>}
       {feriaData.map(fd=>(
         <div key={fd.name} className="feria-card">
           <div className="feria-hdr">
-            <div><div className="feria-name">{fd.name}</div><div className="feria-meta">{fd.destino} · {fd.ps.length} proyecto{fd.ps.length!==1?"s":""}{fd.aceptados.length>0?` · ${fd.aceptados.length} aceptado${fd.aceptados.length>1?"s":""} (viaje compartido)`:""}</div></div>
+            <div><div className="feria-name">{fd.name}</div><div className="feria-meta">{fd.destino} · {fd.ps.length} proy.{fd.aceptados.length>0?` · ${fd.aceptados.length} aceptados`:""}</div></div>
             <div className="feria-stats">
-              {fd.travelSaved>0&&<div className="feria-stat"><div className="feria-stat-lbl">Ahorro viaje</div><div className="feria-stat-val" style={{color:"#f39c12"}}>+USD {fmt(fd.travelSaved)}</div></div>}
               <div className="feria-stat"><div className="feria-stat-lbl">Ingresos</div><div className="feria-stat-val">{fc(fd.ps[0]?.moneda||"USD",fd.totalIngresos)}</div></div>
               <div className="feria-stat"><div className="feria-stat-lbl">Neto</div><div className="feria-stat-val" style={{color:"#2ecc71"}}>{fc(fd.ps[0]?.moneda||"USD",fd.totalNeto)}</div></div>
             </div>
@@ -1300,13 +1468,14 @@ function Dashboard({projects,ferias}){
               {fd.ps.map(p=>(
                 <div key={p.id} className="client-row">
                   <div>
+                    {p.codigo&&<span className="code-chip project" style={{marginBottom:3,display:"inline-block"}}>{p.codigo}</span>}
                     <div className="client-name-big">{p.proyecto}</div>
-                    <div className="client-meta">{p.feria&&p.clienteNombre?p.clienteNombre:p.cliente||"—"}{p.m2>0?` · ${p.m2}m²`:""} · <span className={`badge ${STAGE_BADGE[p.etapa]||""}`}>{STAGES.find(s=>s.id===p.etapa)?.label||p.etapa}</span></div>
+                    <div className="client-meta-sm">{p.clienteNombre||"—"}{p.m2?` · ${p.m2}m²`:""} · <span className={`badge ${STAGE_BADGE[p.etapa]||""}`}>{STAGES.find(s=>s.id===p.etapa)?.label||p.etapa}</span></div>
                   </div>
                   <div style={{textAlign:"right"}}>
-                    <div className="client-amount">{fc(p.moneda,p.ingresos)}</div>
+                    <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:13}}>{p.ingresos>0?fc(p.moneda,p.ingresos):"Sin cotizar"}</div>
                     {p.m2>0&&p.ingresos>0&&<div style={{fontSize:10,color:"#b1ada2"}}>{fc(p.moneda,p.ingresos/p.m2)}/m²</div>}
-                    <div className="client-profit">Neto: {fc(p.moneda,p.neto)}</div>
+                    {p.neto>0&&<div style={{fontSize:10,color:"#2ecc71"}}>Neto: {fc(p.moneda,p.neto)}</div>}
                   </div>
                 </div>
               ))}
@@ -1318,87 +1487,49 @@ function Dashboard({projects,ferias}){
   );
 }
 
-/* ── PROJECTS LIST ── */
-function ProjectsList({projects,onUpdate,onDelete,clients,ferias}){
-  const[selected,setSelected]=useState(null);
-  const[filter,setFilter]=useState("todos");
-  const[search,setSearch]=useState("");
-  const filtered=projects.filter(p=>{
-    const mS=filter==="todos"||p.etapa===filter;
-    const mQ=!search||p.proyecto?.toLowerCase().includes(search.toLowerCase())||p.feria?.toLowerCase().includes(search.toLowerCase())||p.destino?.toLowerCase().includes(search.toLowerCase())||p.clienteNombre?.toLowerCase().includes(search.toLowerCase());
-    return mS&&mQ;
-  });
-  return(
-    <div className="page-wide">
-      <div style={{display:"flex",gap:12,marginBottom:20,flexWrap:"wrap",alignItems:"center"}}>
-        <input placeholder="Buscar proyecto, feria, cliente, destino..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:1,minWidth:200,maxWidth:360}} />
-        <select value={filter} onChange={e=>setFilter(e.target.value)} style={{width:"auto",minWidth:160}}>
-          <option value="todos">Todas las etapas</option>
-          {STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
-          <option value="perdido">Perdido</option>
-        </select>
-      </div>
-      {filtered.length===0
-        ?<div className="empty"><div className="empty-icon">📁</div><div className="empty-title">Sin proyectos</div><div className="empty-sub">Ajustá el filtro o creá un nuevo proyecto</div></div>
-        :(
-          <div className="card"><div className="card-body" style={{padding:0}}>
-            <table className="tbl">
-              <thead><tr><th>Proyecto</th><th>Cliente</th><th>Feria / Destino</th><th>m²</th><th>Etapa</th><th>Ingreso</th><th>€/m²</th><th>Neto</th></tr></thead>
-              <tbody>
-                {filtered.map(p=>(
-                  <tr key={p.id} style={{cursor:"pointer"}} onClick={()=>setSelected(p)}>
-                    <td><div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:13}}>{p.proyecto}</div></td>
-                    <td style={{fontSize:11,color:"#818181"}}>{p.clienteNombre||p.cliente||"—"}</td>
-                    <td><div style={{fontWeight:500,fontSize:12}}>{p.feria}</div><div style={{fontSize:10,color:"#818181"}}>{p.destino}</div></td>
-                    <td style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600}}>{p.m2>0?`${p.m2}m²`:"—"}</td>
-                    <td><span className={`badge ${STAGE_BADGE[p.etapa]||""}`}>{STAGES.find(s=>s.id===p.etapa)?.label||p.etapa}</span></td>
-                    <td style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,fontSize:12}}>{fc(p.moneda,p.ingresos)}</td>
-                    <td style={{fontSize:11,color:"#b1ada2"}}>{p.m2>0&&p.ingresos>0?fc(p.moneda,p.ingresos/p.m2):"—"}</td>
-                    <td style={{color:"#2ecc71",fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,fontSize:12}}>{fc(p.moneda,p.neto)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div></div>
-        )
-      }
-      {selected&&(
-        <ProjectModal
-          project={selected}
-          onClose={()=>setSelected(null)}
-          onUpdate={async(id,data)=>{await onUpdate(id,data);setSelected(p=>({...p,...data}));}}
-          onDelete={onDelete}
-          allProjects={projects}
-          clients={clients}
-          ferias={ferias}
-        />
-      )}
-    </div>
-  );
-}
-
-/* ── MAIN APP ── */
+/* ─── MAIN APP ─── */
 function App(){
   const{user,loading,login,logout}=useAuth();
   const projects=useCollection("projects");
   const clients=useCollection("clients");
   const ferias=useCollection("ferias");
+  const suppliers=useCollection("suppliers");
   const[tab,setTab]=useState("dashboard");
+
+  // Generate project code on add
+  const handleAddProject=async(data)=>{
+    const seq=projects.data.length+1;
+    const codigo=genProjectCode(seq);
+    await projects.add({...data,codigo});
+  };
+  const handleSaveFromCalc=async(data)=>{
+    if(data.proyectoId){
+      await projects.update(data.proyectoId,data);
+    } else {
+      await handleAddProject(data);
+    }
+    setTab("proyectos");
+  };
+
+  // Alerts count
+  const today=todayStr();
+  const alertCount=projects.data.filter(p=>p.alertaFecha&&p.alertaFecha<=today).length;
+  const upcomingCount=projects.data.filter(p=>p.alertaFecha&&p.alertaFecha>today&&p.alertaFecha<=new Date(Date.now()+7*86400000).toISOString().split("T")[0]).length;
+  const totalAlerts=alertCount+upcomingCount;
 
   if(loading)return(<div style={{minHeight:"100vh",background:"#262626",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:18,letterSpacing:6,color:"#e5e3e0"}}>GALERIE</div></div>);
   if(!user)return<LoginScreen onLogin={login}/>;
 
-  const handleSaveProject=async(data)=>{await projects.add(data);setTab("proyectos");};
-
   const TABS=[
-    {id:"dashboard",   label:"Dashboard",       dot:"#f39c12"},
-    {id:"proyectos",   label:"Proyectos",        dot:"#3498db"},
-    {id:"presupuesto", label:"Nueva Cotización", dot:"#2ecc71"},
-    {id:"ferias",      label:"Ferias",           dot:"#9b59b6"},
-    {id:"clientes",    label:"Clientes",         dot:"#e67e22"},
+    {id:"dashboard",   label:"Dashboard",     dot:"#f39c12"},
+    {id:"proyectos",   label:"Proyectos",      dot:"#3498db"},
+    {id:"cotizacion",  label:"Cotización",     dot:"#2ecc71"},
+    {id:"ferias",      label:"Ferias",         dot:"#9b59b6"},
+    {id:"clientes",    label:"Clientes",       dot:"#e67e22"},
+    {id:"proveedores", label:"Proveedores",    dot:"#e74c3c"},
   ];
 
-  const activeCount=projects.data.filter(p=>!["completado","perdido"].includes(p.etapa)).length;
+  const activeCount=projects.data.filter(p=>!["completado","no_aceptado"].includes(p.etapa)).length;
 
   return(
     <>
@@ -1407,6 +1538,12 @@ function App(){
           <div className="hdr-logo" onClick={()=>setTab("dashboard")}>GALERIE</div>
           <div className="hdr-right">
             {!projects.fbMode&&<div className="hdr-pill">MODO DEMO</div>}
+            {totalAlerts>0&&(
+              <div className={`alert-bell${alertCount>0?" has-overdue":""}`} onClick={()=>setTab("proyectos")} title={`${alertCount} vencidas · ${upcomingCount} próximas`}>
+                <span className="alert-bell-icon">🔔</span>
+                <span className={`alert-bubble ${alertCount>0?"overdue":"upcoming"}`}>{totalAlerts}</span>
+              </div>
+            )}
             <div className="hdr-user">{user.email}</div>
             <button className="btn-logout" onClick={logout}>Salir</button>
           </div>
@@ -1424,30 +1561,33 @@ function App(){
       <div className="hero">
         <div className="hero-ey">Galerie — Gestión de Proyectos</div>
         <h1 className="hero-title">
-          {tab==="dashboard"&&"Dashboard General"}
+          {tab==="dashboard"&&"Dashboard"}
           {tab==="proyectos"&&"Proyectos"}
-          {tab==="presupuesto"&&"Nueva Cotización"}
+          {tab==="cotizacion"&&"Nueva Cotización"}
           {tab==="ferias"&&"Ferias"}
           {tab==="clientes"&&"Clientes"}
+          {tab==="proveedores"&&"Proveedores"}
         </h1>
         <div className="hero-sub">
-          {tab==="dashboard"&&`${activeCount} proyectos activos · ${projects.data.filter(p=>p.etapa==="completado").length} completados · ${clients.data.length} clientes · ${ferias.data.length} ferias`}
-          {tab==="proyectos"&&`${projects.data.length} proyectos registrados`}
-          {tab==="presupuesto"&&"Calculadora con costos desde Montevideo · Uso interno Galerie"}
+          {tab==="dashboard"&&`${activeCount} activos · ${projects.data.filter(p=>p.etapa==="completado").length} completados · ${clients.data.length} clientes · ${ferias.data.length} ferias`}
+          {tab==="proyectos"&&`${projects.data.length} proyectos · ${alertCount>0?alertCount+" alertas vencidas · ":""}${upcomingCount>0?upcomingCount+" próximas 7 días":""}`}
+          {tab==="cotizacion"&&"Seleccioná un proyecto existente o calculá uno nuevo"}
           {tab==="ferias"&&`${ferias.data.length} ferias registradas`}
-          {tab==="clientes"&&`${clients.data.length} clientes registrados`}
+          {tab==="clientes"&&`${clients.data.length} clientes · códigos G00001...`}
+          {tab==="proveedores"&&`${suppliers.data.length} proveedores · códigos S00001...`}
         </div>
       </div>
 
-      {tab==="dashboard"  &&<Dashboard projects={projects.data} ferias={ferias.data}/>}
-      {tab==="proyectos"  &&<ProjectsList projects={projects.data} onUpdate={projects.update} onDelete={projects.remove} clients={clients.data} ferias={ferias.data}/>}
-      {tab==="presupuesto"&&<div className="page"><BudgetCalc onSave={handleSaveProject} allProjects={projects.data} clients={clients.data} ferias={ferias.data}/></div>}
-      {tab==="ferias"     &&<FeriasSection ferias={ferias} projects={projects.data}/>}
-      {tab==="clientes"   &&<ClientsSection clients={clients}/>}
+      {tab==="dashboard"&&<Dashboard projects={projects.data} ferias={ferias.data} onTabChange={setTab}/>}
+      {tab==="proyectos"&&<ProjectsList projects={projects.data} onUpdate={projects.update} onDelete={projects.remove} onAdd={handleAddProject} clients={clients.data} ferias={ferias.data} suppliers={suppliers.data}/>}
+      {tab==="cotizacion"&&<div className="page"><BudgetCalc onSave={handleSaveFromCalc} allProjects={projects.data} clients={clients.data} ferias={ferias.data} suppliers={suppliers.data}/></div>}
+      {tab==="ferias"&&<FeriasSection ferias={ferias} projects={projects.data}/>}
+      {tab==="clientes"&&<EntitySection title="Clientes" icon="👤" collection={clients} codePrefix="G" genCode={genClientCode} nameField="empresa"/>}
+      {tab==="proveedores"&&<EntitySection title="Proveedores" icon="🏭" collection={suppliers} codePrefix="S" genCode={genSupplierCode} extraFields={[{key:"especialidad",label:"Especialidad",placeholder:"ej. Montaje de stands, Carpintería..."}]} nameField="empresa"/>}
 
       <footer className="footer">
         <div className="footer-logo">GALERIE</div>
-        <div className="footer-info">galerie-expo.com · Sistema de Gestión Interno{projects.fbMode?" · Firebase ●":""}</div>
+        <div className="footer-info">galerie-expo.com · Sistema Interno{projects.fbMode?" · Firebase ●":""}</div>
       </footer>
     </>
   );
