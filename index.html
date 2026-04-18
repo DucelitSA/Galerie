@@ -1,1418 +1,1703 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ABPA · SIAL París 2026 — Galerie</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root {
-  --black:   #1a1a1a;
-  --dark:    #222222;
-  --mid:     #2e2e2e;
-  --surface: #333333;
-  --line:    rgba(255,255,255,0.1);
-  --line2:   rgba(255,255,255,0.18);
-  --white:   #f5f2ee;
-  --muted:   #888880;
-  --faint:   #4a4a46;
-  --accent:  #c8b97a;   /* warm gold — drawn from the LOGO warmth */
-  --red:     #c0614a;
-  --amber:   #c49a3a;
-  --green:   #5a8f5a;
-  --blue:    #6a8fb0;
-  --r: 4px;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Galerie — Sistema de Gestión</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+      onSnapshot, query, orderBy, serverTimestamp, getDocs }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--black);
-  color: var(--white);
-  min-height: 100vh;
-  font-size: 13.5px;
-  line-height: 1.65;
-  -webkit-font-smoothing: antialiased;
-}
+    const firebaseConfig = {
+      apiKey: "AIzaSyAv3zzT62Z7hyqRuOz1DGwAVyUTYMszPoA",
+      authDomain: "galerie-a5162.firebaseapp.com",
+      projectId: "galerie-a5162",
+      storageBucket: "galerie-a5162.firebasestorage.app",
+      messagingSenderId: "85043850171",
+      appId: "1:85043850171:web:1d4c322cd6dcc3a698f29e"
+    };
 
-/* ── TOPBAR ── */
-.topbar {
-  background: var(--dark);
-  border-bottom: 1px solid var(--line);
-  padding: 0 36px;
-  height: 58px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 200;
-}
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.brand-mark {
-  font-size: 18px;
-  color: var(--accent);
-  line-height: 1;
-  letter-spacing: -1px;
-}
-.brand-name {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 20px;
-  font-weight: 400;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--white);
-}
-.brand-sep {
-  width: 1px;
-  height: 20px;
-  background: var(--line2);
-}
-.brand-project {
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  font-family: 'DM Mono', monospace;
-}
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-}
-.topstat {
-  text-align: right;
-}
-.topstat-val {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--accent);
-  line-height: 1;
-}
-.topstat-label {
-  font-size: 10px;
-  color: var(--faint);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  margin-top: 2px;
-}
+    let app, auth, db;
+    try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } catch(e) {
+      console.warn("Firebase init failed — running in demo mode");
+    }
 
-/* ── LAYOUT ── */
-.layout { display: flex; min-height: calc(100vh - 58px); }
+    window.__galerie_firebase = { auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+      collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs };
+  </script>
 
-/* ── SIDEBAR ── */
-.sidebar {
-  width: 210px;
-  flex-shrink: 0;
-  background: var(--dark);
-  border-right: 1px solid var(--line);
-  padding: 28px 0;
-  position: sticky;
-  top: 58px;
-  height: calc(100vh - 58px);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-.sidebar-logo-row {
-  padding: 0 20px 24px;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 14px;
-}
-.sidebar-eyebrow {
-  font-size: 10px;
-  color: var(--faint);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  font-family: 'DM Mono', monospace;
-  margin-bottom: 4px;
-}
-.sidebar-client {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--white);
-  letter-spacing: 0.5px;
-}
-.sidebar-event {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 2px;
-}
-.nav-group-label {
-  padding: 8px 20px 4px;
-  font-size: 9.5px;
-  color: var(--faint);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-family: 'DM Mono', monospace;
-}
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 20px;
-  cursor: pointer;
-  color: var(--muted);
-  font-size: 12.5px;
-  border-left: 2px solid transparent;
-  transition: all 0.14s;
-  user-select: none;
-}
-.nav-item:hover { background: var(--mid); color: var(--white); }
-.nav-item.active {
-  background: var(--mid);
-  color: var(--white);
-  border-left-color: var(--accent);
-  font-weight: 500;
-}
-.nav-sq { font-size: 8px; color: var(--accent); flex-shrink: 0; }
-.sidebar-footer {
-  margin-top: auto;
-  padding: 18px 20px 0;
-  border-top: 1px solid var(--line);
-  font-size: 10px;
-  color: var(--faint);
-  line-height: 1.7;
-}
+  <!-- React -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-/* ── MAIN ── */
-.main { flex: 1; padding: 36px 40px; overflow-x: hidden; max-width: 960px; }
-.panel { display: none; animation: fadeIn 0.2s ease; }
-.panel.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: #f0eeeb; font-family: 'Poppins', sans-serif; font-weight: 300; color: #262626; min-height: 100vh; }
+    #root { min-height: 100vh; }
 
-.panel-eyebrow {
-  font-size: 10px;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  font-family: 'DM Mono', monospace;
-  margin-bottom: 8px;
-}
-.panel-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 30px;
-  font-weight: 400;
-  letter-spacing: 0.2px;
-  margin-bottom: 6px;
-  line-height: 1.2;
-}
-.panel-sub {
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 32px;
-  max-width: 580px;
-  line-height: 1.7;
-}
-.divider {
-  width: 32px;
-  height: 1px;
-  background: var(--accent);
-  margin: 14px 0 28px;
-}
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #f0eeeb; }
+    ::-webkit-scrollbar-thumb { background: #b1ada2; }
 
-/* ── STAT ROW ── */
-.stat-row {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  overflow: hidden;
-  margin-bottom: 32px;
-}
-.stat-cell {
-  background: var(--dark);
-  padding: 16px 14px;
-  text-align: center;
-}
-.stat-val {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 26px;
-  font-weight: 500;
-  color: var(--accent);
-  line-height: 1;
-}
-.stat-label {
-  font-size: 10px;
-  color: var(--faint);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-top: 5px;
-}
+    /* ── STICKY SHELL ── */
+    .sticky-shell { position: sticky; top: 0; z-index: 200; }
 
-/* ── PROGRESS ── */
-.progress-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-  background: var(--dark);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  margin-bottom: 28px;
-}
-.progress-label {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-}
-.progress-track {
-  flex: 1;
-  height: 2px;
-  background: var(--mid);
-}
-.progress-fill {
-  height: 100%;
-  background: var(--accent);
-  transition: width 0.4s ease;
-}
-.progress-pct {
-  font-family: 'DM Mono', monospace;
-  font-size: 12px;
-  color: var(--accent);
-  min-width: 34px;
-  text-align: right;
-}
+    /* ── HEADER ── */
+    .hdr { background: #262626; height: 64px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #b1ada2; }
+    .hdr-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 6px; color: #e5e3e0; text-transform: uppercase; cursor: pointer; }
+    .hdr-right { display: flex; align-items: center; gap: 16px; }
+    .hdr-pill { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #b1ada2; border: 1px solid #b1ada244; padding: 5px 14px; font-family: 'Poppins', sans-serif; }
+    .hdr-user { font-size: 10px; color: #818181; letter-spacing: 1px; }
+    .btn-logout { background: transparent; border: 1px solid #3a3a3a; color: #818181; padding: 6px 14px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; font-family: 'Poppins', sans-serif; transition: all .15s; }
+    .btn-logout:hover { border-color: #818181; color: #e5e3e0; }
 
-/* ── AREA BLOCKS ── */
-.area-block { margin-bottom: 2px; }
-.area-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 18px;
-  background: var(--dark);
-  border: 1px solid var(--line);
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.12s;
-}
-.area-block.open .area-header { border-bottom-color: transparent; }
-.area-header:hover { background: var(--mid); }
-.area-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.area-label {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 16px;
-  font-weight: 500;
-  flex: 1;
-  letter-spacing: 0.2px;
-}
-.area-badge {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-weight: 400;
-  font-family: 'DM Mono', monospace;
-}
-.ab-amber { background: rgba(196,154,58,0.12); color: var(--amber); }
-.ab-green { background: rgba(90,143,90,0.12); color: var(--green); }
-.ab-blue  { background: rgba(106,143,176,0.12); color: var(--blue); }
-.ab-red   { background: rgba(192,97,74,0.12); color: var(--red); }
-.ab-muted { background: rgba(255,255,255,0.06); color: var(--muted); }
-.area-count {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--faint);
-}
-.area-chevron {
-  font-size: 10px;
-  color: var(--faint);
-  transition: transform 0.18s;
-}
-.area-block.open .area-chevron { transform: rotate(90deg); }
+    /* ── NAV ── */
+    .nav { background: #1e1e1e; border-bottom: 1px solid #2a2a2a; display: flex; overflow-x: auto; }
+    .nav-item { padding: 0 28px; height: 44px; display: flex; align-items: center; gap: 8px; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap; font-family: 'Poppins', sans-serif; }
+    .nav-item:hover { color: #b1ada2; }
+    .nav-item.active { color: #e5e3e0; border-bottom-color: #b1ada2; }
+    .nav-dot { width: 6px; height: 6px; border-radius: 50%; }
 
-.area-body {
-  display: none;
-  border: 1px solid var(--line);
-  border-top: none;
-}
-.area-block.open .area-body { display: block; }
+    /* ── LOGIN ── */
+    .login-wrap { min-height: 100vh; background: #262626; display: flex; align-items: center; justify-content: center; }
+    .login-box { width: 380px; }
+    .login-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: 8px; color: #e5e3e0; text-align: center; margin-bottom: 6px; }
+    .login-sub { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #818181; text-align: center; margin-bottom: 48px; font-family: 'Poppins', sans-serif; }
+    .login-field { margin-bottom: 14px; }
+    .login-label { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; display: block; margin-bottom: 6px; font-family: 'Poppins', sans-serif; }
+    .login-input { width: 100%; background: #1a1a1a; border: 1px solid #3a3a3a; color: #e5e3e0; padding: 13px 16px; font-family: 'Poppins', sans-serif; font-size: 13px; outline: none; border-radius: 0; }
+    .login-input:focus { border-color: #b1ada2; }
+    .login-btn { width: 100%; background: #e5e3e0; color: #262626; border: none; padding: 16px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; cursor: pointer; margin-top: 8px; transition: opacity .15s; }
+    .login-btn:hover { opacity: .88; }
+    .login-error { background: #3a1a1a; border: 1px solid #e74c3c44; color: #e74c3c; padding: 10px 14px; font-size: 11px; margin-top: 12px; text-align: center; }
 
-.sec-label {
-  padding: 8px 18px 6px;
-  font-size: 9.5px;
-  color: var(--faint);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  font-family: 'DM Mono', monospace;
-  background: var(--mid);
-  border-bottom: 1px solid var(--line);
-}
-.check-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 9px 18px;
-  border-bottom: 1px solid var(--line);
-  background: var(--dark);
-  transition: background 0.1s;
-}
-.check-row:last-child { border-bottom: none; }
-.check-row:hover { background: var(--mid); }
-.check-row input[type=checkbox] {
-  margin-top: 2px;
-  flex-shrink: 0;
-  cursor: pointer;
-  accent-color: var(--accent);
-  width: 14px;
-  height: 14px;
-}
-.check-row label {
-  font-size: 13px;
-  cursor: pointer;
-  line-height: 1.55;
-  color: var(--white);
-}
-.check-row.done label {
-  text-decoration: line-through;
-  color: var(--faint);
-}
+    /* ── LAYOUT ── */
+    .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+    .page-wide { max-width: 1300px; margin: 0 auto; padding: 32px 24px 80px; }
 
-/* ── BUDGET ── */
-.kpi-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  overflow: hidden;
-  margin-bottom: 28px;
-}
-.kpi-cell {
-  background: var(--dark);
-  padding: 20px 24px;
-}
-.kpi-cell.accent-border { border-left: 2px solid var(--accent); }
-.kpi-eyebrow { font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; font-family: 'DM Mono', monospace; }
-.kpi-val {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 32px;
-  font-weight: 500;
-  line-height: 1;
-}
-.kpi-val.low { color: var(--green); }
-.kpi-val.high { color: var(--red); }
-.kpi-val.neutral { color: var(--accent); }
-.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 5px; }
+    /* ── HERO ── */
+    .hero { background: #262626; padding: 40px 40px 32px; }
+    .hero-ey { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #b1ada2; margin-bottom: 8px; }
+    .hero-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 32px; color: #e5e3e0; line-height: 1.1; }
+    .hero-sub { font-size: 12px; color: #818181; margin-top: 8px; }
 
-.budget-table-wrap {
-  background: var(--dark);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  padding: 0 24px;
-  margin-bottom: 16px;
-}
-table.bt { width: 100%; border-collapse: collapse; }
-table.bt tr { border-bottom: 1px solid var(--line); }
-table.bt tr:last-child { border-bottom: none; }
-table.bt td { padding: 11px 0; font-size: 13px; }
-table.bt td:first-child { color: var(--muted); padding-right: 20px; }
-table.bt td:last-child { text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; white-space: nowrap; }
-table.bt tr.driver td { }
-table.bt tr.driver td:first-child { color: var(--white); }
-table.bt tr.driver td:last-child { color: var(--red); }
-table.bt tr.total-row td { border-top: 1px solid var(--line2); padding-top: 16px; font-weight: 500; }
-table.bt tr.total-row td:first-child { color: var(--white); font-size: 14px; }
-table.bt tr.total-row td:last-child { color: var(--accent); font-size: 14px; }
+    /* ── CARDS ── */
+    .card { background: #fff; border: 1px solid #e5e3e0; margin-bottom: 14px; }
+    .card-hdr { background: #f0eeeb; padding: 14px 24px; border-bottom: 1px solid #e5e3e0; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .card-hdr-left { display: flex; align-items: center; gap: 14px; }
+    .step { width: 26px; height: 26px; background: #262626; color: #e5e3e0; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .card-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: #262626; }
+    .card-body { padding: 24px; }
 
-/* ── CALLOUT ── */
-.callout {
-  border-left: 2px solid var(--accent);
-  padding: 14px 18px;
-  background: rgba(200,185,122,0.04);
-  border-radius: 0 var(--r) var(--r) 0;
-  margin-top: 14px;
-}
-.callout p { font-size: 12.5px; color: var(--muted); line-height: 1.75; }
-.callout p strong { color: var(--white); font-weight: 500; }
+    /* ── STAT CARDS ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border: 1px solid #e5e3e0; padding: 20px 22px; }
+    .stat-lbl { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; margin-bottom: 10px; font-family: 'Poppins', sans-serif; }
+    .stat-val { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 28px; color: #262626; line-height: 1; }
+    .stat-sub { font-size: 10px; color: #b1ada2; margin-top: 6px; }
+    .stat-card.dark { background: #262626; border-color: #262626; }
+    .stat-card.dark .stat-lbl { color: #818181; }
+    .stat-card.dark .stat-val { color: #e5e3e0; }
+    .stat-card.dark .stat-sub { color: #818181; }
+    .stat-card.green { border-left: 3px solid #2ecc71; }
+    .stat-card.red { border-left: 3px solid #e74c3c; }
+    .stat-card.gold { border-left: 3px solid #f39c12; }
 
-/* ── TIMELINE ── */
-.tl-item { display: flex; gap: 0; }
-.tl-spine {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 30px;
-  flex-shrink: 0;
-}
-.tl-node {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 5px;
-}
-.tl-thread {
-  flex: 1;
-  width: 1px;
-  background: var(--line2);
-  margin: 3px 0;
-  min-height: 16px;
-}
-.tl-body { flex: 1; padding: 0 0 26px 6px; }
-.tl-date {
-  font-size: 10px;
-  color: var(--faint);
-  font-family: 'DM Mono', monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin-bottom: 3px;
-}
-.tl-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 17px;
-  font-weight: 500;
-  margin-bottom: 5px;
-  letter-spacing: 0.1px;
-}
-.tl-desc { font-size: 12.5px; color: var(--muted); line-height: 1.65; }
-.tl-critical { border-left: 1px solid var(--red); padding-left: 12px; }
+    /* ── FERIAS DASHBOARD ── */
+    .feria-card { background: #fff; border: 1px solid #e5e3e0; margin-bottom: 14px; overflow: hidden; }
+    .feria-hdr { background: #262626; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .feria-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 15px; color: #e5e3e0; letter-spacing: 1px; }
+    .feria-meta { font-size: 10px; color: #818181; margin-top: 3px; }
+    .feria-stats { display: flex; gap: 20px; align-items: center; }
+    .feria-stat { text-align: right; }
+    .feria-stat-lbl { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #818181; }
+    .feria-stat-val { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 14px; color: #e5e3e0; }
+    .feria-body { padding: 16px 24px; }
+    .clients-list { display: flex; flex-direction: column; gap: 8px; }
+    .client-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f0eeeb; border: 1px solid #e5e3e0; }
+    .client-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 12px; }
+    .client-meta { font-size: 10px; color: #818181; margin-top: 2px; }
+    .client-amount { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 13px; color: #262626; }
+    .client-profit { font-size: 10px; color: #2ecc71; text-align: right; }
+    .saving-badge { background: #f39c1222; border: 1px solid #f39c1244; color: #f39c12; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; font-family: 'Poppins', sans-serif; }
 
-/* ── PROVIDERS ── */
-.provider-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-.provider-card {
-  background: var(--dark);
-  padding: 20px 22px;
-  transition: background 0.12s;
-}
-.provider-card:hover { background: var(--mid); }
-.pc-num {
-  font-size: 10px;
-  color: var(--accent);
-  font-family: 'DM Mono', monospace;
-  margin-bottom: 6px;
-  letter-spacing: 0.5px;
-}
-.pc-name {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 18px;
-  font-weight: 500;
-  margin-bottom: 6px;
-}
-.pc-meta { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
-.pc-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px; }
-.pc-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  color: var(--accent);
-  text-decoration: none;
-  border-bottom: 1px solid rgba(200,185,122,0.3);
-  padding-bottom: 1px;
-  transition: border-color 0.12s;
-  font-family: 'DM Mono', monospace;
-}
-.pc-link:hover { border-color: var(--accent); }
-.pc-contact { font-size: 11px; color: var(--faint); margin-top: 5px; font-family: 'DM Mono', monospace; }
-.provider-full {
-  background: var(--dark);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  padding: 20px 22px;
-  margin-bottom: 1px;
-  transition: background 0.12s;
-}
-.provider-full:hover { background: var(--mid); }
+    /* ── PROJECTS TABLE ── */
+    .proj-table { width: 100%; border-collapse: collapse; }
+    .proj-table th { background: #f0eeeb; padding: 10px 14px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #818181; text-align: left; border-bottom: 1px solid #e5e3e0; font-family: 'Poppins', sans-serif; font-weight: 500; }
+    .proj-table td { padding: 12px 14px; border-bottom: 1px solid #f0eeeb; font-size: 12px; }
+    .proj-table tr:hover td { background: #fafaf9; }
+    .proj-table tr:last-child td { border-bottom: none; }
 
-/* ── DESIGN ── */
-.design-card {
-  background: var(--dark);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  padding: 24px;
-  margin-bottom: 12px;
-  transition: border-color 0.14s;
-}
-.design-card:hover { border-color: var(--line2); }
-.design-card.featured { border-color: rgba(200,185,122,0.35); }
-.dc-num { font-size: 10px; color: var(--faint); font-family: 'DM Mono', monospace; margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
-.dc-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 21px;
-  font-weight: 500;
-  margin-bottom: 12px;
-  letter-spacing: 0.1px;
-}
-.dc-body { font-size: 13px; color: var(--muted); line-height: 1.75; }
-.dc-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
-.dc-tag {
-  font-size: 10px;
-  padding: 3px 9px;
-  border-radius: 20px;
-  border: 1px solid var(--line2);
-  color: var(--faint);
-  font-family: 'DM Mono', monospace;
-}
-.dc-tag.featured { border-color: rgba(200,185,122,0.4); color: var(--accent); }
+    /* ── STATUS BADGES ── */
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; font-family: 'Poppins', sans-serif; border: 1px solid; white-space: nowrap; }
+    .badge-exploration { background: #f0eeeb; border-color: #b1ada2; color: #818181; }
+    .badge-contact { background: #fff8e6; border-color: #f39c1266; color: #f39c12; }
+    .badge-design { background: #e6f0ff; border-color: #3498db44; color: #3498db; }
+    .badge-quote { background: #f0e6ff; border-color: #9b59b644; color: #9b59b6; }
+    .badge-accepted { background: #e6ffe6; border-color: #2ecc7144; color: #2ecc71; }
+    .badge-closed { background: #ffe6e6; border-color: #e74c3c44; color: #e74c3c; }
+    .badge-production { background: #fff3e6; border-color: #e67e2244; color: #e67e22; }
+    .badge-completed { background: #262626; border-color: #262626; color: #e5e3e0; }
 
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
+    /* ── PIPELINE STAGES ── */
+    .pipeline { display: flex; align-items: stretch; gap: 0; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; }
+    .pipe-stage { flex: 1; min-width: 120px; border: 1px solid #e5e3e0; border-right: none; background: #fff; padding: 14px 16px; position: relative; cursor: pointer; transition: background .15s; }
+    .pipe-stage:last-child { border-right: 1px solid #e5e3e0; }
+    .pipe-stage.active { background: #262626; }
+    .pipe-stage::after { content: '›'; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #b1ada2; z-index: 1; }
+    .pipe-stage:last-child::after { display: none; }
+    .pipe-lbl { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #818181; margin-bottom: 6px; font-family: 'Poppins', sans-serif; }
+    .pipe-count { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 24px; color: #262626; }
+    .pipe-stage.active .pipe-lbl { color: #818181; }
+    .pipe-stage.active .pipe-count { color: #e5e3e0; }
+    .pipe-sub { font-size: 9px; color: #b1ada2; margin-top: 3px; }
+    .pipe-stage.active .pipe-sub { color: #818181; }
 
-/* ── RESPONSIVE ── */
-@media (max-width: 700px) {
-  .sidebar { display: none; }
-  .main { padding: 24px 18px; }
-  .topbar { padding: 0 18px; }
-  .topbar-right { display: none; }
-  .stat-row { grid-template-columns: repeat(3,1fr); }
-  .kpi-grid { grid-template-columns: 1fr; }
-}
-</style>
+    /* ── FORMS ── */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .g4 { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 14px; }
+    .fg { display: flex; flex-direction: column; gap: 5px; }
+    label { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; font-weight: 500; font-family: 'Poppins', sans-serif; }
+    input, select, textarea { font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 400; color: #262626; background: #f0eeeb; border: 1px solid #e5e3e0; padding: 10px 13px; width: 100%; outline: none; transition: border-color .15s, background .15s; -webkit-appearance: none; appearance: none; border-radius: 0; }
+    input:focus, select:focus, textarea:focus { border-color: #818181; background: #fff; }
+    textarea { resize: vertical; min-height: 80px; }
+    .pfx { display: flex; }
+    .pfx-tag { background: #e5e3e0; border: 1px solid #e5e3e0; border-right: none; padding: 10px 12px; font-size: 11px; color: #818181; display: flex; align-items: center; white-space: nowrap; font-family: 'Poppins', sans-serif; flex-shrink: 0; }
+    .pfx input { border-left: none; }
+    .sfx { display: flex; }
+    .sfx input { border-right: none; }
+    .sfx-tag { background: #e5e3e0; border: 1px solid #e5e3e0; border-left: none; padding: 10px 12px; font-size: 11px; color: #818181; display: flex; align-items: center; font-family: 'Poppins', sans-serif; }
+    .hint { font-size: 10px; color: #b1ada2; font-style: italic; margin-top: 3px; }
+    .subtotal { font-size: 11px; color: #818181; font-style: italic; margin-top: 10px; }
+    .subtotal strong { color: #262626; font-style: normal; font-weight: 500; }
+
+    /* ── BUTTONS ── */
+    .btn-dark { background: #262626; color: #e5e3e0; border: none; padding: 11px 24px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background .15s; }
+    .btn-dark:hover { background: #1a1a1a; }
+    .btn-dark:disabled { background: #b1ada2; cursor: not-allowed; }
+    .btn-warm { background: #b1ada2; color: #fff; border: none; padding: 11px 22px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: opacity .15s; }
+    .btn-warm:hover { opacity: .85; }
+    .btn-ghost { background: transparent; color: #818181; border: 1px solid #e5e3e0; padding: 10px 18px; font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: border-color .15s; }
+    .btn-ghost:hover { border-color: #818181; color: #262626; }
+    .btn-danger { background: #e74c3c22; color: #e74c3c; border: 1px solid #e74c3c44; padding: 8px 16px; font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all .15s; }
+    .btn-danger:hover { background: #e74c3c; color: #fff; }
+    .btn-success { background: #2ecc7122; color: #2ecc71; border: 1px solid #2ecc7144; padding: 8px 16px; font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all .15s; }
+    .btn-success:hover { background: #2ecc71; color: #fff; }
+
+    /* ── MODAL ── */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .modal { background: #fff; width: 100%; max-width: 720px; max-height: 90vh; overflow-y: auto; }
+    .modal-hdr { background: #262626; padding: 20px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; }
+    .modal-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 14px; color: #e5e3e0; letter-spacing: 2px; text-transform: uppercase; }
+    .modal-close { background: none; border: none; color: #818181; font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1; }
+    .modal-close:hover { color: #e5e3e0; }
+    .modal-body { padding: 28px; }
+    .modal-footer { padding: 16px 28px; border-top: 1px solid #e5e3e0; display: flex; gap: 12px; justify-content: flex-end; background: #f0eeeb; }
+
+    /* ── SECTION DIVIDER ── */
+    .div-label { text-align: center; margin: 28px 0; position: relative; }
+    .div-label::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e5e3e0; }
+    .div-label span { position: relative; background: #f0eeeb; padding: 0 16px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #818181; }
+
+    /* ── RESULTS ── */
+    .results { background: #262626; color: #e5e3e0; }
+    .res-top { padding: 28px 36px 20px; border-bottom: 1px solid #3a3a3a; }
+    .res-ey { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #b1ada2; margin-bottom: 6px; font-family: 'Poppins', sans-serif; }
+    .res-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.3; }
+    .res-sub { font-size: 12px; color: #818181; margin-top: 4px; }
+    .res-body { padding: 0 36px 28px; }
+    .res-sect { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 6px; border-bottom: 1px solid #3a3a3a; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #b1ada2; }
+    .res-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #2a2a2a; font-size: 12px; }
+    .res-row.ind { padding-left: 16px; color: rgba(255,255,255,.45); font-size: 11px; }
+    .res-amt { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500; font-size: 13px; }
+    .res-amt.neg { color: #e74c3c; }
+    .res-amt.pos { color: #2ecc71; }
+    .res-amt.gold { color: #f39c12; }
+    .res-neto { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; margin-top: 8px; }
+    .res-neto span:first-child { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #e5e3e0; }
+    .big-box { margin: 0 36px 24px; border: 1px solid #3a3a3a; padding: 28px; text-align: center; position: relative; overflow: hidden; }
+    .big-box::before { content: 'GALERIE'; position: absolute; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 80px; letter-spacing: 10px; color: rgba(255,255,255,.025); top: 50%; left: 50%; transform: translate(-50%,-50%); white-space: nowrap; pointer-events: none; }
+    .big-lbl { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #b1ada2; font-family: 'Poppins', sans-serif; margin-bottom: 8px; }
+    .big-val { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 52px; color: #e5e3e0; line-height: 1; letter-spacing: -1px; }
+    .big-sub { font-size: 10px; color: #818181; margin-top: 6px; }
+    .res-tags { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 36px 20px; }
+    .tag { background: rgba(255,255,255,.06); border: 1px solid #3a3a3a; color: #b1ada2; font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: 1px; padding: 4px 12px; }
+    .res-actions { padding: 16px 36px 28px; border-top: 1px solid #2a2a2a; display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-ghost-inv { background: transparent; color: rgba(255,255,255,.5); border: 1px solid #3a3a3a; padding: 11px 20px; font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-ghost-inv:hover { border-color: #818181; color: #e5e3e0; }
+
+    /* ── TRAVEL BADGES ── */
+    .tbadges { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 18px; }
+    .tbadge { border: 1px solid #e5e3e0; padding: 14px 16px; background: #f0eeeb; }
+    .tb-lbl { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #818181; font-family: 'Poppins', sans-serif; margin-bottom: 6px; }
+    .tb-val { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 18px; color: #262626; }
+    .tb-sub { font-size: 10px; color: #b1ada2; margin-top: 2px; }
+
+    /* ── NOTE BOX ── */
+    .note-box { background: #f0eeeb; border-left: 3px solid #b1ada2; padding: 12px 16px; margin-top: 12px; font-size: 11px; color: #262626; line-height: 1.6; }
+    .note-box strong { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #b1ada2; display: block; margin-bottom: 3px; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .note-box.savings { border-left-color: #f39c12; background: #fff9f0; }
+    .note-box.savings strong { color: #f39c12; }
+
+    /* ── STAGE TRACKER ── */
+    .stage-track { display: flex; align-items: center; gap: 0; margin: 16px 0; }
+    .stage-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; cursor: pointer; }
+    .stage-item::after { content: ''; position: absolute; top: 11px; left: calc(50% + 12px); right: calc(-50% + 12px); height: 2px; background: #e5e3e0; z-index: 0; }
+    .stage-item:last-child::after { display: none; }
+    .stage-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #e5e3e0; background: #fff; z-index: 1; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; transition: all .2s; }
+    .stage-dot.done { background: #2ecc71; border-color: #2ecc71; color: #fff; }
+    .stage-dot.current { background: #262626; border-color: #262626; color: #fff; }
+    .stage-dot.failed { background: #e74c3c; border-color: #e74c3c; color: #fff; }
+    .stage-lbl { font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: #818181; text-align: center; font-family: 'Poppins', sans-serif; }
+    .stage-item.done .stage-lbl { color: #2ecc71; }
+    .stage-item.current .stage-lbl { color: #262626; font-weight: 600; }
+    .stage-item.failed .stage-lbl { color: #e74c3c; }
+
+    /* ── FOOTER ── */
+    .footer { background: #262626; border-top: 2px solid #b1ada2; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 12px; letter-spacing: 5px; color: #b1ada2; }
+    .footer-info { font-size: 10px; color: #818181; text-align: right; line-height: 1.6; }
+
+    /* ── EMPTY STATE ── */
+    .empty { text-align: center; padding: 60px 24px; }
+    .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: .3; }
+    .empty-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 14px; color: #818181; margin-bottom: 6px; letter-spacing: 1px; }
+    .empty-sub { font-size: 12px; color: #b1ada2; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .hdr, .hero { padding-left: 20px; padding-right: 20px; }
+      .hero-title { font-size: 26px; }
+      .page, .page-wide { padding: 20px 16px 60px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .g2, .g3, .g4, .tbadges { grid-template-columns: 1fr; }
+      .stage-track { overflow-x: auto; }
+      .footer { padding: 16px 20px; flex-direction: column; gap: 12px; text-align: center; }
+      .footer-info { text-align: center; }
+    }
+    @media (max-width: 500px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
+<div id="root"></div>
 
-<!-- TOPBAR -->
-<div class="topbar">
-  <div class="brand">
-    <div class="brand-mark">■</div>
-    <div class="brand-name">Galerie</div>
-    <div class="brand-sep"></div>
-    <div class="brand-project">ABPA · SIAL París 2026</div>
-  </div>
-  <div class="topbar-right">
-    <div class="topstat"><div class="topstat-val">677</div><div class="topstat-label">m² totales</div></div>
-    <div class="topstat"><div class="topstat-val">4</div><div class="topstat-label">islas</div></div>
-    <div class="topstat"><div class="topstat-val">24</div><div class="topstat-label">co-expositores</div></div>
-    <div class="topstat"><div class="topstat-val">43</div><div class="topstat-label">personas</div></div>
-  </div>
-</div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
 
-<div class="layout">
+/* ══════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════ */
+const fmt = (n, d=0) => n==null||isNaN(n) ? "—"
+  : new Intl.NumberFormat("es-UY",{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
+const fc = (cur, n) => `${cur} ${fmt(n)}`;
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="sidebar-logo-row">
-      <div class="sidebar-eyebrow">Proyecto</div>
-      <div class="sidebar-client">ABPA</div>
-      <div class="sidebar-event">SIAL París · 17–21 oct 2026</div>
-    </div>
+const STAGES = [
+  { id: "exploracion",  label: "Exploración",   color: "#818181" },
+  { id: "contacto",     label: "Contacto",      color: "#f39c12" },
+  { id: "diseno",       label: "Diseño",        color: "#3498db" },
+  { id: "cotizacion",   label: "Cotización",    color: "#9b59b6" },
+  { id: "negociacion",  label: "Negociación",   color: "#e67e22" },
+  { id: "aceptado",     label: "Aceptado",      color: "#2ecc71" },
+  { id: "produccion",   label: "En Producción", color: "#e67e22" },
+  { id: "completado",   label: "Completado",    color: "#262626" },
+];
+const LOST_STAGE = { id: "perdido", label: "Perdido", color: "#e74c3c" };
 
-    <div class="nav-group-label">Módulos</div>
-    <div class="nav-item active" onclick="showPanel('checklist',this)">
-      <span class="nav-sq">■</span>Checklist
-    </div>
-    <div class="nav-item" onclick="showPanel('budget',this)">
-      <span class="nav-sq">■</span>Presupuesto
-    </div>
-    <div class="nav-item" onclick="showPanel('timeline',this)">
-      <span class="nav-sq">■</span>Camino crítico
-    </div>
-    <div class="nav-item" onclick="showPanel('providers',this)">
-      <span class="nav-sq">■</span>Proveedores
-    </div>
-    <div class="nav-item" onclick="showPanel('design',this)">
-      <span class="nav-sq">■</span>Ideas de diseño
-    </div>
-    <div class="nav-item" onclick="showPanel('staffing',this)">
-      <span class="nav-sq">■</span>Staffing
-    </div>
+const STAGE_BADGE = {
+  exploracion: "badge-exploration",
+  contacto: "badge-contact",
+  diseno: "badge-design",
+  cotizacion: "badge-quote",
+  negociacion: "badge-contact",
+  aceptado: "badge-accepted",
+  produccion: "badge-production",
+  completado: "badge-completed",
+  perdido: "badge-closed",
+};
 
-    <div class="sidebar-footer">
-      Generado por Galerie<br>
-      info@galerie-expo.com<br>
-      galerie-expo.com
-    </div>
-  </div>
+/*
+ * FLIGHT COST ENGINE — desde Montevideo (MVD/EZE)
+ * Lógica: tarifa base por región + ajuste por hub de conexión + factor ciudad
+ * Fuente: promedios reales de búsquedas GDS en clase económica, ida y vuelta,
+ * con anticipación típica de 45–90 días, temporada media.
+ * Zona horaria y conexiones: MVD vuela vía Buenos Aires (EZE) o São Paulo (GRU)
+ * hacia Europa y resto del mundo, con 1–2 escalas.
+ *
+ * Estructura: { f: vuelo_pp_irt, h: hotel_noche, d: viaticos_dia_pp }
+ * f = promedio USD por persona, ida y vuelta (incluye tasas)
+ * h = promedio USD por habitación por noche (hotel 3–4 estrellas, feria)
+ * d = viáticos diarios por persona (comida + transporte local)
+ */
 
-  <!-- MAIN -->
-  <div class="main">
+// Factor de temporada feria: la mayoría de ferias son sep–nov (alta) o feb–may
+// Factor de congestión de feria: +15% sobre precio base en semanas de feria grande
+const FERIA_FACTOR = 1.15;
 
-    <!-- ══ CHECKLIST ══ -->
-    <div id="panel-checklist" class="panel active">
-      <div class="panel-eyebrow">■ Términos de referencia — traducidos</div>
-      <div class="panel-title">Checklist de requerimientos</div>
-      <div class="divider"></div>
-      <div class="panel-sub">Marcá cada ítem a medida que se confirma con el montador. El progreso se actualiza en tiempo real.</div>
+// Tarifas base por región desde MVD/EZE (USD, ida y vuelta por persona)
+const REGION_BASE = {
+  sudamerica_cercana: { f: 380, h: 65,  d: 48 },  // Santiago, Lima, Asunción, BsAs
+  sudamerica_norte:   { f: 520, h: 72,  d: 55 },  // Bogotá, Medellín, Quito, Lima Norte
+  caribe_mexico:      { f: 620, h: 95,  d: 68 },  // México DF, Cancún, Panamá
+  usa_este:           { f: 820, h: 165, d: 110 }, // NYC, Miami, Boston, Atlanta
+  usa_centro:         { f: 850, h: 140, d: 98 },  // Chicago, Dallas, Houston
+  usa_oeste:          { f: 880, h: 160, d: 108 }, // LA, SF, Seattle
+  canada:             { f: 870, h: 135, d: 96 },  // Toronto, Montreal, Vancouver
+  europa_oeste_hub:   { f: 980, h: 115, d: 90 },  // Madrid, Lisboa, Paris, Frankfurt (hubs directos)
+  europa_oeste:       { f: 1020, h: 105, d: 88 }, // Roma, Milan, Barcelona, Amsterdam
+  europa_norte:       { f: 1050, h: 120, d: 100 },// Londres, Ámsterdam, Copenhague, Estocolmo
+  europa_central:     { f: 1000, h: 90,  d: 78 }, // Viena, Praga, Budapest, Varsovia
+  europa_este:        { f: 980,  h: 72,  d: 62 }, // Bucarest, Sofia, Belgrado
+  europa_mediterraneo:{ f: 1010, h: 85,  d: 80 }, // Atenas, Estambul, Nicosia
+  oriente_medio:      { f: 1050, h: 125, d: 95 }, // Dubai, Doha, Abu Dhabi, Tel Aviv
+  africa_norte:       { f: 1080, h: 80,  d: 65 }, // Cairo, Casablanca
+  africa_sub:         { f: 1350, h: 85,  d: 60 }, // Johannesburgo, Nairobi
+  asia_sur:           { f: 1280, h: 88,  d: 65 }, // Delhi, Mumbai, Bangalore
+  asia_sudeste:       { f: 1350, h: 82,  d: 58 }, // Bangkok, Singapur, KL, Jakarta
+  asia_este:          { f: 1480, h: 118, d: 88 }, // Tokio, Seúl, Shanghai, Pekín, Hong Kong
+  oceania:            { f: 1650, h: 145, d: 105 },// Sídney, Melbourne
+  default:            { f: 980,  h: 95,  d: 80 },
+};
 
-      <div class="stat-row">
-        <div class="stat-cell"><div class="stat-val">677</div><div class="stat-label">m² totales</div></div>
-        <div class="stat-cell"><div class="stat-val">342</div><div class="stat-label">m² pollo</div></div>
-        <div class="stat-cell"><div class="stat-val">149</div><div class="stat-label">m² MBRF</div></div>
-        <div class="stat-cell"><div class="stat-val">105</div><div class="stat-label">m² cerdo</div></div>
-        <div class="stat-cell"><div class="stat-val">80</div><div class="stat-label">m² huevos</div></div>
-      </div>
+// Mapa ciudad → región + ajuste individual (delta sobre la base regional)
+// dF = delta en vuelo, dH = delta hotel (ciudad más/menos cara), dD = delta viáticos
+const CITY_MAP = {
+  // SUDAMÉRICA CERCANA
+  "santiago":        { r:"sudamerica_cercana", dF:0,   dH:8,  dD:5  },
+  "lima":            { r:"sudamerica_cercana", dF:50,  dH:5,  dD:5  },
+  "asuncion":        { r:"sudamerica_cercana", dF:-30, dH:-10,dD:-8 },
+  "la paz":          { r:"sudamerica_cercana", dF:60,  dH:-5, dD:-5 },
+  "santa cruz":      { r:"sudamerica_cercana", dF:55,  dH:-5, dD:-5 },
+  "sao paulo":       { r:"sudamerica_cercana", dF:40,  dH:20, dD:15 },
+  "rio de janeiro":  { r:"sudamerica_cercana", dF:50,  dH:25, dD:18 },
+  "buenos aires":    { r:"sudamerica_cercana", dF:-80, dH:15, dD:12 },
 
-      <div class="progress-row">
-        <div class="progress-label">Progreso general</div>
-        <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
-        <div class="progress-pct" id="prog-pct">0 %</div>
-      </div>
+  // SUDAMÉRICA NORTE
+  "bogota":          { r:"sudamerica_norte",   dF:0,   dH:-5, dD:-5 },
+  "medellin":        { r:"sudamerica_norte",   dF:10,  dH:-8, dD:-8 },
+  "quito":           { r:"sudamerica_norte",   dF:20,  dH:-5, dD:-5 },
+  "guayaquil":       { r:"sudamerica_norte",   dF:20,  dH:-8, dD:-8 },
+  "caracas":         { r:"sudamerica_norte",   dF:40,  dH:5,  dD:5  },
 
-      <!-- ISLA 1 -->
-      <div class="area-block open">
-        <div class="area-header" onclick="toggleArea(this)">
-          <div class="area-dot" style="background:#c49a3a;"></div>
-          <div class="area-label">Isla 1 — 105,38 m²</div>
-          <div class="area-badge ab-amber">Cerdo</div>
-          <div class="area-count" id="cnt-a1"></div>
-          <div class="area-chevron">▶</div>
-        </div>
-        <div class="area-body">
-          <div class="sec-label">Recepción ABPA</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 banquetas en área de recepción</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mostrador con toma de corriente embutida, estante y puertas con cerradura</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Toma de corriente libre en recepción</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Papelera + panel de comunicación visual</label></div>
-          <div class="sec-label">2 Salas de reunión — mampara móvil</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 mesa para 4–6 personas por sala</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>6 sillas por sala (soporte mín. 100 kg)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Ventilador · perchero · toma de corriente libre</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Papelera · gabinete con llave y enchufe interior</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mampara retráctil para unir ambas salas</label></div>
-          <div class="sec-label">Despensa / Pantry</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Pileta con instalación de agua y desagüe</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 heladera · 2 cafeteras · 1 termo grande · 1 pava eléctrica</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Soporte/dispensador para bidones de 20 L (apilable)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Tomas de corriente para heladera, pava y cafeteras</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 columna de lockers con llave · caja de corriente central del área · papelera 100 L</label></div>
-          <div class="sec-label">6 módulos empresariales</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Estandarización de tamaño entre espacios con igual cantidad de mesas</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Paneles visuales en todas las paredes (mín. 2 paneles laterales por empresa)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Señalización con bandera de identificación de proteína (cerdo)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mostrador con toma embutida + logo aplicado · toma libre · papelera</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Distribución: 2 empresas c/1 mesa · 3 empresas c/2 mesas · 1 empresa c/3 mesas (redondas + 4 sillas c/u)</label></div>
-        </div>
-      </div>
+  // CARIBE / MÉXICO
+  "mexico city":     { r:"caribe_mexico",      dF:0,   dH:0,  dD:0  },
+  "guadalajara":     { r:"caribe_mexico",      dF:10,  dH:-8, dD:-5 },
+  "monterrey":       { r:"caribe_mexico",      dF:5,   dH:-5, dD:-5 },
+  "cancun":          { r:"caribe_mexico",      dF:-10, dH:0,  dD:0  },
+  "panama":          { r:"caribe_mexico",      dF:-20, dH:5,  dD:5  },
 
-      <!-- ISLA 2 -->
-      <div class="area-block open">
-        <div class="area-header" onclick="toggleArea(this)">
-          <div class="area-dot" style="background:#5a8f5a;"></div>
-          <div class="area-label">Isla 2 — 342,81 m²</div>
-          <div class="area-badge ab-green">Pollo · Isla principal</div>
-          <div class="area-count" id="cnt-a2"></div>
-          <div class="area-chevron">▶</div>
-        </div>
-        <div class="area-body">
-          <div class="sec-label">Recepción ABPA</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mostrador · 2 banquetas · papelera · tomas de corriente</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Pantalla / TV grande (~2 m × 4 m) para videos en bucle</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Pasillo de acceso al área central del stand</label></div>
-          <div class="sec-label">Sala de reunión</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mesa 6 personas · 6 sillas · ventilador · perchero · toma de corriente · papelera</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>TV con entrada USB y HDMI · gabinete con llave y enchufe interior</label></div>
-          <div class="sec-label">Almacén</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Estanterías · 5 columnas de lockers · 2 percheros · papelera · caja central de corriente</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>3 soportes de bidones apilables</label></div>
-          <div class="sec-label">Pantry de bebidas</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Pileta con agua y desagüe · 2 heladeras</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Dispensador de agua + 60 bidones (entrega escalonada 2–3 días)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mesadas con alacenas · estanterías en todas las paredes</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 cafeteras · 1 pava eléctrica · 1 termo · 1 papelera 100 L</label></div>
-          <div class="sec-label">Cocina industrial — degustación &nbsp;<span class="area-badge ab-red">Normativa sanitaria francesa</span></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 piletas con terminación correcta entre mesada y pared</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 freezer vertical + 1 freezer horizontal + 4 heladeras</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mesada central para preparación y emplatado</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 cocinas de 4 hornallas (8 hornallas grandes en total)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 horno grande</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>3 arroceras eléctricas</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 freidoras eléctricas de 2 canastas + 1 extractor/campana por freidora</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>60 L aceite + recipiente para aceite usado (8–10 L)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 freidoras de aire jumbo · 1 parrilla estilo George Foreman · 1 licuadora · 1 batidora · 1 mixer</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Ventana pass-through con puerta hacia el restaurante</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 papeleras 50 L · gel antibacterial · alcohol 70% · botiquín básico</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Utensilios completos: cuchillos, ollas grandes/medianas, sartenes, tablas, bowls, recipientes plásticos, espátulas, ladles (ver lista detallada en TdR)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Consumibles de limpieza: esponjas, lana de acero, desengrasante, detergente, bolsas 130 L, balde, trapeador, papel de cocina</label></div>
-          <div class="sec-label">Restaurante central "GALETERÍA" &nbsp;<span class="area-badge ab-amber">Área emblema del stand</span></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mínimo 15 mesas con 4 sillas c/u · sillas soporte mín. 100 kg</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 TV grande con USB para videos en bucle</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 hornos giratorios tipo rotisería — 30 pollos enteros c/u con puertas de vidrio &nbsp;<span class="area-badge ab-red">Carga eléctrica alta</span></label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Hornos posicionados cerca de entrada a cocina para facilitar transporte de pollos</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Piso antideslizante y fácil de limpiar en zona de hornos</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Distribución en tableros eléctricos separados — evitar sobrecargas simultáneas</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Cumplimiento reglamento del recinto para hornos en zona de acceso público</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Cartel de neón: "BRAZILIAN CHICKEN" junto a los hornos</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Pasaje interior entre módulos de empresas y Galetería (sin salir del stand)</label></div>
-          <div class="sec-label">11 módulos empresariales</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 empresa c/2 mesas · 3 empresas c/3 mesas · 3 empresas c/4 mesas · 3 empresas c/5 mesas · 1 empresa c/6 mesas</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mostrador con logo + paneles visuales en todas las paredes (mín. 2 laterales) + toma de corriente + papelera</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Acceso individual de cada módulo al área central de la Galetería</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Tabique trasero con pasaje para mozo cargando bandeja con bebidas</label></div>
-        </div>
-      </div>
+  // USA ESTE
+  "new york":        { r:"usa_este",           dF:0,   dH:35, dD:22 },
+  "miami":           { r:"usa_este",           dF:-30, dH:5,  dD:10 },
+  "boston":          { r:"usa_este",           dF:10,  dH:20, dD:15 },
+  "atlanta":         { r:"usa_este",           dF:-30, dH:5,  dD:5  },
+  "washington":      { r:"usa_este",           dF:0,   dH:15, dD:12 },
+  "philadelphia":    { r:"usa_este",           dF:0,   dH:10, dD:8  },
+  "orlando":         { r:"usa_este",           dF:-40, dH:-5, dD:-5 },
+  "fort lauderdale": { r:"usa_este",           dF:-40, dH:0,  dD:0  },
 
-      <!-- ISLA 3 -->
-      <div class="area-block open">
-        <div class="area-header" onclick="toggleArea(this)">
-          <div class="area-dot" style="background:#6a8fb0;"></div>
-          <div class="area-label">Isla 3 — 80 m²</div>
-          <div class="area-badge ab-blue">Huevos y pato</div>
-          <div class="area-count" id="cnt-a3"></div>
-          <div class="area-chevron">▶</div>
-        </div>
-        <div class="area-body">
-          <div class="sec-label">Recepción ABPA</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 banquetas · mostrador con toma embutida, estante y cerradura</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Toma de corriente libre · papelera · panel de comunicación visual</label></div>
-          <div class="sec-label">Sala de reunión</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mesa 6 personas · 6 sillas · ventilador · perchero · toma de corriente · papelera</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Gabinete con llave y enchufe interior</label></div>
-          <div class="sec-label">Despensa / Pantry</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Estanterías + mesada de apoyo para organizar catering</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 heladera · 1 cafetera · 1 termo · 1 pava eléctrica</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Soporte/dispensador bidones 20 L · tomas de corriente · 1 columna de lockers · papelera 100 L · caja central</label></div>
-          <div class="sec-label">3 módulos empresariales</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 empresa c/1 mesa · 2 empresas c/2 mesas (redondas + 4 sillas)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mostrador con logo · paneles visuales · señalización proteína · toma libre · papelera</label></div>
-        </div>
-      </div>
+  // USA CENTRO
+  "chicago":         { r:"usa_centro",         dF:0,   dH:18, dD:12 },
+  "dallas":          { r:"usa_centro",         dF:-20, dH:5,  dD:3  },
+  "houston":         { r:"usa_centro",         dF:-20, dH:5,  dD:3  },
+  "denver":          { r:"usa_centro",         dF:-5,  dH:5,  dD:3  },
 
-      <!-- ISLA 4 -->
-      <div class="area-block open">
-        <div class="area-header" onclick="toggleArea(this)">
-          <div class="area-dot" style="background:#9b7fb0;"></div>
-          <div class="area-label">Isla 4 — 149,50 m²</div>
-          <div class="area-badge ab-muted">MBRF</div>
-          <div class="area-count" id="cnt-a4"></div>
-          <div class="area-chevron">▶</div>
-        </div>
-        <div class="area-body">
-          <div class="sec-label">Identidad visual</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Paneles de comunicación visual estándar ABPA · logo en mostrador · fascia estándar</label></div>
-          <div class="sec-label">Recepción + atención al cliente</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 banquetas · mostrador con toma embutida, estante y puertas con llave · papelera</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mesas redondas con 4 sillas c/u según espacio · tomas de corriente libres · papeleras · paneles visuales</label></div>
-          <div class="sec-label">2 salas de reunión combinables</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mesa 6 personas + 6 sillas + ventilador + perchero (cada sala)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Toma de corriente libre + gabinete con llave y enchufe interior (cada sala)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>TV con USB y HDMI (solo 1 de las 2 salas)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Arte decorativo en cada sala</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mampara retráctil para combinar ambas salas</label></div>
-          <div class="sec-label">Despensa + cocina MBRF</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Pileta con agua y desagüe · mesadas con alacenas · estanterías en todas las paredes</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 heladeras · dispensador de agua + 15 bidones (entrega escalonada)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>2 cafeteras · 1 pava eléctrica · 2 soportes de bidones apilables</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1 freidora de aire jumbo · 1 freidora eléctrica de 2 canastas + 1 extractor · 1 horno · 1 parrilla George Foreman</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>3 columnas de lockers con llave · papelera 100 L · caja central de corriente</label></div>
-          <div class="sec-label">Insumos y consumibles &nbsp;<span class="area-badge ab-amber">Lista completa</span></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1.000 platos descartables · 1.000 tenedores + cuchillos de madera FSC en packaging individual</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>1.000 servilletas FSC · 1.000 vasos de café · 1.000 vasos agua/gaseosa</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>800 palitos para café · 700 sobres azúcar · 700 sobres edulcorante · 6 kg café molido</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>50 saquitos de té · 500 porciones de leche · 5 bandejas para servir</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>40 L Coca-Cola · 100 L Coca-Cola Zero · 45 L 7-Up · 30 L agua con gas · 15 bidones 20 L</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Elementos de cocina: cuchillos, cucharas, bandejas para horno, esponjas, desengrasante, detergente, bolsas 130 L, balde, trapeador</label></div>
-        </div>
-      </div>
+  // USA OESTE
+  "los angeles":     { r:"usa_oeste",          dF:-10, dH:20, dD:12 },
+  "san francisco":   { r:"usa_oeste",          dF:0,   dH:30, dD:18 },
+  "las vegas":       { r:"usa_oeste",          dF:-10, dH:0,  dD:8  },
+  "seattle":         { r:"usa_oeste",          dF:0,   dH:15, dD:8  },
 
-      <!-- GENERAL -->
-      <div class="area-block open">
-        <div class="area-header" onclick="toggleArea(this)">
-          <div class="area-dot" style="background:#c0614a;"></div>
-          <div class="area-label">Servicios generales</div>
-          <div class="area-badge ab-red">Responsabilidad del contratado</div>
-          <div class="area-count" id="cnt-gen"></div>
-          <div class="area-chevron">▶</div>
-        </div>
-        <div class="area-body">
+  // CANADÁ
+  "toronto":         { r:"canada",             dF:0,   dH:5,  dD:5  },
+  "montreal":        { r:"canada",             dF:0,   dH:-5, dD:0  },
+  "vancouver":       { r:"canada",             dF:5,   dH:5,  dD:5  },
 
-          <!-- BLOQUE GALERIE -->
-          <div class="sec-label" style="background:rgba(200,185,122,0.08);color:var(--accent);border-left:2px solid var(--accent);">■ GALERIE contrata directamente — 5 recepcionistas trilingüe PT-FR-EN</div>
-          <div class="check-row" style="background:rgba(200,185,122,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label><strong style="color:var(--accent);font-weight:500;">Agencia seleccionada</strong> — Agence Bonjour / Exhibition Girls / Expo Stars (cotizar las 3 en paralelo)</label>
-          </div>
-          <div class="check-row" style="background:rgba(200,185,122,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>4 recepcionistas trilingüe PT-FR-EN — 2 área pollo · 1 cerdo · 1 huevos · desde 17/10</label>
-          </div>
-          <div class="check-row" style="background:rgba(200,185,122,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>1 recepcionista trilingüe PT-FR-EN — área MBRF · desde 17/10</label>
-          </div>
-          <div class="check-row" style="background:rgba(200,185,122,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>Briefing enviado a las recepcionistas (productos, empresas, protocolo del pabellón) — mín. 7 días antes</label>
-          </div>
-          <div class="check-row" style="background:rgba(200,185,122,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>Contrato firmado con agencia · seguros y empleabilidad legal en Francia verificados</label>
-          </div>
+  // EUROPA OESTE HUBS (vuelo más barato por directo o competencia)
+  "madrid":          { r:"europa_oeste_hub",   dF:-60, dH:-8, dD:-5 },
+  "lisbon":          { r:"europa_oeste_hub",   dF:-50, dH:-5, dD:-5 },
+  "paris":           { r:"europa_oeste_hub",   dF:0,   dH:22, dD:18 },
+  "frankfurt":       { r:"europa_oeste_hub",   dF:0,   dH:15, dD:10 },
 
-          <!-- BLOQUE MONTADOR -->
-          <div class="sec-label" style="background:rgba(106,143,176,0.08);color:var(--blue);border-left:2px solid var(--blue);">■ MONTADOR gestiona — 38 personas restantes (cotizado como línea separada en el contrato)</div>
-          <div class="check-row" style="background:rgba(106,143,176,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>1 coordinador de stand — 16 al 21/10 · organización del equipo, stock, supervisión, gestión de turnos</label>
-          </div>
-          <div class="check-row" style="background:rgba(106,143,176,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>4 asistentes de cocina — 16 al 21/10</label>
-          </div>
-          <div class="check-row" style="background:rgba(106,143,176,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>1 persona para compras de mercado — días 16, 17 y 18/10</label>
-          </div>
-          <div class="check-row" style="background:rgba(106,143,176,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>4 asistentes de pantry/café — 2 área pollo · 1 cerdo · 1 huevos</label>
-          </div>
-          <div class="check-row" style="background:rgba(106,143,176,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>2 asistentes de pantry — área MBRF</label>
-          </div>
-          <div class="check-row" style="background:rgba(106,143,176,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>15 mozos — áreas pollo/cerdo/huevos</label>
-          </div>
-          <div class="check-row" style="background:rgba(106,143,176,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>5 mozos — área MBRF</label>
-          </div>
-          <div class="check-row" style="background:rgba(106,143,176,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>5 personas de limpieza — 2 pollo · 1 cerdo · 1 huevos · 1 rotativo para descansos</label>
-          </div>
-          <div class="check-row" style="background:rgba(106,143,176,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>1 persona de limpieza — área MBRF</label>
-          </div>
-          <div class="check-row" style="background:rgba(106,143,176,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>Staffing de servicio cotizado como línea desglosada y separada — no incluido en precio global de estructura</label>
-          </div>
-          <div class="check-row" style="background:rgba(106,143,176,0.04);">
-            <input type="checkbox" onchange="tick(this)">
-            <label>Último día 21/10: solo 50% del equipo de servicio opera</label>
-          </div>
-          <div class="sec-label">Infraestructura y servicios</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Wi-Fi: mín. 6 routers (2 en áreas grandes · 1 en áreas pequeñas) — 80 dispositivos simultáneos</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Instalación eléctrica completa + tableros separados (calcular carga de hornos + freidoras simultáneos)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Plomería completa: agua y desagüe para todas las piletas</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Conexión del sistema de extracción de cocina al hall del recinto</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Mínimo 6 contenedores de residuos (armado, desmontaje, orgánicos, cajas)</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Limpieza diaria durante la feria + limpieza en día de montaje</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>Todos los fees al organizador (electricidad, plomería, overtime, auditoría, internet, fascia) — 100% a cargo del contratado</label></div>
-          <div class="sec-label">Fechas límite no negociables</div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>■ 16 oct / 9:00 hs — Cocina operativa, heladeras encendidas y limpia. Inicia preparación de degustación</label></div>
-          <div class="check-row"><input type="checkbox" onchange="tick(this)"><label>■ 16 oct / 14:00 hs — Stand 100% completo, decorado y listo sin excepciones</label></div>
-        </div>
-      </div>
-    </div>
+  // EUROPA OESTE
+  "barcelona":       { r:"europa_oeste",       dF:-20, dH:-5, dD:0  },
+  "rome":            { r:"europa_oeste",       dF:-10, dH:0,  dD:5  },
+  "milan":           { r:"europa_oeste",       dF:-10, dH:15, dD:10 },
+  "amsterdam":       { r:"europa_oeste",       dF:10,  dH:15, dD:8  },
+  "brussels":        { r:"europa_oeste",       dF:10,  dH:8,  dD:5  },
+  "lyon":            { r:"europa_oeste",       dF:0,   dH:0,  dD:0  },
+  "nice":            { r:"europa_oeste",       dF:0,   dH:20, dD:12 },
+  "cannes":          { r:"europa_oeste",       dF:0,   dH:40, dD:20 },
+  "florence":        { r:"europa_oeste",       dF:-10, dH:5,  dD:5  },
+  "venice":          { r:"europa_oeste",       dF:-10, dH:25, dD:12 },
+  "bologna":         { r:"europa_oeste",       dF:-10, dH:-2, dD:-2 },
+  "seville":         { r:"europa_oeste",       dF:-20, dH:-5, dD:-5 },
+  "valencia":        { r:"europa_oeste",       dF:-20, dH:-8, dD:-5 },
+  "bilbao":          { r:"europa_oeste",       dF:-15, dH:-5, dD:-5 },
+  "porto":           { r:"europa_oeste",       dF:-30, dH:-5, dD:-5 },
+  "dusseldorf":      { r:"europa_oeste",       dF:5,   dH:8,  dD:5  },
+  "cologne":         { r:"europa_oeste",       dF:5,   dH:5,  dD:3  },
+  "hamburg":         { r:"europa_oeste",       dF:10,  dH:5,  dD:3  },
+  "munich":          { r:"europa_oeste",       dF:5,   dH:18, dD:8  },
+  "dortmund":        { r:"europa_oeste",       dF:5,   dH:3,  dD:3  },
+  "hannover":        { r:"europa_oeste",       dF:5,   dH:-2, dD:-2 },
+  "nuremberg":       { r:"europa_oeste",       dF:5,   dH:-2, dD:-2 },
+  "berlin":          { r:"europa_oeste",       dF:10,  dH:5,  dD:3  },
 
-    <!-- ══ PRESUPUESTO ══ -->
-    <div id="panel-budget" class="panel">
-      <div class="panel-eyebrow">■ Estimación orientativa</div>
-      <div class="panel-title">Presupuesto estimado</div>
-      <div class="divider"></div>
-      <div class="panel-sub">Basado en tarifas de mercado europeo para stand a medida + pabellón nacional con cocina industrial en París. Rango 2025–2026.</div>
+  // EUROPA NORTE
+  "london":          { r:"europa_norte",       dF:0,   dH:40, dD:28 },
+  "edinburgh":       { r:"europa_norte",       dF:10,  dH:15, dD:10 },
+  "manchester":      { r:"europa_norte",       dF:5,   dH:10, dD:8  },
+  "copenhagen":      { r:"europa_norte",       dF:10,  dH:20, dD:12 },
+  "stockholm":       { r:"europa_norte",       dF:10,  dH:18, dD:10 },
+  "oslo":            { r:"europa_norte",       dF:15,  dH:25, dD:15 },
+  "helsinki":        { r:"europa_norte",       dF:15,  dH:15, dD:10 },
+  "dublin":          { r:"europa_norte",       dF:0,   dH:18, dD:10 },
 
-      <div class="kpi-grid">
-        <div class="kpi-cell accent-border">
-          <div class="kpi-eyebrow">Rango estimado bajo</div>
-          <div class="kpi-val low">€ 850.000</div>
-          <div class="kpi-sub">~€ 1.255 / m²</div>
-        </div>
-        <div class="kpi-cell accent-border">
-          <div class="kpi-eyebrow">Rango estimado alto</div>
-          <div class="kpi-val high">€ 1.440.000</div>
-          <div class="kpi-sub">~€ 2.125 / m²</div>
-        </div>
-        <div class="kpi-cell">
-          <div class="kpi-eyebrow">Referencia de mercado París</div>
-          <div class="kpi-val neutral" style="font-size:24px;">€ 1.300 – 2.200 / m²</div>
-          <div class="kpi-sub">Stand pabellón nacional con cocina industrial</div>
-        </div>
-        <div class="kpi-cell">
-          <div class="kpi-eyebrow">Mayor driver de costo</div>
-          <div class="kpi-val neutral" style="font-size:22px;">Cocina + fees</div>
-          <div class="kpi-sub">Normativa sanitaria francesa + fees recinto París</div>
-        </div>
-      </div>
+  // EUROPA CENTRAL
+  "vienna":          { r:"europa_central",     dF:0,   dH:12, dD:8  },
+  "prague":          { r:"europa_central",     dF:-5,  dH:0,  dD:-2 },
+  "budapest":        { r:"europa_central",     dF:-5,  dH:-2, dD:-5 },
+  "warsaw":          { r:"europa_central",     dF:-5,  dH:-2, dD:-5 },
+  "zurich":          { r:"europa_central",     dF:10,  dH:65, dD:40 },
+  "geneva":          { r:"europa_central",     dF:10,  dH:70, dD:42 },
+  "basel":           { r:"europa_central",     dF:10,  dH:52, dD:30 },
+  "bern":            { r:"europa_central",     dF:10,  dH:50, dD:28 },
+  "luxembourg":      { r:"europa_central",     dF:5,   dH:20, dD:12 },
 
-      <div class="budget-table-wrap">
-        <table class="bt">
-          <tr><td>Diseño arquitectónico + renders 3D</td><td>€ 25.000 – 45.000</td></tr>
-          <tr><td>Construcción y montaje estructura (677 m²)</td><td>€ 380.000 – 600.000</td></tr>
-          <tr><td>Mobiliario (mostradores, mesas, sillas, lockers, mamparas)</td><td>€ 60.000 – 95.000</td></tr>
-          <tr class="driver"><td>Cocina industrial — equipamiento completo</td><td>€ 80.000 – 130.000</td></tr>
-          <tr class="driver"><td>2 hornos giratorios tipo rotisería</td><td>€ 20.000 – 35.000</td></tr>
-          <tr><td>Comunicación visual (paneles, impresiones, neón, banderas)</td><td>€ 45.000 – 75.000</td></tr>
-          <tr><td>Instalación eléctrica completa + tableros</td><td>€ 40.000 – 65.000</td></tr>
-          <tr><td>Instalación hidráulica (agua y desagüe)</td><td>€ 20.000 – 35.000</td></tr>
-          <tr><td>Wi-Fi (6 routers, 80 dispositivos simultáneos)</td><td>€ 8.000 – 15.000</td></tr>
-          <tr style="border-top:1px solid rgba(200,185,122,0.2);">
-            <td style="color:var(--accent);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;padding-top:14px;" colspan="2">■ Galerie contrata directamente</td>
-          </tr>
-          <tr><td>5 recepcionistas trilingüe PT-FR-EN (Agence Bonjour / Exhibition Girls) × 5 días</td><td style="color:var(--accent);">€ 9.000 – 14.000</td></tr>
-          <tr style="border-top:1px solid rgba(106,143,176,0.2);">
-            <td style="color:var(--blue);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;padding-top:14px;" colspan="2">■ Montador gestiona (línea desglosada en contrato)</td>
-          </tr>
-          <tr><td>38 personas de servicio (coordinador, cocina, mozos, pantry, limpieza) × 5–6 días</td><td>€ 65.000 – 110.000</td></tr>
-          <tr><td>Limpieza diaria + contenedores de residuos</td><td>€ 12.000 – 20.000</td></tr>
-          <tr class="driver"><td>Fees al organizador (electricidad, plomería, fascia, auditoría, etc.)</td><td>€ 50.000 – 90.000</td></tr>
-          <tr><td>Catering y consumibles (MBRF + cocina)</td><td>€ 20.000 – 35.000</td></tr>
-          <tr><td>Logística, transporte y almacenamiento</td><td>€ 25.000 – 40.000</td></tr>
-          <tr><td>Desmontaje</td><td>€ 18.000 – 30.000</td></tr>
-          <tr class="total-row"><td>Total estimado</td><td>€ 883.000 – € 1.439.000</td></tr>
-        </table>
-      </div>
+  // EUROPA MEDITERRÁNEO
+  "athens":          { r:"europa_mediterraneo",dF:0,   dH:0,  dD:0  },
+  "istanbul":        { r:"europa_mediterraneo",dF:-20, dH:-5, dD:-5 },
+  "tel aviv":        { r:"europa_mediterraneo",dF:10,  dH:30, dD:15 },
 
-      <div class="callout">
-        <p>
-          <strong>Estrategia de contratación · Galerie</strong><br>
-          · <span style="color:var(--accent);">■ Galerie contrata directamente</span> las 5 recepcionistas trilingüe PT-FR-EN — son la cara del pabellón, el perfil más estratégico y el que el montador no tiene ventaja para conseguir mejor.<br>
-          · <span style="color:var(--blue);">■ El montador</span> gestiona los 38 perfiles restantes (mozos, cocina, pantry, limpieza) — exigir que ese ítem aparezca desglosado y cotizado por separado en el contrato, nunca mezclado con el precio de estructura.<br>
-          · Solicitar al montador que incluya un <strong>project manager dedicado</strong> como parte del contrato — no un vendedor, sino un técnico que sea punto de contacto durante el armado en París.<br>
-          · Los fees en París-Nord Villepinte representan el 8–15% del total. Incluirlos todos en el contrato del montador.<br>
-          · El 21/10 opera solo el 50% del equipo de servicio — negociar ese descuento explícitamente en la cotización de staffing.
-        </p>
-      </div>
-    </div>
+  // ORIENTE MEDIO
+  "dubai":           { r:"oriente_medio",      dF:0,   dH:20, dD:10 },
+  "doha":            { r:"oriente_medio",      dF:0,   dH:25, dD:10 },
+  "abu dhabi":       { r:"oriente_medio",      dF:0,   dH:15, dD:8  },
+  "riyadh":          { r:"oriente_medio",      dF:10,  dH:18, dD:5  },
 
-    <!-- ══ TIMELINE ══ -->
-    <div id="panel-timeline" class="panel">
-      <div class="panel-eyebrow">■ Gestión del proyecto</div>
-      <div class="panel-title">Camino crítico</div>
-      <div class="divider"></div>
-      <div class="panel-sub">Las tareas en rojo son bloqueantes. Con 677 m² y cocina industrial en París, no existe margen de atraso en las etapas iniciales.</div>
+  // ASIA ESTE
+  "tokyo":           { r:"asia_este",          dF:0,   dH:20, dD:12 },
+  "osaka":           { r:"asia_este",          dF:-10, dH:10, dD:8  },
+  "seoul":           { r:"asia_este",          dF:-20, dH:15, dD:5  },
+  "shanghai":        { r:"asia_este",          dF:-20, dH:18, dD:5  },
+  "beijing":         { r:"asia_este",          dF:-20, dH:15, dD:5  },
+  "hong kong":       { r:"asia_este",          dF:-30, dH:30, dD:15 },
 
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">Marzo – Abril 2026</div>
-          <div class="tl-title tl-critical">Selección y contratación del montador &nbsp;<span class="area-badge ab-red">Crítico</span></div>
-          <div class="tl-desc">RFP, evaluación de 3+ propuestas, firma de contrato. Con 677 m² + cocina industrial, los montadores con capacidad suficiente en París tienen agenda muy limitada. Galerie debería enviar el brief en las próximas semanas.</div>
+  // ASIA SUDESTE
+  "singapore":       { r:"asia_sudeste",       dF:0,   dH:40, dD:18 },
+  "bangkok":         { r:"asia_sudeste",       dF:-20, dH:-5, dD:-8 },
+  "kuala lumpur":    { r:"asia_sudeste",       dF:-20, dH:-5, dD:-8 },
+  "jakarta":         { r:"asia_sudeste",       dF:-20, dH:-5, dD:-8 },
+  "bali":            { r:"asia_sudeste",       dF:-30, dH:5,  dD:-8 },
+  "manila":          { r:"asia_sudeste",       dF:-20, dH:-5, dD:-8 },
+
+  // ASIA SUR
+  "delhi":           { r:"asia_sur",           dF:0,   dH:5,  dD:0  },
+  "mumbai":          { r:"asia_sur",           dF:0,   dH:8,  dD:5  },
+  "bangalore":       { r:"asia_sur",           dF:5,   dH:0,  dD:0  },
+
+  // OCEANÍA
+  "sydney":          { r:"oceania",            dF:0,   dH:10, dD:5  },
+  "melbourne":       { r:"oceania",            dF:0,   dH:5,  dD:0  },
+};
+
+function getDef(city) {
+  const l = (city||"").toLowerCase().trim();
+  // Busca match exacto primero, luego parcial
+  let entry = null;
+  for(const [k,v] of Object.entries(CITY_MAP)) {
+    if(l === k) { entry=v; break; }
+  }
+  if(!entry) {
+    for(const [k,v] of Object.entries(CITY_MAP)) {
+      if(l.includes(k) || k.includes(l)) { entry=v; break; }
+    }
+  }
+  if(!entry) {
+    // Fallback inteligente por palabras clave regionales
+    if(l.includes("eur")||["germany","france","italy","spain","uk"].some(x=>l.includes(x))) entry={r:"europa_oeste",dF:0,dH:0,dD:0};
+    else if(["usa","united states","estados unidos"].some(x=>l.includes(x))) entry={r:"usa_este",dF:0,dH:0,dD:0};
+    else entry={r:"default",dF:0,dH:0,dD:0};
+  }
+  const base = REGION_BASE[entry.r] || REGION_BASE.default;
+  return {
+    f: Math.round((base.f + (entry.dF||0)) * FERIA_FACTOR),
+    h: Math.round(base.h + (entry.dH||0)),
+    d: Math.round(base.d + (entry.dD||0)),
+    region: entry.r,
+  };
+}
+function rooms(pax) { return pax<=2?1:pax<=4?2:3; }
+function nightsBetween(d1,d2) {
+  if(!d1||!d2) return 0;
+  const diff=Math.round((new Date(d2)-new Date(d1))/86400000);
+  return diff>0?diff:0;
+}
+
+/* ══════════════════════════════════════════════
+   DEMO DATA (when Firebase not connected)
+══════════════════════════════════════════════ */
+const DEMO_PROJECTS = [
+  { id:"p1", proyecto:"BILBOSA", cliente:"Stand Pabellón B", feria:"Seafood Barcelona 2026",
+    destino:"Barcelona", etapa:"completado", moneda:"USD", ingresos:18500, costoStand:8200,
+    costoCatering:0, costoServicios:400, personas:2, llegada:"2026-04-10", partida:"2026-04-13",
+    flightTotal:1900, hotelTotal:855, dailyTotal:480, gastosAdmin:405, rentaBruta:6260,
+    irae:1565, neto:4695, gastosAdminPct:0.05, notas:"Cliente muy satisfecho. Renovar para 2027.",
+    createdAt: new Date("2026-01-15"), updatedAt: new Date("2026-04-14") },
+  { id:"p2", proyecto:"MARFRIO", cliente:"Stand 36m²", feria:"Anuga Cologne 2026",
+    destino:"Cologne", etapa:"aceptado", moneda:"EUR", ingresos:22000, costoStand:12000,
+    costoCatering:800, costoServicios:600, personas:2, llegada:"2026-10-04", partida:"2026-10-08",
+    flightTotal:1890, hotelTotal:1440, dailyTotal:624, gastosAdmin:502, rentaBruta:4144,
+    irae:1036, neto:3108, gastosAdminPct:0.05, notas:"Anticipo cobrado. Stand en producción.",
+    createdAt: new Date("2026-02-20"), updatedAt: new Date("2026-03-15") },
+  { id:"p3", proyecto:"ARROZAL", cliente:"Stand 18m²", feria:"Anuga Cologne 2026",
+    destino:"Cologne", etapa:"produccion", moneda:"EUR", ingresos:14500, costoStand:7800,
+    costoCatering:500, costoServicios:200, personas:2, llegada:"2026-10-04", partida:"2026-10-08",
+    flightTotal:1890, hotelTotal:1440, dailyTotal:624, gastosAdmin:294, rentaBruta:1752,
+    irae:438, neto:1314, gastosAdminPct:0.05, notas:"Mismo destino que MARFRIO — costos de viaje compartidos.",
+    createdAt: new Date("2026-02-22"), updatedAt: new Date("2026-03-18") },
+  { id:"p4", proyecto:"NUTRIPACK", cliente:"Stand 24m²", feria:"SIAL Paris 2026",
+    destino:"Paris", etapa:"cotizacion", moneda:"EUR", ingresos:19000, costoStand:10500,
+    costoCatering:600, costoServicios:400, personas:2, llegada:"2026-10-18", partida:"2026-10-23",
+    flightTotal:2000, hotelTotal:2400, dailyTotal:1000, gastosAdmin:415, rentaBruta:2685,
+    irae:671, neto:2014, gastosAdminPct:0.05, notas:"En espera de aprobación presupuesto.",
+    createdAt: new Date("2026-03-01"), updatedAt: new Date("2026-04-01") },
+  { id:"p5", proyecto:"CONAPROLE", cliente:"Stand 30m²", feria:"Anuga Cologne 2026",
+    destino:"Cologne", etapa:"diseno", moneda:"EUR", ingresos:21000, costoStand:11500,
+    costoCatering:700, costoServicios:300, personas:2, llegada:"2026-10-04", partida:"2026-10-08",
+    flightTotal:1890, hotelTotal:1440, dailyTotal:624, gastosAdmin:437, rentaBruta:4209,
+    irae:1052, neto:3157, gastosAdminPct:0.05, notas:"3er cliente en Anuga. Viaje muy rentable.",
+    createdAt: new Date("2026-03-10"), updatedAt: new Date("2026-04-10") },
+  { id:"p6", proyecto:"OLIVOS SA", cliente:"Stand 12m²", feria:"SIAL Paris 2026",
+    destino:"Paris", etapa:"perdido", moneda:"EUR", ingresos:12000, costoStand:6500,
+    costoCatering:0, costoServicios:200, personas:2, llegada:"2026-10-18", partida:"2026-10-23",
+    flightTotal:2000, hotelTotal:2400, dailyTotal:1000, gastosAdmin:185, rentaBruta:1715,
+    irae:429, neto:1286, gastosAdminPct:0.05, notas:"Eligieron proveedor local. Hacer seguimiento para próxima edición.",
+    createdAt: new Date("2026-03-05"), updatedAt: new Date("2026-04-05") },
+];
+
+/* ══════════════════════════════════════════════
+   FIREBASE BRIDGE
+══════════════════════════════════════════════ */
+function useProjects() {
+  const [projects, setProjects] = useState(DEMO_PROJECTS);
+  const [fbMode, setFbMode] = useState(false);
+  const fb = window.__galerie_firebase;
+
+  useEffect(() => {
+    if(!fb?.db) return;
+    try {
+      const { collection, query, orderBy, onSnapshot } = fb;
+      const q = query(collection(fb.db,"projects"), orderBy("updatedAt","desc"));
+      const unsub = onSnapshot(q, snap => {
+        const data = snap.docs.map(d=>({id:d.id,...d.data(),
+          createdAt:d.data().createdAt?.toDate?.()??new Date(),
+          updatedAt:d.data().updatedAt?.toDate?.()??new Date()
+        }));
+        setProjects(data);
+        setFbMode(true);
+      }, ()=>{});
+      return unsub;
+    } catch(e){}
+  },[]);
+
+  const addProject = async (proj) => {
+    if(fb?.db) {
+      const { collection, addDoc, serverTimestamp } = fb;
+      await addDoc(collection(fb.db,"projects"),{...proj,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+    } else {
+      setProjects(p=>[{id:"p"+Date.now(),...proj,createdAt:new Date(),updatedAt:new Date()},...p]);
+    }
+  };
+
+  const updateProject = async (id, data) => {
+    if(fb?.db) {
+      const { doc, updateDoc, serverTimestamp } = fb;
+      await updateDoc(doc(fb.db,"projects",id),{...data,updatedAt:serverTimestamp()});
+    } else {
+      setProjects(p=>p.map(x=>x.id===id?{...x,...data,updatedAt:new Date()}:x));
+    }
+  };
+
+  const deleteProject = async (id) => {
+    if(fb?.db) {
+      const { doc, deleteDoc } = fb;
+      await deleteDoc(doc(fb.db,"projects",id));
+    } else {
+      setProjects(p=>p.filter(x=>x.id!==id));
+    }
+  };
+
+  return { projects, addProject, updateProject, deleteProject, fbMode };
+}
+
+/* ══════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════ */
+function useAuth() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const fb = window.__galerie_firebase;
+
+  useEffect(() => {
+    if(!fb?.auth) { setLoading(false); return; }
+    const unsub = fb.onAuthStateChanged(fb.auth, u=>{ setUser(u); setLoading(false); });
+    return unsub;
+  },[]);
+
+  const login = async (email, pass) => {
+    if(!fb?.auth) {
+      // demo mode
+      if(email==="info@galerie-expo.com"&&pass==="Galerie270925") {
+        setUser({email,displayName:"Galerie Admin"});
+      } else throw new Error("Credenciales incorrectas");
+      return;
+    }
+    await fb.signInWithEmailAndPassword(fb.auth, email, pass);
+  };
+
+  const logout = async () => {
+    if(!fb?.auth) { setUser(null); return; }
+    await fb.signOut(fb.auth);
+  };
+
+  return { user, loading, login, logout };
+}
+
+/* ══════════════════════════════════════════════
+   LOGIN SCREEN
+══════════════════════════════════════════════ */
+function LoginScreen({ onLogin }) {
+  const [email, setEmail] = useState("info@galerie-expo.com");
+  const [pass, setPass] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const submit = async () => {
+    setError(""); setLoading(true);
+    try { await onLogin(email, pass); }
+    catch(e){ setError(e.message||"Error de autenticación"); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="login-wrap">
+      <div className="login-box">
+        <div className="login-logo">GALERIE</div>
+        <div className="login-sub">Sistema de Gestión de Proyectos</div>
+        <div className="login-field">
+          <label className="login-label">Email</label>
+          <input className="login-input" type="email" value={email}
+            onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} />
         </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">Abril – Mayo 2026</div>
-          <div class="tl-title tl-critical">Diseño arquitectónico + renders 3D &nbsp;<span class="area-badge ab-red">Crítico</span></div>
-          <div class="tl-desc">Galerie coordina el diseño. Debe contemplar: 4 islas como proyecto unificado, cocina con cumplimiento sanitario, Galetería visible, flujo de mozos sin salir del stand, y regulaciones de hornos en zona pública del recinto.</div>
+        <div className="login-field">
+          <label className="login-label">Contraseña</label>
+          <input className="login-input" type="password" value={pass}
+            onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} />
         </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">Mayo 2026</div>
-          <div class="tl-title tl-critical">Aprobación del plano por el organizador SIAL &nbsp;<span class="area-badge ab-red">Crítico</span></div>
-          <div class="tl-desc">Obligatorio antes de iniciar producción. SIAL tiene normativas específicas para hornos en zonas accesibles al público y para la conexión del sistema de extracción al hall. Sin aprobación, no arranca fabricación.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--amber);"></div><div class="tl-thread"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">Mayo – Junio 2026</div>
-          <div class="tl-title">Pedido de servicios al organizador SIAL &nbsp;<span class="area-badge ab-amber">Urgente</span></div>
-          <div class="tl-desc">Reservar electricidad, plomería, internet, fascia y limpieza oficial. Los cupos y precios preferenciales cierran meses antes del evento.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">Junio 2026</div>
-          <div class="tl-title tl-critical">Inicio de producción de estructura y mobiliario &nbsp;<span class="area-badge ab-red">Crítico</span></div>
-          <div class="tl-desc">Fabricación de mostradores, mamparas, mesadas de cocina y mobiliario custom. Mínimo 3 meses de producción en taller para un stand de esta escala.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--amber);"></div><div class="tl-thread"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">Julio – Agosto 2026</div>
-          <div class="tl-title">Diseño y producción de comunicación visual &nbsp;<span class="area-badge ab-amber">Urgente</span></div>
-          <div class="tl-desc">Paneles, fascias, banderas de proteínas, cartel neón "Brazilian Chicken" e identidad visual unificada de las 4 islas. Artwork cerrado para imprenta.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--amber);"></div><div class="tl-thread"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">Agosto – Septiembre 2026</div>
-          <div class="tl-title">Contratación de personal — modelo split &nbsp;<span class="area-badge ab-amber">Urgente</span></div>
-          <div class="tl-desc"><span style="color:var(--accent);">Galerie contrata</span> las 5 recepcionistas trilingüe PT-FR-EN directamente (Agence Bonjour / Exhibition Girls). <span style="color:var(--blue);">El montador</span> gestiona los 38 perfiles restantes. Iniciar ambas búsquedas en simultáneo — las trilingües PT-FR-EN son el perfil más escaso en París.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--amber);"></div><div class="tl-thread"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">Septiembre – Octubre 2026</div>
-          <div class="tl-title">Validación eléctrica + aprobación sanitaria &nbsp;<span class="area-badge ab-amber">Urgente</span></div>
-          <div class="tl-desc">Verificar carga con hornos + freidoras simultáneos. Coordinar inspección sanitaria de cocina industrial según normativa francesa.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">12 – 15 octubre 2026</div>
-          <div class="tl-title tl-critical">Armado y montaje en recinto &nbsp;<span class="area-badge ab-red">Crítico</span></div>
-          <div class="tl-desc">Instalación eléctrica, hidráulica, estructura, mobiliario y comunicación visual. 677 m² con cocina industrial requiere mínimo 4 días. Coordinar ventanas de acceso con SIAL.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">16 octubre 2026 · 09:00 hs</div>
-          <div class="tl-title tl-critical">Cocina operativa &nbsp;<span class="area-badge ab-red">Deadline duro</span></div>
-          <div class="tl-desc">Heladeras encendidas, cocina limpia. Inicia preparación de degustación un día antes de la feria.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--red);"></div><div class="tl-thread"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">16 octubre 2026 · 14:00 hs</div>
-          <div class="tl-title tl-critical">Stand 100% completo &nbsp;<span class="area-badge ab-red">Deadline duro</span></div>
-          <div class="tl-desc">Todo montado, decorado y listo. Condición contractual estricta especificada en los TdR.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--green);"></div><div class="tl-thread"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">17 – 21 octubre 2026</div>
-          <div class="tl-title" style="color:var(--green);">SIAL París 2026 — En operación</div>
-          <div class="tl-desc">43 personas activas. 21/10: solo 50% del equipo. 1 persona de compras los días 16, 17 y 18.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-spine"><div class="tl-node" style="background:var(--faint);"></div></div>
-        <div class="tl-body">
-          <div class="tl-date">22 – 23 octubre 2026</div>
-          <div class="tl-title" style="color:var(--muted);">Desmontaje</div>
-          <div class="tl-desc">Incluido en contrato del montador. Todos los fees de desmontaje a cargo del contratado.</div>
-        </div>
+        <button className="login-btn" onClick={submit} disabled={loading}>
+          {loading ? "INGRESANDO..." : "INGRESAR"}
+        </button>
+        {error && <div className="login-error">{error}</div>}
       </div>
     </div>
+  );
+}
 
-    <!-- ══ PROVEEDORES ══ -->
-    <div id="panel-providers" class="panel">
-      <div class="panel-eyebrow">■ Red de montadores</div>
-      <div class="panel-title">Proveedores recomendados</div>
-      <div class="divider"></div>
-      <div class="panel-sub">Empresas con experiencia documentada en SIAL París y ferias de gran escala en Francia. Solicitar mínimo 3 cotizaciones en paralelo.</div>
+/* ══════════════════════════════════════════════
+   STAGE TRACKER COMPONENT
+══════════════════════════════════════════════ */
+function StageTracker({ currentStage, onStageClick, compact=false }) {
+  const stageIdx = STAGES.findIndex(s=>s.id===currentStage);
+  const isLost = currentStage==="perdido";
 
-      <div class="provider-grid">
-        <div class="provider-card">
-          <div class="pc-num">01</div>
-          <div class="pc-name">Expomobilia</div>
-          <div class="pc-meta">Suiza / Europa · +50 años de experiencia · página específica SIAL París 2026 · solución 360° (diseño → desmontaje) · especialistas en pabellones nacionales</div>
-          <div class="pc-tags"><span class="area-badge ab-green">Pabellones nacionales</span><span class="area-badge ab-green">SIAL referenciado</span></div>
-          <a class="pc-link" href="https://www.expomobilia.com/en/lp/sialparis" target="_blank">expomobilia.com ↗</a>
-          <div class="pc-contact">+41 52 354 74 74</div>
+  return (
+    <div className="stage-track">
+      {STAGES.map((s,i)=>{
+        const done = !isLost && i < stageIdx;
+        const curr = !isLost && s.id === currentStage;
+        const cls = done?"done":curr?"current":"";
+        return (
+          <div key={s.id} className={`stage-item ${cls}`} onClick={()=>onStageClick&&onStageClick(s.id)}>
+            <div className={`stage-dot ${cls}`}>{done?"✓":i+1}</div>
+            {!compact && <div className="stage-lbl">{s.label}</div>}
+          </div>
+        );
+      })}
+      {isLost && (
+        <div className="stage-item failed">
+          <div className="stage-dot failed">✕</div>
+          {!compact && <div className="stage-lbl" style={{color:"#e74c3c"}}>Perdido</div>}
         </div>
-        <div class="provider-card">
-          <div class="pc-num">02</div>
-          <div class="pc-name">Decore Studio Events</div>
-          <div class="pc-meta">#1 ranking Francia 2026 · alta gama · Giselle Calderon · operación local París · 100% bespoke</div>
-          <div class="pc-tags"><span class="area-badge ab-amber">Premium</span><span class="area-badge ab-green">París local</span></div>
-          <a class="pc-link" href="https://www.decore-studio-events.com/en/exhibition-stand-builders-in-paris" target="_blank">decore-studio-events.com ↗</a>
-        </div>
-        <div class="provider-card">
-          <div class="pc-num">03</div>
-          <div class="pc-name">Messe Masters</div>
-          <div class="pc-meta">Pan-europeo · Alemania, Francia, España, Italia · cotiza en español · presencia directa SIAL 2026</div>
-          <div class="pc-tags"><span class="area-badge ab-amber">Habla español</span><span class="area-badge ab-blue">Pan-europeo</span></div>
-          <a class="pc-link" href="https://www.messemasters.com/es/shows/sial-paris/" target="_blank">messemasters.com/es ↗</a>
-        </div>
-        <div class="provider-card">
-          <div class="pc-num">04</div>
-          <div class="pc-name">Blueprint Exhibits</div>
-          <div class="pc-meta">París · especialistas SIAL + Anuga · cotización + render 3D gratis en 5 días · precio fijo sin sorpresas</div>
-          <div class="pc-tags"><span class="area-badge ab-green">Alimentos / SIAL</span><span class="area-badge ab-blue">3D gratis</span></div>
-          <a class="pc-link" href="https://www.blueprintexhibits.com/es/sial-paris/" target="_blank">blueprintexhibits.com ↗</a>
-          <div class="pc-contact">enquiry@blue-prints.org</div>
-        </div>
-        <div class="provider-card">
-          <div class="pc-num">05</div>
-          <div class="pc-name">oBooths</div>
-          <div class="pc-meta">París local · Philippe Dumont · 4.500 m² de taller con socios · trato directo · precio muy competitivo · maneja pabellones enteros</div>
-          <div class="pc-tags"><span class="area-badge ab-amber">Precio competitivo</span><span class="area-badge ab-green">París local</span></div>
-          <a class="pc-link" href="https://www.obooths.com/paris/" target="_blank">obooths.com ↗</a>
-        </div>
-        <div class="provider-card">
-          <div class="pc-num">06</div>
-          <div class="pc-name">Vissual Events</div>
-          <div class="pc-meta">Francia · 20 años de experiencia en montaje local · diseño y construcción completa</div>
-          <div class="pc-tags"><span class="area-badge ab-blue">20 años en Francia</span></div>
-          <a class="pc-link" href="https://vissualevents.com/en/exhibition-stands-design-paris/" target="_blank">vissualevents.com ↗</a>
-        </div>
-      </div>
-
-      <div class="provider-full">
-        <div class="pc-num">07 — COMPARADOR</div>
-        <div class="pc-name">nstand.com</div>
-        <div class="pc-meta">Plataforma para solicitar hasta 5 propuestas de montadores para SIAL en simultáneo, gratis y sin compromiso. Útil para obtener rango de precios rápido antes de comprometerse con un proveedor.</div>
-        <div class="pc-tags"><span class="area-badge ab-amber">Hasta 5 cotizaciones simultáneas</span><span class="area-badge ab-green">Gratis / sin compromiso</span></div>
-        <a class="pc-link" href="https://www.nstand.com/sial-francia-feria-alimentacion/" target="_blank">nstand.com/sial-francia ↗</a>
-      </div>
-
-      <div class="callout">
-        <p>
-          <strong>Consejo para Galerie al enviar el brief</strong><br>
-          Siempre destacar estos 3 puntos que definen el precio y que los montadores suelen subestimar en primera cotización: <strong>(1)</strong> cocina industrial con cumplimiento normativa sanitaria francesa, <strong>(2)</strong> 2 hornos giratorios en zona de acceso público — regulaciones especiales del recinto, <strong>(3)</strong> 4 islas independientes que funcionan como único proyecto arquitectónico integrado con flujo interno de personal entre ellas.
-        </p>
-      </div>
+      )}
     </div>
+  );
+}
 
-    <!-- ══ DISEÑO ══ -->
-    <div id="panel-design" class="panel">
-      <div class="panel-eyebrow">■ Dirección creativa</div>
-      <div class="panel-title">Ideas de diseño</div>
-      <div class="divider"></div>
-      <div class="panel-sub">Tres conceptos para posicionar al Pabellón Brasileño como el stand más memorable de SIAL 2026.</div>
+/* ══════════════════════════════════════════════
+   BUDGET CALCULATOR (standalone or embedded)
+══════════════════════════════════════════════ */
+function BudgetCalc({ onSave, initialData={}, companyClients=[] }) {
+  const [form, setForm] = useState({
+    proyecto: initialData.proyecto||"",
+    cliente: initialData.cliente||"",
+    feria: initialData.feria||"",
+    destino: initialData.destino||"",
+    llegada: initialData.llegada||"",
+    partida: initialData.partida||"",
+    personas: initialData.personas||"2",
+    costoStand: initialData.costoStand||"",
+    costoCatering: initialData.costoCatering||"",
+    costoServicios: initialData.costoServicios||"",
+    moneda: initialData.moneda||"USD",
+    gastosAdminPct: initialData.gastosAdminPct ? String(initialData.gastosAdminPct*100) : "5",
+    resultadoEsperado: "",
+    notas: initialData.notas||"",
+    etapa: initialData.etapa||"exploracion",
+  });
+  const [travel, setTravel] = useState({
+    flight: initialData.flightCostPax ? String(initialData.flightCostPax) : "",
+    hotel: initialData.hotelCostNight ? String(initialData.hotelCostNight) : "",
+    daily: initialData.dailyCostPax ? String(initialData.dailyCostPax) : "",
+  });
+  const [result, setResult] = useState(null);
+  const [sharedCostNote, setSharedCostNote] = useState(null);
+  const resRef = useRef(null);
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
 
-      <div class="design-card">
-        <div class="dc-num">Concepto 01</div>
-        <div class="dc-title">"Brasil Vivo" — Mercado tropical con arquitectura verde</div>
-        <div class="dc-body">Inspirado en los mercados municipales de São Paulo y Belo Horizonte. Estructura con madera natural clara certificada FSC (pino o eucalipto), plantas tropicales reales (heliconias, bromelias, bambú) como separadores entre módulos. Techo con volúmenes irregulares que evocan techos de mercado cubierto. Los hornos giratorios se transforman en el fogón central visible desde los cuatro pasillos de circulación. La Galetería queda enmarcada por una pérgola de madera con iluminación LED cálida suspendida. Paleta: verde Brasil #009c3b + amarillo dorado + blanco roto. El cartel "Brazilian Chicken" en neón verde lima enmarca los hornos como pieza escultórica. Efecto: orgánico, cálido, aspiracional e instagrameable.</div>
-        <div class="dc-tags">
-          <span class="dc-tag">Orgánico</span>
-          <span class="dc-tag">Madera natural</span>
-          <span class="dc-tag">Verde / amarillo / blanco</span>
-          <span class="dc-tag">Plantas reales</span>
-          <span class="dc-tag">Sostenible FSC</span>
-          <span class="dc-tag">Instagrameable</span>
+  const n = nightsBetween(form.llegada, form.partida);
+  const pax = parseInt(form.personas)||1;
+
+  // Check if there are other projects going to same feria (cost sharing)
+  const sameFeraProjects = companyClients.filter(p =>
+    p.feria === form.feria && p.destino?.toLowerCase() === form.destino?.toLowerCase()
+  );
+  const totalClientsOnFeria = sameFeraProjects.length + 1;
+
+  const onDestinoBlur = () => {
+    if(!form.destino) return;
+    const d = getDef(form.destino);
+    setTravel({ flight: String(d.f), hotel: String(d.h), daily: String(d.d) });
+  };
+
+  const calcular = () => {
+    const cs = parseFloat(form.costoStand)||0;
+    const cc = parseFloat(form.costoCatering)||0;
+    const cv = parseFloat(form.costoServicios)||0;
+    const top = cs+cc+cv;
+
+    const flightUnit = parseFloat(travel.flight)||0;
+    const hotelUnit  = parseFloat(travel.hotel)||0;
+    const dailyUnit  = parseFloat(travel.daily)||0;
+
+    // Cost sharing logic — travel costs divided among all clients at same feria
+    const divisor = totalClientsOnFeria;
+    const ft  = (flightUnit * pax) / divisor;
+    const ht  = (hotelUnit * n * rooms(pax)) / divisor;
+    const dt  = (dailyUnit * n * pax) / divisor;
+    const trep = ft+ht+dt;
+
+    const pct = (parseFloat(form.gastosAdminPct)/100)||0.05;
+    const neto = parseFloat(form.resultadoEsperado)||0;
+    const costos = top+trep;
+    const rb = neto/0.75;
+    const ingresos = costos + rb/(1-pct);
+    const ga = (ingresos-costos)*pct;
+    const rbc = ingresos-costos-ga;
+    const irae = rbc*0.25;
+
+    const r = {
+      ingresos, costoStand:cs, costoCatering:cc, costoServicios:cv, totalOperativos:top,
+      flightTotal:ft, hotelTotal:ht, dailyTotal:dt, totalRepresentacion:trep,
+      flightCostPax:flightUnit, hotelCostNight:hotelUnit, dailyCostPax:dailyUnit,
+      gastosAdminPct:pct, gastosAdmin:ga, rentaBruta:rbc, irae, neto:rbc-irae,
+      moneda:form.moneda, personas:pax, nights:n,
+      proyecto:form.proyecto, cliente:form.cliente, feria:form.feria, destino:form.destino,
+      costoViajeFull: flightUnit*pax*2 + hotelUnit*n*rooms(pax) + dailyUnit*n*pax,
+      divisor,
+    };
+    setResult(r);
+    if(divisor>1) setSharedCostNote(`Costos de viaje divididos entre ${divisor} clientes en ${form.feria}.`);
+    else setSharedCostNote(null);
+    setTimeout(()=>resRef.current?.scrollIntoView({behavior:"smooth"}),100);
+  };
+
+  const canCalc = form.costoStand && form.resultadoEsperado && travel.flight && travel.hotel && travel.daily && n>0;
+
+  const handleSave = () => {
+    if(!result||!onSave) return;
+    onSave({
+      ...form,
+      personas: pax,
+      gastosAdminPct: result.gastosAdminPct,
+      ingresos: result.ingresos,
+      costoStand: result.costoStand,
+      costoCatering: result.costoCatering,
+      costoServicios: result.costoServicios,
+      flightTotal: result.flightTotal,
+      hotelTotal: result.hotelTotal,
+      dailyTotal: result.dailyTotal,
+      flightCostPax: result.flightCostPax,
+      hotelCostNight: result.hotelCostNight,
+      dailyCostPax: result.dailyCostPax,
+      gastosAdmin: result.gastosAdmin,
+      rentaBruta: result.rentaBruta,
+      irae: result.irae,
+      neto: result.neto,
+      totalRepresentacion: result.totalRepresentacion,
+      totalOperativos: result.totalOperativos,
+    });
+  };
+
+  return (
+    <div>
+      {/* 1 — Proyecto */}
+      <div className="card">
+        <div className="card-hdr"><div className="card-hdr-left"><span className="step">1</span><span className="card-title">Información del Proyecto</span></div></div>
+        <div className="card-body">
+          <div className="g2" style={{marginBottom:14}}>
+            <div className="fg"><label>Proyecto / Cliente</label><input placeholder="ej. BILBOSA" value={form.proyecto} onChange={e=>set("proyecto",e.target.value)} /></div>
+            <div className="fg"><label>Stand / Descripción</label><input placeholder="ej. Stand Pabellón B 24m²" value={form.cliente} onChange={e=>set("cliente",e.target.value)} /></div>
+            <div className="fg"><label>Nombre de la Feria</label><input placeholder="ej. Seafood Barcelona 2026" value={form.feria} onChange={e=>set("feria",e.target.value)} /></div>
+            <div className="fg">
+              <label>Moneda del Presupuesto</label>
+              <select value={form.moneda} onChange={e=>set("moneda",e.target.value)}>
+                <option value="USD">USD — Dólar Americano</option>
+                <option value="EUR">EUR — Euro</option>
+                <option value="UYU">UYU — Peso Uruguayo</option>
+              </select>
+            </div>
+            <div className="fg">
+              <label>Etapa Actual</label>
+              <select value={form.etapa} onChange={e=>set("etapa",e.target.value)}>
+                {STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
+                <option value="perdido">Perdido</option>
+              </select>
+            </div>
+            {onSave && (
+              <div className="fg"><label>Notas</label><textarea value={form.notas} onChange={e=>set("notas",e.target.value)} placeholder="Observaciones, estado, etc." /></div>
+            )}
+          </div>
+          {sameFeraProjects.length>0 && (
+            <div className="note-box savings">
+              <strong>⚡ Licuación de Costos Detectada</strong>
+              Hay {sameFeraProjects.length} proyecto{sameFeraProjects.length>1?"s":""} más en {form.feria}: {sameFeraProjects.map(p=>p.proyecto).join(", ")}.
+              Los costos de viaje se dividirán en {totalClientsOnFeria} partes.
+            </div>
+          )}
         </div>
       </div>
 
-      <div class="design-card featured">
-        <div class="dc-num">Concepto 02 — Recomendado por Galerie</div>
-        <div class="dc-title">"Proteína de Brasil" — Pabellón moderno e institucional</div>
-        <div class="dc-body">Arquitectura de líneas limpias y rectas, predominio del blanco lacado con franjas y detalles en los colores de la bandera brasileña. Comunicación visual de gran formato en todas las paredes: fotografías de campo, granjas, pollos enteros, proceso de producción. Carpintería lacada en blanco con perfilería en verde y amarillo. Cada módulo tiene identidad propia enmarcada en el sistema visual del pabellón. La Galetería se distingue con techo diferenciado: estructura de madera o malla metálica dorada suspendida, creando un ambiente "restaurante" dentro del stand. Este concepto es el más fácil de cotizar, producir y ejecutar en los plazos disponibles. Efecto: profesional, institucional, confiable.</div>
-        <div class="dc-tags">
-          <span class="dc-tag featured">Recomendado</span>
-          <span class="dc-tag">Blanco / verde / amarillo</span>
-          <span class="dc-tag">Foto gran formato</span>
-          <span class="dc-tag">Fácil de cotizar</span>
-          <span class="dc-tag">Institucional</span>
-          <span class="dc-tag">Producción segura</span>
+      {/* 2 — Costos Operativos */}
+      <div className="card">
+        <div className="card-hdr"><div className="card-hdr-left"><span className="step">2</span><span className="card-title">Costos Operativos del Stand</span></div></div>
+        <div className="card-body">
+          <div className="g3">
+            <div className="fg"><label>Stand / Montaje</label><div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoStand} onChange={e=>set("costoStand",e.target.value)} /></div></div>
+            <div className="fg"><label>Catering</label><div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoCatering} onChange={e=>set("costoCatering",e.target.value)} /></div></div>
+            <div className="fg"><label>Otros Servicios</label><div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoServicios} onChange={e=>set("costoServicios",e.target.value)} /></div></div>
+          </div>
         </div>
       </div>
 
-      <div class="design-card">
-        <div class="dc-num">Concepto 03 — Opción premium</div>
-        <div class="dc-title">"Amazônia Premium" — Stand oscuro de alto impacto</div>
-        <div class="dc-body">Alto contraste para diferenciarse radicalmente de los pabellones blancos de SIAL. Fondos en grafito oscuro o verde selva profundo, iluminación localizada y cálida sobre cada módulo y sobre la Galetería. Materiales: madera oscura laminada, perfilería en metal negro mate, luz LED muy cálida (2700K). Textos en dorado y fotografías retroiluminadas crean profundidad. Los hornos con pollos dorados girando bajo luz cálida se convierten en la pieza escultórica central. La Galetería opera visualmente como un restaurante de alta cocina. Advertencia: más complejo de ejecutar y considerablemente más costoso.</div>
-        <div class="dc-tags">
-          <span class="dc-tag">Alta gama</span>
-          <span class="dc-tag">Grafito / negro / dorado</span>
-          <span class="dc-tag">Máximo impacto visual</span>
-          <span class="dc-tag">Premium</span>
-          <span class="dc-tag">Mayor costo</span>
+      {/* 3 — Representación */}
+      <div className="card">
+        <div className="card-hdr">
+          <div className="card-hdr-left"><span className="step">3</span><span className="card-title">Costos de Representación</span></div>
+          {totalClientsOnFeria>1 && <span className="saving-badge">÷{totalClientsOnFeria} clientes</span>}
+        </div>
+        <div className="card-body">
+          <div className="g4">
+            <div className="fg">
+              <label>Ciudad destino</label>
+              <input placeholder="ej. Barcelona, Paris, Dubai..." value={form.destino}
+                onChange={e=>set("destino",e.target.value)} onBlur={onDestinoBlur} />
+            </div>
+            <div className="fg">
+              <label>Personas</label>
+              <select value={form.personas} onChange={e=>set("personas",e.target.value)}>
+                {[1,2,3,4,5,6].map(x=><option key={x} value={x}>{x} pax</option>)}
+              </select>
+            </div>
+            <div className="fg"><label>Llegada</label><input type="date" value={form.llegada} onChange={e=>set("llegada",e.target.value)} /></div>
+            <div className="fg"><label>Partida</label><input type="date" value={form.partida} onChange={e=>set("partida",e.target.value)} /></div>
+          </div>
+          {n>0 && <p className="subtotal" style={{marginTop:10}}><strong>{n} noches · {pax} persona{pax>1?"s":""}</strong>{totalClientsOnFeria>1 && <span style={{color:"#f39c12"}}> · Costos de viaje prorrateados entre {totalClientsOnFeria} clientes</span>}</p>}
+          <div className="tbadges">
+            {[
+              {k:"flight",lbl:"Pasaje por persona",sub:"ida y vuelta (total)"},
+              {k:"hotel", lbl:"Hotel por noche",   sub:`por habitación · ${rooms(pax)} hab.`},
+              {k:"daily", lbl:"Viáticos por día/pax",sub:"comida + transporte"},
+            ].map(({k,lbl,sub})=>(
+              <div className="tbadge" key={k}>
+                <div className="tb-lbl">{lbl}</div>
+                <div className="pfx" style={{marginTop:6}}>
+                  <span className="pfx-tag">{form.moneda}</span>
+                  <input type="number" value={travel[k]} onChange={e=>setTravel(t=>({...t,[k]:e.target.value}))} />
+                </div>
+                <div className="tb-sub">{sub}</div>
+              </div>
+            ))}
+          </div>
+          {travel.flight && totalClientsOnFeria>1 && (
+            <div className="note-box savings" style={{marginTop:14}}>
+              <strong>Ahorro por licuación</strong>
+              Costo viaje completo: {fc(form.moneda,(parseFloat(travel.flight)||0)*pax*2 + (parseFloat(travel.hotel)||0)*n*rooms(pax) + (parseFloat(travel.daily)||0)*n*pax)}.
+              Este proyecto absorbe solo 1/{totalClientsOnFeria} = {fc(form.moneda, ((parseFloat(travel.flight)||0)*pax + (parseFloat(travel.hotel)||0)*n*rooms(pax) + (parseFloat(travel.daily)||0)*n*pax)/totalClientsOnFeria)}
+            </div>
+          )}
         </div>
       </div>
 
-      <div class="callout">
-        <p>
-          <strong>Recomendación estratégica · Galerie</strong><br>
-          Proponer al cliente el <strong>Concepto 02</strong> como base — el más seguro en ejecución, presupuesto y plazos. Incorporar elementos del <strong>Concepto 01</strong> específicamente en la Galetería (maderas, plantas, iluminación cálida) para darle calidez en el punto más visible del stand. El <strong>Concepto 03</strong> es opción si el cliente dispone de presupuesto adicional. En todos los casos, el pasaje interior entre islas debe ser tratado como elemento de diseño — un arco o marquesina temática que refuerce la narrativa del pabellón y sea visible desde los pasillos de la feria.
-        </p>
+      {/* 4 — Financiero */}
+      <div className="card">
+        <div className="card-hdr"><div className="card-hdr-left"><span className="step">4</span><span className="card-title">Parámetros Financieros</span></div></div>
+        <div className="card-body">
+          <div className="g2">
+            <div className="fg">
+              <label>Gastos Administrativos</label>
+              <div className="sfx">
+                <input type="number" step="0.5" min="0" max="100" value={form.gastosAdminPct} onChange={e=>set("gastosAdminPct",e.target.value)} />
+                <span className="sfx-tag">%</span>
+              </div>
+              <p className="hint">Pre-cargado en 5% — política interna Galerie</p>
+            </div>
+            <div className="fg">
+              <label>Resultado esperado después de impuestos ({form.moneda})</label>
+              <div className="pfx">
+                <span className="pfx-tag">{form.moneda}</span>
+                <input type="number" placeholder="ej. 1500" value={form.resultadoEsperado} onChange={e=>set("resultadoEsperado",e.target.value)} />
+              </div>
+              <p className="hint">IRAE Uruguay = 25% sobre renta bruta</p>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <div style={{display:"flex",justifyContent:"center",marginTop:8}}>
+        <button className="btn-dark" style={{padding:"16px 48px",fontSize:11,letterSpacing:4}} onClick={calcular} disabled={!canCalc}>
+          {canCalc ? "◆  CALCULAR PRESUPUESTO" : "COMPLETÁ TODOS LOS CAMPOS"}
+        </button>
+      </div>
+
+      {result && (
+        <div ref={resRef}>
+          <div className="div-label"><span>Resultado</span></div>
+          <div className="results">
+            <div className="res-top">
+              <div className="res-ey">Presupuesto calculado</div>
+              <div className="res-title">{result.feria||"Feria Internacional"}{result.destino?` — ${result.destino}`:""}</div>
+              {result.proyecto && <div className="res-sub">{result.proyecto}{result.cliente?` · ${result.cliente}`:""}</div>}
+              {result.divisor>1 && <div className="res-sub" style={{color:"#f39c12",marginTop:4}}>⚡ Costos de viaje ÷ {result.divisor} clientes</div>}
+            </div>
+
+            <div className="res-body">
+              <div className="res-sect"><span>Costos Operativos</span><span>{fc(result.moneda,result.totalOperativos)}</span></div>
+              {result.costoStand>0    && <div className="res-row ind"><span>Stand / Montaje</span><span className="res-amt">{fc(result.moneda,result.costoStand)}</span></div>}
+              {result.costoCatering>0 && <div className="res-row ind"><span>Catering</span><span className="res-amt">{fc(result.moneda,result.costoCatering)}</span></div>}
+              {result.costoServicios>0&& <div className="res-row ind"><span>Servicios</span><span className="res-amt">{fc(result.moneda,result.costoServicios)}</span></div>}
+
+              <div className="res-sect"><span>Costos de Representación {result.divisor>1?`(1/${result.divisor} del viaje)`:""}</span><span>{fc(result.moneda,result.totalRepresentacion)}</span></div>
+              <div className="res-row ind"><span>Pasajes ({result.personas} pax, ida y vuelta)</span><span className="res-amt">{fc(result.moneda,result.flightTotal)}</span></div>
+              <div className="res-row ind"><span>Hotel ({result.nights} noches × {rooms(result.personas)} hab.)</span><span className="res-amt">{fc(result.moneda,result.hotelTotal)}</span></div>
+              <div className="res-row ind"><span>Viáticos ({result.nights} días × {result.personas} pax)</span><span className="res-amt">{fc(result.moneda,result.dailyTotal)}</span></div>
+              {result.divisor>1 && (
+                <div className="res-row ind" style={{color:"#f39c12"}}>
+                  <span>Ahorro vs. un solo cliente</span>
+                  <span className="res-amt gold">−{fc(result.moneda, result.costoViajeFull - result.totalRepresentacion)}</span>
+                </div>
+              )}
+
+              <div className="res-sect"><span>Gastos Administrativos ({(result.gastosAdminPct*100).toFixed(1)}%)</span><span>{fc(result.moneda,result.gastosAdmin)}</span></div>
+              <div className="res-sect"><span>Renta Bruta antes de IRAE</span><span>{fc(result.moneda,result.rentaBruta)}</span></div>
+              <div className="res-row ind"><span>IRAE (25%)</span><span className="res-amt neg">({fc(result.moneda,result.irae)})</span></div>
+              <div className="res-neto">
+                <span>Resultado Neto después de Impuestos</span>
+                <span className="res-amt pos">{fc(result.moneda,result.neto)}</span>
+              </div>
+            </div>
+
+            <div className="big-box">
+              <div className="big-lbl">Ingreso Operativo a Cotizar</div>
+              <div className="big-val">{fc(result.moneda, result.ingresos)}</div>
+              <div className="big-sub">Valor mínimo a cobrar por el stand</div>
+            </div>
+
+            <div className="res-tags">
+              {result.destino && <span className="tag">{result.destino}</span>}
+              <span className="tag">{result.nights} noches</span>
+              <span className="tag">{result.personas} pax</span>
+              <span className="tag">IRAE 25%</span>
+              <span className="tag">Admin {(result.gastosAdminPct*100).toFixed(0)}%</span>
+              <span className="tag">{result.moneda}</span>
+              {result.divisor>1 && <span className="tag" style={{borderColor:"#f39c1244",color:"#f39c12"}}>÷{result.divisor} clientes</span>}
+            </div>
+
+            <div className="res-actions">
+              {onSave && <button className="btn-dark" onClick={handleSave}>◆  GUARDAR PROYECTO</button>}
+              <button className="btn-ghost-inv" onClick={()=>{setResult(null);window.scrollTo({top:0,behavior:"smooth"});}}>Nuevo cálculo</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
 
-    <!-- ══ STAFFING ══ -->
-    <div id="panel-staffing" class="panel">
-      <div class="panel-eyebrow">■ Estrategia de contratación</div>
-      <div class="panel-title">Staffing — 43 personas</div>
-      <div class="divider"></div>
-      <div class="panel-sub">Modelo split recomendado: Galerie contrata directamente los perfiles estratégicos. El montador gestiona los perfiles de servicio como línea desglosada en el contrato.</div>
+/* ══════════════════════════════════════════════
+   DASHBOARD VIEW
+══════════════════════════════════════════════ */
+function Dashboard({ projects }) {
+  const active = projects.filter(p=>!["completado","perdido"].includes(p.etapa));
+  const completed = projects.filter(p=>p.etapa==="completado");
+  const lost = projects.filter(p=>p.etapa==="perdido");
+  const revenue = completed.reduce((a,p)=>a+(p.ingresos||0),0);
+  const netProfit = completed.reduce((a,p)=>a+(p.neto||0),0);
 
-      <div class="kpi-grid" style="margin-bottom:28px;">
-        <div class="kpi-cell" style="border-left:2px solid var(--accent);">
-          <div class="kpi-eyebrow" style="color:var(--accent);">■ Galerie contrata</div>
-          <div class="kpi-val" style="color:var(--accent);font-size:28px;">5</div>
-          <div class="kpi-sub">Recepcionistas trilingüe PT-FR-EN · €9K–14K estimado</div>
+  // Group by feria
+  const byFeria = {};
+  projects.forEach(p => {
+    if(!p.feria) return;
+    if(!byFeria[p.feria]) byFeria[p.feria]={ projects:[], destino:p.destino };
+    byFeria[p.feria].projects.push(p);
+  });
+
+  const feriaData = Object.entries(byFeria).map(([name,{projects:ps,destino}])=>{
+    const activos = ps.filter(p=>!["perdido"].includes(p.etapa));
+    const totalIngresos = activos.reduce((a,p)=>a+(p.ingresos||0),0);
+    const totalNeto = activos.reduce((a,p)=>a+(p.neto||0),0);
+    // travel cost that would be without sharing
+    const travelFull = ps[0] ? ((ps[0].flightCostPax||0)*2*(ps[0].personas||2) + (ps[0].hotelCostNight||0)*nightsBetween(ps[0].llegada,ps[0].partida)*rooms(ps[0].personas||2) + (ps[0].dailyCostPax||0)*nightsBetween(ps[0].llegada,ps[0].partida)*(ps[0].personas||2)) : 0;
+    const travelSaved = activos.length>1 ? travelFull*(activos.length-1)/activos.length : 0;
+    return { name, destino, ps: activos, totalIngresos, totalNeto, travelSaved };
+  }).sort((a,b)=>b.totalIngresos-a.totalIngresos);
+
+  // Pipeline counts
+  const stageCounts = {};
+  STAGES.forEach(s=>{ stageCounts[s.id]=projects.filter(p=>p.etapa===s.id).length; });
+
+  return (
+    <div className="page-wide">
+      {/* Stats */}
+      <div className="stats-grid">
+        <div className="stat-card dark">
+          <div className="stat-lbl">Proyectos Activos</div>
+          <div className="stat-val">{active.length}</div>
+          <div className="stat-sub">{projects.length} proyectos en total</div>
         </div>
-        <div class="kpi-cell" style="border-left:2px solid var(--blue);">
-          <div class="kpi-eyebrow" style="color:var(--blue);">■ Montador gestiona</div>
-          <div class="kpi-val" style="color:var(--blue);font-size:28px;">38</div>
-          <div class="kpi-sub">Coordinador, cocina, mozos, pantry, limpieza · €65K–110K estimado</div>
+        <div className="stat-card green">
+          <div className="stat-lbl">Proyectos Completados</div>
+          <div className="stat-val">{completed.length}</div>
+          <div className="stat-sub">Tasa éxito: {projects.length ? Math.round(completed.length/projects.length*100) : 0}%</div>
+        </div>
+        <div className="stat-card gold">
+          <div className="stat-lbl">Revenue Total (Completados)</div>
+          <div className="stat-val" style={{fontSize:20}}>USD {fmt(revenue)}</div>
+          <div className="stat-sub">Neto: USD {fmt(netProfit)}</div>
+        </div>
+        <div className="stat-card red">
+          <div className="stat-lbl">Perdidos</div>
+          <div className="stat-val">{lost.length}</div>
+          <div className="stat-sub">{projects.length ? Math.round(lost.length/projects.length*100) : 0}% tasa de pérdida</div>
         </div>
       </div>
 
-      <!-- BLOQUE GALERIE -->
-      <div style="border:1px solid rgba(200,185,122,0.25);border-radius:var(--r);overflow:hidden;margin-bottom:16px;">
-        <div style="background:rgba(200,185,122,0.08);padding:14px 18px;border-bottom:1px solid rgba(200,185,122,0.2);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      {/* Pipeline */}
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:"9px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#818181",marginBottom:12,fontFamily:"'Poppins',sans-serif"}}>Pipeline de Proyectos</div>
+        <div className="pipeline">
+          {STAGES.slice(0,6).map(s=>(
+            <div key={s.id} className="pipe-stage">
+              <div className="pipe-lbl">{s.label}</div>
+              <div className="pipe-count">{stageCounts[s.id]||0}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Por Feria */}
+      <div style={{fontSize:"9px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#818181",marginBottom:12,fontFamily:"'Poppins',sans-serif"}}>Potencial por Feria</div>
+      {feriaData.length===0 && <div className="empty"><div className="empty-icon">📊</div><div className="empty-title">Sin datos de ferias</div><div className="empty-sub">Agregá proyectos para ver el dashboard por feria</div></div>}
+      {feriaData.map(fd=>(
+        <div key={fd.name} className="feria-card">
+          <div className="feria-hdr">
+            <div>
+              <div className="feria-name">{fd.name}</div>
+              <div className="feria-meta">{fd.destino} · {fd.ps.length} cliente{fd.ps.length!==1?"s":""} en esta feria</div>
+            </div>
+            <div className="feria-stats">
+              {fd.travelSaved>0 && (
+                <div className="feria-stat">
+                  <div className="feria-stat-lbl">Ahorro viaje</div>
+                  <div className="feria-stat-val" style={{color:"#f39c12"}}>+{fc("USD",fd.travelSaved)}</div>
+                </div>
+              )}
+              <div className="feria-stat">
+                <div className="feria-stat-lbl">Ingresos totales</div>
+                <div className="feria-stat-val">{fc(fd.ps[0]?.moneda||"USD",fd.totalIngresos)}</div>
+              </div>
+              <div className="feria-stat">
+                <div className="feria-stat-lbl">Neto total</div>
+                <div className="feria-stat-val" style={{color:"#2ecc71"}}>{fc(fd.ps[0]?.moneda||"USD",fd.totalNeto)}</div>
+              </div>
+            </div>
+          </div>
+          <div className="feria-body">
+            <div className="clients-list">
+              {fd.ps.map(p=>(
+                <div key={p.id} className="client-row">
+                  <div>
+                    <div className="client-name">{p.proyecto}</div>
+                    <div className="client-meta">{p.cliente} · <span className={`badge ${STAGE_BADGE[p.etapa]||""}`}>{STAGES.find(s=>s.id===p.etapa)?.label||p.etapa}</span></div>
+                  </div>
+                  <div>
+                    <div className="client-amount">{fc(p.moneda,p.ingresos)}</div>
+                    <div className="client-profit">Neto: {fc(p.moneda,p.neto)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   PROJECT DETAIL MODAL — Full edit
+══════════════════════════════════════════════ */
+function ProjectModal({ project, onClose, onUpdate, onDelete, allProjects }) {
+  const [mode, setMode] = useState("view"); // "view" | "edit-stage" | "edit-quote"
+  const [saving, setSaving] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+
+  // Stage edit state
+  const [newStage, setNewStage] = useState(project.etapa);
+  const [notas, setNotas] = useState(project.notas||"");
+
+  // Quote edit state — mirrors BudgetCalc fields
+  const [qForm, setQForm] = useState({
+    proyecto: project.proyecto||"",
+    cliente: project.cliente||"",
+    feria: project.feria||"",
+    destino: project.destino||"",
+    llegada: project.llegada||"",
+    partida: project.partida||"",
+    personas: String(project.personas||2),
+    costoStand: String(project.costoStand||""),
+    costoCatering: String(project.costoCatering||""),
+    costoServicios: String(project.costoServicios||""),
+    moneda: project.moneda||"USD",
+    gastosAdminPct: String((project.gastosAdminPct||0.05)*100),
+  });
+  const [qTravel, setQTravel] = useState({
+    flight: String(project.flightCostPax || Math.round((project.flightTotal||0)/(project.personas||2)) || ""),
+    hotel:  String(project.hotelCostNight || ""),
+    daily:  String(project.dailyCostPax || ""),
+  });
+  const [resultadoEsperado, setResultadoEsperado] = useState(String(project.neto||""));
+  const [qResult, setQResult] = useState(null);
+
+  const setQ = (k,v) => setQForm(f=>({...f,[k]:v}));
+  const n = nightsBetween(qForm.llegada, qForm.partida);
+  const pax = parseInt(qForm.personas)||1;
+
+  const sameFeraCount = allProjects.filter(p=>p.feria===project.feria&&p.id!==project.id&&!["perdido"].includes(p.etapa)).length;
+  const divisor = sameFeraCount + 1;
+
+  const onDestinoBlur = () => {
+    if(!qForm.destino) return;
+    const d = getDef(qForm.destino);
+    setQTravel({ flight: String(d.f), hotel: String(d.h), daily: String(d.d) });
+  };
+
+  const recalcular = () => {
+    const cs = parseFloat(qForm.costoStand)||0;
+    const cc = parseFloat(qForm.costoCatering)||0;
+    const cv = parseFloat(qForm.costoServicios)||0;
+    const top = cs+cc+cv;
+    const ft = (parseFloat(qTravel.flight)||0)*pax / divisor;
+    const ht = (parseFloat(qTravel.hotel)||0)*n*rooms(pax) / divisor;
+    const dt = (parseFloat(qTravel.daily)||0)*n*pax / divisor;
+    const trep = ft+ht+dt;
+    const pct = (parseFloat(qForm.gastosAdminPct)/100)||0.05;
+    const neto = parseFloat(resultadoEsperado)||0;
+    const costos = top+trep;
+    const rb = neto/0.75;
+    const ingresos = costos + rb/(1-pct);
+    const ga = (ingresos-costos)*pct;
+    const rbc = ingresos-costos-ga;
+    const irae = rbc*0.25;
+    setQResult({
+      ingresos, costoStand:cs, costoCatering:cc, costoServicios:cv, totalOperativos:top,
+      flightTotal:ft, hotelTotal:ht, dailyTotal:dt, totalRepresentacion:trep,
+      flightCostPax:parseFloat(qTravel.flight)||0, hotelCostNight:parseFloat(qTravel.hotel)||0,
+      dailyCostPax:parseFloat(qTravel.daily)||0,
+      gastosAdminPct:pct, gastosAdmin:ga, rentaBruta:rbc, irae, neto:rbc-irae,
+      moneda:qForm.moneda, personas:pax, nights:n, divisor,
+    });
+  };
+
+  const saveStage = async () => {
+    setSaving(true);
+    await onUpdate(project.id, { etapa: newStage, notas });
+    setSaving(false);
+    setMode("view");
+  };
+
+  const saveQuote = async () => {
+    if(!qResult) return;
+    setSaving(true);
+    await onUpdate(project.id, {
+      ...qForm,
+      personas: pax,
+      gastosAdminPct: qResult.gastosAdminPct,
+      ingresos: qResult.ingresos,
+      costoStand: qResult.costoStand,
+      costoCatering: qResult.costoCatering,
+      costoServicios: qResult.costoServicios,
+      flightTotal: qResult.flightTotal,
+      hotelTotal: qResult.hotelTotal,
+      dailyTotal: qResult.dailyTotal,
+      flightCostPax: qResult.flightCostPax,
+      hotelCostNight: qResult.hotelCostNight,
+      dailyCostPax: qResult.dailyCostPax,
+      gastosAdmin: qResult.gastosAdmin,
+      rentaBruta: qResult.rentaBruta,
+      irae: qResult.irae,
+      neto: qResult.neto,
+      totalRepresentacion: qResult.totalRepresentacion,
+      totalOperativos: qResult.totalOperativos,
+    });
+    setSaving(false);
+    setMode("view");
+  };
+
+  const cur = project.moneda;
+
+  return (
+    <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{maxWidth:800}}>
+        <div className="modal-hdr">
           <div>
-            <div style="font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px;font-family:'DM Mono',monospace;margin-bottom:3px;">■ Galerie contrata directamente</div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;">5 recepcionistas trilingüe PT-FR-EN</div>
+            <div className="modal-title">{project.proyecto}</div>
+            <div style={{fontSize:10,color:"#818181",marginTop:2,letterSpacing:1}}>{project.feria} · {project.destino}</div>
           </div>
-          <div style="text-align:right;flex-shrink:0;">
-            <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--accent);">€9K–14K</div>
-            <div style="font-size:11px;color:var(--faint);">estimado 5 días</div>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <button className="modal-close" onClick={onClose}>✕</button>
           </div>
         </div>
-        <div style="padding:16px 18px;background:var(--dark);">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7;">Son la <strong style="color:var(--white);font-weight:500;">cara visible del pabellón</strong> — el perfil más estratégico del proyecto y el más difícil de conseguir en París. Galerie los contrata directamente para tener control total sobre la calidad, sin pagar el margen del montador (~25–40% encima del costo real).</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-            <div style="background:var(--mid);border-radius:var(--r);padding:12px 14px;">
-              <div style="font-size:11px;color:var(--faint);margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;">Distribución</div>
-              <div style="font-size:12px;color:var(--white);line-height:1.9;">2 → área pollo<br>1 → área cerdo<br>1 → área huevos<br>1 → área MBRF</div>
+
+        {/* Tab switcher inside modal */}
+        <div style={{background:"#1e1e1e",display:"flex",borderBottom:"1px solid #2a2a2a"}}>
+          {[
+            {id:"view",      label:"Resumen"},
+            {id:"edit-stage",label:"Cambiar Etapa"},
+            {id:"edit-quote",label:"Editar Cotización"},
+          ].map(t=>(
+            <div key={t.id}
+              onClick={()=>setMode(t.id)}
+              style={{
+                padding:"10px 20px", fontSize:9, letterSpacing:"2px", textTransform:"uppercase",
+                fontFamily:"'Poppins',sans-serif", cursor:"pointer", color:mode===t.id?"#e5e3e0":"#818181",
+                borderBottom:mode===t.id?"2px solid #b1ada2":"2px solid transparent", transition:"all .15s"
+              }}>
+              {t.label}
             </div>
-            <div style="background:var(--mid);border-radius:var(--r);padding:12px 14px;">
-              <div style="font-size:11px;color:var(--faint);margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;">Requisitos</div>
-              <div style="font-size:12px;color:var(--white);line-height:1.9;">Portugués · Francés · Inglés<br>Experiencia en ferias<br>Empleadas legalmente en FR<br>Disponibles 17–21/10</div>
-            </div>
-          </div>
-          <div style="font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:0.7px;font-family:'DM Mono',monospace;margin-bottom:10px;">Agencias recomendadas — cotizar las 3 en paralelo</div>
-          <div style="display:flex;flex-direction:column;gap:1px;border-radius:var(--r);overflow:hidden;">
-            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-              <div>
-                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Agence Bonjour</div>
-                <div style="font-size:11px;color:var(--muted);">París local · multilingüe · +10 años en salones · Paris-Nord Villepinte referenciado</div>
+          ))}
+        </div>
+
+        <div className="modal-body">
+
+          {/* ── VIEW MODE ── */}
+          {mode==="view" && (
+            <>
+              <div style={{marginBottom:20}}>
+                <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Etapa Actual</div>
+                <StageTracker currentStage={project.etapa} />
               </div>
-              <a href="https://www.agencebonjour.fr" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(200,185,122,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">agencebonjour.fr ↗</a>
-            </div>
-            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-              <div>
-                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Exhibition Girls Limited</div>
-                <div style="font-size:11px;color:var(--muted);">Oficina local París · empleadas legalmente · Paris-Nord Villepinte referenciado</div>
+              <div className="g2" style={{marginBottom:20}}>
+                <div>
+                  <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:4,fontFamily:"'Poppins',sans-serif"}}>Stand</div>
+                  <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>{project.cliente||"—"}</div>
+                  <div style={{fontSize:"11px",color:"#818181"}}>{project.llegada||"—"} → {project.partida||"—"} · {project.personas||2} pax</div>
+                </div>
+                <div>
+                  <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:4,fontFamily:"'Poppins',sans-serif"}}>Notas</div>
+                  <div style={{fontSize:"12px",color:"#262626",lineHeight:1.5}}>{project.notas||<span style={{color:"#b1ada2"}}>Sin notas</span>}</div>
+                </div>
               </div>
-              <a href="https://www.exhibition-girls.com/paris-hostess-agency/" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(200,185,122,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">exhibition-girls.com ↗</a>
-            </div>
-            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-              <div>
-                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Expo Stars</div>
-                <div style="font-size:11px;color:var(--muted);">100 ciudades · 53 países · personal local bilingüe · opción más económica para este perfil</div>
+              <div className="results">
+                <div className="res-body" style={{paddingTop:16}}>
+                  <div className="res-sect"><span>Costos Operativos</span><span>{fc(cur,project.totalOperativos)}</span></div>
+                  {project.costoStand>0    && <div className="res-row ind"><span>Stand / Montaje</span><span className="res-amt">{fc(cur,project.costoStand)}</span></div>}
+                  {project.costoCatering>0 && <div className="res-row ind"><span>Catering</span><span className="res-amt">{fc(cur,project.costoCatering)}</span></div>}
+                  {project.costoServicios>0&& <div className="res-row ind"><span>Servicios</span><span className="res-amt">{fc(cur,project.costoServicios)}</span></div>}
+                  <div className="res-sect"><span>Representación{sameFeraCount>0?` (÷${divisor})`:""}</span><span>{fc(cur,project.totalRepresentacion)}</span></div>
+                  <div className="res-row ind"><span>Pasajes</span><span className="res-amt">{fc(cur,project.flightTotal)}</span></div>
+                  <div className="res-row ind"><span>Hotel</span><span className="res-amt">{fc(cur,project.hotelTotal)}</span></div>
+                  <div className="res-row ind"><span>Viáticos</span><span className="res-amt">{fc(cur,project.dailyTotal)}</span></div>
+                  <div className="res-sect"><span>Gastos Admin ({((project.gastosAdminPct||0.05)*100).toFixed(0)}%)</span><span>{fc(cur,project.gastosAdmin)}</span></div>
+                  <div className="res-sect"><span>IRAE (25%)</span><span className="res-amt neg">{fc(cur,project.irae)}</span></div>
+                  <div className="res-neto"><span>Resultado Neto</span><span className="res-amt pos">{fc(cur,project.neto)}</span></div>
+                </div>
+                <div className="big-box" style={{margin:"0 24px 16px"}}>
+                  <div className="big-lbl">Ingreso a Cotizar</div>
+                  <div className="big-val" style={{fontSize:36}}>{fc(cur,project.ingresos)}</div>
+                </div>
               </div>
-              <a href="https://expostars.com/service/booth-staffing/" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(200,185,122,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">expostars.com ↗</a>
-            </div>
-            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-              <div>
-                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Manon Gaimard</div>
-                <div style="font-size:11px;color:var(--muted);">Intérprete FR-EN-PT · red de intérpretes especializados en ferias en Villepinte</div>
+              {sameFeraCount>0 && (
+                <div className="note-box savings" style={{marginTop:14}}>
+                  <strong>⚡ Feria Compartida</strong>
+                  {sameFeraCount} cliente{sameFeraCount>1?"s":""} más en {project.feria}. Costos de viaje divididos entre {divisor} proyectos.
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ── EDIT STAGE MODE ── */}
+          {mode==="edit-stage" && (
+            <>
+              <div style={{marginBottom:16}}>
+                <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Seleccioná la etapa actual haciendo click</div>
+                <div className="stage-track">
+                  {STAGES.map((s,i)=>{
+                    const stageIdx = STAGES.findIndex(x=>x.id===newStage);
+                    const done = i < stageIdx;
+                    const curr = s.id === newStage;
+                    const cls = done?"done":curr?"current":"";
+                    return (
+                      <div key={s.id} className={`stage-item ${cls}`} onClick={()=>setNewStage(s.id)} style={{cursor:"pointer"}}>
+                        <div className={`stage-dot ${cls}`} style={{width:28,height:28,fontSize:10}}>{done?"✓":i+1}</div>
+                        <div className="stage-lbl" style={{fontSize:8}}>{s.label}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{marginTop:16}}>
+                  <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:6,fontFamily:"'Poppins',sans-serif"}}>O elegí directamente</div>
+                  <select value={newStage} onChange={e=>setNewStage(e.target.value)}>
+                    {STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
+                    <option value="perdido">Perdido</option>
+                  </select>
+                </div>
               </div>
-              <a href="https://www.manongaimard.com/en/trade-fairs/" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(200,185,122,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">manongaimard.com ↗</a>
-            </div>
-          </div>
+              <div style={{marginTop:16}}>
+                <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:6,fontFamily:"'Poppins',sans-serif"}}>Notas / Observaciones</div>
+                <textarea value={notas} onChange={e=>setNotas(e.target.value)} rows={4}
+                  placeholder="Actualizá el estado, comentarios del cliente, próximos pasos..." />
+              </div>
+            </>
+          )}
+
+          {/* ── EDIT QUOTE MODE ── */}
+          {mode==="edit-quote" && (
+            <>
+              <div style={{fontSize:"10px",color:"#818181",marginBottom:20,background:"#f0eeeb",padding:"10px 14px",borderLeft:"3px solid #b1ada2"}}>
+                Editá los valores y recalculá. Al guardar se actualiza el presupuesto del proyecto.
+              </div>
+
+              {/* Datos básicos */}
+              <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Datos del Proyecto</div>
+              <div className="g2" style={{marginBottom:16}}>
+                <div className="fg"><label>Proyecto / Cliente</label><input value={qForm.proyecto} onChange={e=>setQ("proyecto",e.target.value)} /></div>
+                <div className="fg"><label>Stand / Descripción</label><input value={qForm.cliente} onChange={e=>setQ("cliente",e.target.value)} /></div>
+                <div className="fg"><label>Nombre de la Feria</label><input value={qForm.feria} onChange={e=>setQ("feria",e.target.value)} /></div>
+                <div className="fg">
+                  <label>Moneda</label>
+                  <select value={qForm.moneda} onChange={e=>setQ("moneda",e.target.value)}>
+                    <option value="USD">USD</option><option value="EUR">EUR</option><option value="UYU">UYU</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Fechas y destino */}
+              <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Fechas y Destino</div>
+              <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:14,marginBottom:16}}>
+                <div className="fg">
+                  <label>Ciudad Destino</label>
+                  <input value={qForm.destino} onChange={e=>setQ("destino",e.target.value)} onBlur={onDestinoBlur} />
+                </div>
+                <div className="fg">
+                  <label>Personas</label>
+                  <select value={qForm.personas} onChange={e=>setQ("personas",e.target.value)}>
+                    {[1,2,3,4,5,6].map(x=><option key={x} value={x}>{x} pax</option>)}
+                  </select>
+                </div>
+                <div className="fg"><label>Llegada</label><input type="date" value={qForm.llegada} onChange={e=>setQ("llegada",e.target.value)} /></div>
+                <div className="fg"><label>Partida</label><input type="date" value={qForm.partida} onChange={e=>setQ("partida",e.target.value)} /></div>
+              </div>
+
+              {/* Costos operativos */}
+              <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Costos Operativos</div>
+              <div className="g3" style={{marginBottom:16}}>
+                <div className="fg"><label>Stand / Montaje</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoStand} onChange={e=>setQ("costoStand",e.target.value)} /></div></div>
+                <div className="fg"><label>Catering</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoCatering} onChange={e=>setQ("costoCatering",e.target.value)} /></div></div>
+                <div className="fg"><label>Servicios</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoServicios} onChange={e=>setQ("costoServicios",e.target.value)} /></div></div>
+              </div>
+
+              {/* Costos de viaje */}
+              <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>
+                Costos de Viaje {divisor>1?<span style={{color:"#f39c12"}}> · ÷{divisor} clientes</span>:null}
+              </div>
+              <div className="g3" style={{marginBottom:16}}>
+                <div className="fg"><label>Pasaje/pax I+V</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.flight} onChange={e=>setQTravel(t=>({...t,flight:e.target.value}))} /></div></div>
+                <div className="fg"><label>Hotel/noche/hab</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.hotel} onChange={e=>setQTravel(t=>({...t,hotel:e.target.value}))} /></div></div>
+                <div className="fg"><label>Viáticos/día/pax</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.daily} onChange={e=>setQTravel(t=>({...t,daily:e.target.value}))} /></div></div>
+              </div>
+
+              {/* Financiero */}
+              <div className="g2" style={{marginBottom:20}}>
+                <div className="fg">
+                  <label>Gastos Administrativos</label>
+                  <div className="sfx"><input type="number" step="0.5" value={qForm.gastosAdminPct} onChange={e=>setQ("gastosAdminPct",e.target.value)} /><span className="sfx-tag">%</span></div>
+                </div>
+                <div className="fg">
+                  <label>Resultado esperado neto ({qForm.moneda})</label>
+                  <div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={resultadoEsperado} onChange={e=>setResultadoEsperado(e.target.value)} /></div>
+                </div>
+              </div>
+
+              <div style={{display:"flex",justifyContent:"center",marginBottom:20}}>
+                <button className="btn-dark" onClick={recalcular}
+                  disabled={!qForm.costoStand||!resultadoEsperado||!qTravel.flight||n<=0}>
+                  ◆ RECALCULAR
+                </button>
+              </div>
+
+              {qResult && (
+                <div className="results">
+                  <div className="res-body" style={{paddingTop:16}}>
+                    <div className="res-sect"><span>Costos Operativos</span><span>{fc(qResult.moneda,qResult.totalOperativos)}</span></div>
+                    <div className="res-sect"><span>Representación{qResult.divisor>1?` (÷${qResult.divisor})`:""}</span><span>{fc(qResult.moneda,qResult.totalRepresentacion)}</span></div>
+                    <div className="res-sect"><span>Admin + IRAE</span><span>{fc(qResult.moneda,qResult.gastosAdmin+qResult.irae)}</span></div>
+                    <div className="res-neto"><span>Resultado Neto</span><span className="res-amt pos">{fc(qResult.moneda,qResult.neto)}</span></div>
+                  </div>
+                  <div className="big-box" style={{margin:"0 24px 16px"}}>
+                    <div className="big-lbl">Nuevo Ingreso a Cotizar</div>
+                    <div className="big-val" style={{fontSize:36}}>{fc(qResult.moneda,qResult.ingresos)}</div>
+                    <div className="big-sub">Diferencia vs anterior: {qResult.ingresos>project.ingresos?"+":""}
+                      {fc(qResult.moneda,qResult.ingresos-(project.ingresos||0))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+        </div>
+
+        <div className="modal-footer">
+          {!confirm
+            ? <button className="btn-danger" onClick={()=>setConfirm(true)}>Eliminar proyecto</button>
+            : <button className="btn-danger" onClick={()=>{ onDelete(project.id); onClose(); }}>¿Confirmar?</button>
+          }
+          <button className="btn-ghost" onClick={onClose}>Cerrar</button>
+          {mode==="edit-stage" && (
+            <button className="btn-dark" onClick={saveStage} disabled={saving}>
+              {saving?"Guardando...":"Guardar Etapa"}
+            </button>
+          )}
+          {mode==="edit-quote" && qResult && (
+            <button className="btn-dark" onClick={saveQuote} disabled={saving}>
+              {saving?"Guardando...":"Guardar Cotización"}
+            </button>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
 
-      <!-- BLOQUE MONTADOR -->
-      <div style="border:1px solid rgba(106,143,176,0.25);border-radius:var(--r);overflow:hidden;margin-bottom:16px;">
-        <div style="background:rgba(106,143,176,0.08);padding:14px 18px;border-bottom:1px solid rgba(106,143,176,0.2);display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <div>
-            <div style="font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:0.8px;font-family:'DM Mono',monospace;margin-bottom:3px;">■ Montador gestiona — línea desglosada en contrato</div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;">38 personas de servicio</div>
-          </div>
-          <div style="text-align:right;flex-shrink:0;">
-            <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--blue);">€65K–110K</div>
-            <div style="font-size:11px;color:var(--faint);">estimado 5–6 días</div>
-          </div>
+/* ══════════════════════════════════════════════
+   PROJECTS LIST VIEW
+══════════════════════════════════════════════ */
+function ProjectsList({ projects, onUpdate, onDelete }) {
+  const [selected, setSelected] = useState(null);
+  const [filter, setFilter] = useState("todos");
+  const [search, setSearch] = useState("");
+
+  const filtered = projects.filter(p => {
+    const matchStage = filter==="todos"||p.etapa===filter;
+    const matchSearch = !search || p.proyecto?.toLowerCase().includes(search.toLowerCase()) ||
+      p.feria?.toLowerCase().includes(search.toLowerCase()) || p.destino?.toLowerCase().includes(search.toLowerCase());
+    return matchStage && matchSearch;
+  });
+
+  return (
+    <div className="page-wide">
+      {/* Filters */}
+      <div style={{display:"flex",gap:12,marginBottom:20,flexWrap:"wrap",alignItems:"center"}}>
+        <input placeholder="Buscar proyecto, feria, destino..." value={search}
+          onChange={e=>setSearch(e.target.value)}
+          style={{flex:"1",minWidth:200,maxWidth:340}} />
+        <select value={filter} onChange={e=>setFilter(e.target.value)} style={{width:"auto",minWidth:160}}>
+          <option value="todos">Todas las etapas</option>
+          {STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
+          <option value="perdido">Perdido</option>
+        </select>
+      </div>
+
+      {filtered.length===0 ? (
+        <div className="empty">
+          <div className="empty-icon">📁</div>
+          <div className="empty-title">Sin proyectos</div>
+          <div className="empty-sub">Ajustá el filtro o creá un nuevo proyecto</div>
         </div>
-        <div style="padding:16px 18px;background:var(--dark);">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7;">El montador tiene acceso a redes locales de personal de servicio en París. <strong style="color:var(--white);font-weight:500;">Condición no negociable:</strong> este ítem debe aparecer cotizado como línea separada — nunca mezclado en el precio global de estructura.</div>
-          <div style="background:var(--mid);border-radius:var(--r);padding:0 14px;margin-bottom:16px;">
-            <table style="width:100%;border-collapse:collapse;">
-              <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 0;font-size:12px;color:var(--muted);">1 coordinador de stand</td><td style="padding:8px 0;font-size:11px;color:var(--faint);text-align:right;font-family:'DM Mono',monospace;">16–21/10</td></tr>
-              <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 0;font-size:12px;color:var(--muted);">4 asistentes de cocina</td><td style="padding:8px 0;font-size:11px;color:var(--faint);text-align:right;font-family:'DM Mono',monospace;">16–21/10</td></tr>
-              <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 0;font-size:12px;color:var(--muted);">1 persona de compras de mercado</td><td style="padding:8px 0;font-size:11px;color:var(--faint);text-align:right;font-family:'DM Mono',monospace;">16, 17, 18/10</td></tr>
-              <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 0;font-size:12px;color:var(--muted);">6 asistentes de pantry/café (4 áreas + 2 MBRF)</td><td style="padding:8px 0;font-size:11px;color:var(--faint);text-align:right;font-family:'DM Mono',monospace;">17–21/10</td></tr>
-              <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 0;font-size:12px;color:var(--muted);">20 mozos (15 áreas + 5 MBRF)</td><td style="padding:8px 0;font-size:11px;color:var(--faint);text-align:right;font-family:'DM Mono',monospace;">17–21/10</td></tr>
-              <tr><td style="padding:8px 0;font-size:12px;color:var(--muted);">6 personas de limpieza (5 áreas + 1 MBRF)</td><td style="padding:8px 0;font-size:11px;color:var(--faint);text-align:right;font-family:'DM Mono',monospace;">17–21/10</td></tr>
+      ) : (
+        <div className="card">
+          <div className="card-body" style={{padding:0}}>
+            <table className="proj-table">
+              <thead>
+                <tr>
+                  <th>Proyecto</th>
+                  <th>Feria / Destino</th>
+                  <th>Etapa</th>
+                  <th>Ingreso</th>
+                  <th>Neto</th>
+                  <th>Fechas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(p=>(
+                  <tr key={p.id} style={{cursor:"pointer"}} onClick={()=>setSelected(p)}>
+                    <td>
+                      <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:13}}>{p.proyecto}</div>
+                      <div style={{fontSize:11,color:"#818181"}}>{p.cliente}</div>
+                    </td>
+                    <td>
+                      <div style={{fontWeight:500}}>{p.feria}</div>
+                      <div style={{fontSize:11,color:"#818181"}}>{p.destino}</div>
+                    </td>
+                    <td><span className={`badge ${STAGE_BADGE[p.etapa]||""}`}>{STAGES.find(s=>s.id===p.etapa)?.label||p.etapa}</span></td>
+                    <td style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600}}>{fc(p.moneda,p.ingresos)}</td>
+                    <td style={{color:"#2ecc71",fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600}}>{fc(p.moneda,p.neto)}</td>
+                    <td style={{fontSize:11,color:"#818181"}}>{p.llegada||"—"}<br/>{p.partida||"—"}</td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
-          <div style="font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:0.7px;font-family:'DM Mono',monospace;margin-bottom:10px;">Agencias que el montador puede usar (o que Galerie puede proponer)</div>
-          <div style="display:flex;flex-direction:column;gap:1px;border-radius:var(--r);overflow:hidden;">
-            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-              <div>
-                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Tendance Hôtesses</div>
-                <div style="font-size:11px;color:var(--muted);">+20.000 personas en Francia · servicio de mozos, restauración, limpieza y cocina</div>
-              </div>
-              <a href="https://www.tendance-hotesses.fr" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(106,143,176,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">tendance-hotesses.fr ↗</a>
-            </div>
-            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-              <div>
-                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Staff.Direct</div>
-                <div style="font-size:11px;color:var(--muted);">Alemania · márgenes bajos · régimen détachement EU · más económico para mozos y limpieza</div>
-              </div>
-              <a href="https://staff.direct/en" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(106,143,176,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">staff.direct ↗</a>
-            </div>
-            <div style="background:var(--mid);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-              <div>
-                <div style="font-weight:500;font-size:13px;margin-bottom:2px;">Profil Agency</div>
-                <div style="font-size:11px;color:var(--muted);">París · especialistas en stands de ferias · restauración y recepción</div>
-              </div>
-              <a href="https://www.profil.fr/en/reception-and-hospitality-staffing-agency-paris" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(106,143,176,0.3);white-space:nowrap;font-family:'DM Mono',monospace;flex-shrink:0;">profil.fr ↗</a>
-            </div>
+        </div>
+      )}
+
+      {selected && (
+        <ProjectModal
+          project={selected}
+          onClose={()=>setSelected(null)}
+          onUpdate={async(id,data)=>{ await onUpdate(id,data); setSelected(p=>({...p,...data})); }}
+          onDelete={onDelete}
+          allProjects={projects}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   MAIN APP
+══════════════════════════════════════════════ */
+function App() {
+  const { user, loading, login, logout } = useAuth();
+  const { projects, addProject, updateProject, deleteProject, fbMode } = useProjects();
+  const [tab, setTab] = useState("dashboard");
+
+  if(loading) return (
+    <div style={{minHeight:"100vh",background:"#262626",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:18,letterSpacing:6,color:"#e5e3e0"}}>GALERIE</div>
+    </div>
+  );
+
+  if(!user) return <LoginScreen onLogin={login} />;
+
+  const handleSaveProject = async (data) => {
+    await addProject(data);
+    setTab("proyectos");
+  };
+
+  const tabs = [
+    { id:"dashboard",   label:"Dashboard",          dot:"#f39c12" },
+    { id:"proyectos",   label:"Proyectos",           dot:"#3498db" },
+    { id:"presupuesto", label:"Nueva Cotización",    dot:"#2ecc71" },
+  ];
+
+  return (
+    <>
+      <div className="sticky-shell">
+        <header className="hdr">
+          <div className="hdr-logo" onClick={()=>setTab("dashboard")}>GALERIE</div>
+          <div className="hdr-right">
+            {!fbMode && <div className="hdr-pill">MODO DEMO</div>}
+            <div className="hdr-user">{user.email}</div>
+            <button className="btn-logout" onClick={logout}>Salir</button>
           </div>
+        </header>
+
+        <nav className="nav">
+          {tabs.map(t=>(
+            <div key={t.id} className={`nav-item${tab===t.id?" active":""}`} onClick={()=>setTab(t.id)}>
+              <div className="nav-dot" style={{background:tab===t.id?t.dot:"#3a3a3a"}}></div>
+              {t.label}
+            </div>
+          ))}
+        </nav>
+      </div>
+
+      {/* Hero */}
+      <div className="hero">
+        <div className="hero-ey">Galerie — Gestión de Proyectos</div>
+        <h1 className="hero-title">
+          {tab==="dashboard"   && "Dashboard General"}
+          {tab==="proyectos"   && "Proyectos"}
+          {tab==="presupuesto" && "Nueva Cotización de Feria"}
+        </h1>
+        <div className="hero-sub">
+          {tab==="dashboard"   && `${projects.filter(p=>!["completado","perdido"].includes(p.etapa)).length} proyectos activos · ${projects.filter(p=>p.etapa==="completado").length} completados`}
+          {tab==="proyectos"   && `${projects.length} proyectos registrados`}
+          {tab==="presupuesto" && "Desde Montevideo al mundo · Uso interno Galerie"}
         </div>
       </div>
 
-      <div class="callout">
-        <p>
-          <strong>Cláusula clave para incluir en el contrato con el montador</strong><br>
-          "El servicio de personal operativo (coordinador, cocina, mozos, pantry y limpieza) se cotizará como línea independiente, con detalle de cantidad de personas por perfil, tarifa diaria por persona y número de días. Galerie se reserva el derecho de contratar este servicio por separado si el precio del montador no resulta competitivo."<br><br>
-          Esto te da poder de negociación real y visibilidad total sobre lo que cuesta cada cosa — sin sorpresas después de firma.
-        </p>
-      </div>
-    </div>
+      {tab==="dashboard"   && <Dashboard projects={projects} />}
+      {tab==="proyectos"   && <ProjectsList projects={projects} onUpdate={updateProject} onDelete={deleteProject} />}
+      {tab==="presupuesto" && (
+        <div className="page">
+          <BudgetCalc
+            onSave={handleSaveProject}
+            companyClients={projects.filter(p=>!["perdido"].includes(p.etapa))}
+          />
+        </div>
+      )}
 
-  </div>
-</div>
-
-<script>
-function showPanel(id, el) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('panel-' + id).classList.add('active');
-  el.classList.add('active');
+      <footer className="footer">
+        <div className="footer-logo">GALERIE</div>
+        <div className="footer-info">galerie-expo.com · Sistema de Gestión Interno{fbMode?" · Firebase conectado":""}</div>
+      </footer>
+    </>
+  );
 }
 
-function toggleArea(header) {
-  const block = header.closest('.area-block');
-  block.classList.toggle('open');
-  const body = block.querySelector('.area-body');
-  body.style.display = block.classList.contains('open') ? 'block' : 'none';
-}
-
-function tick(cb) {
-  cb.closest('.check-row').classList.toggle('done', cb.checked);
-  updateAll();
-}
-
-function updateAll() {
-  const all = document.querySelectorAll('#panel-checklist input[type=checkbox]');
-  const chk = document.querySelectorAll('#panel-checklist input[type=checkbox]:checked');
-  const pct = Math.round(chk.length / all.length * 100);
-  document.getElementById('prog-pct').textContent = pct + ' %';
-  document.getElementById('prog-fill').style.width = pct + '%';
-
-  const areas = [
-    { body: '.area-block:nth-child(1) .area-body', cnt: 'cnt-a1' },
-    { body: '.area-block:nth-child(2) .area-body', cnt: 'cnt-a2' },
-    { body: '.area-block:nth-child(3) .area-body', cnt: 'cnt-a3' },
-    { body: '.area-block:nth-child(4) .area-body', cnt: 'cnt-a4' },
-    { body: '.area-block:nth-child(5) .area-body', cnt: 'cnt-gen' },
-  ];
-  document.querySelectorAll('.area-block').forEach((block, i) => {
-    const cntId = ['cnt-a1','cnt-a2','cnt-a3','cnt-a4','cnt-gen'][i];
-    if (!cntId) return;
-    const a = block.querySelectorAll('input[type=checkbox]').length;
-    const c = block.querySelectorAll('input[type=checkbox]:checked').length;
-    const el = document.getElementById(cntId);
-    if (el) el.textContent = c + ' / ' + a;
-  });
-}
-
-document.querySelectorAll('.area-block').forEach(block => {
-  const body = block.querySelector('.area-body');
-  if (body) body.style.display = block.classList.contains('open') ? 'block' : 'none';
-});
-
-updateAll();
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
 </html>
