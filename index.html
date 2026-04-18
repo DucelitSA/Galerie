@@ -61,14 +61,39 @@
     .nav-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
 
     /* ALERT BELL */
-    .alert-bell{position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;transition:background .15s;}
-    .alert-bell:hover{background:rgba(255,255,255,.08);}
-    .alert-bell-icon{font-size:18px;line-height:1;}
-    .alert-bell.has-overdue .alert-bell-icon{animation:bellshake .5s ease infinite alternate;}
-    @keyframes bellshake{0%{transform:rotate(-12deg);}100%{transform:rotate(12deg);}}
-    .alert-bubble{position:absolute;top:2px;right:2px;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;padding:0 4px;border:2px solid #262626;line-height:1;}
+    .alert-bell-wrap{position:relative;}
+    .alert-bell{position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;transition:background .15s;opacity:.45;}
+    .alert-bell:hover{background:rgba(255,255,255,.08);opacity:.8;}
+    .alert-bell.has-overdue{opacity:1;}
+    .alert-bell.has-upcoming{opacity:.85;}
+    .alert-bell-icon{font-size:17px;line-height:1;user-select:none;}
+    .alert-bell.has-overdue .alert-bell-icon{animation:bellshake .45s ease infinite alternate;}
+    @keyframes bellshake{0%{transform:rotate(-14deg);}100%{transform:rotate(14deg);}}
+    .alert-bubble{position:absolute;top:1px;right:1px;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;padding:0 4px;border:2px solid #262626;line-height:1;}
     .alert-bubble.overdue{background:#e74c3c;color:#fff;}
     .alert-bubble.upcoming{background:#f39c12;color:#fff;}
+
+    /* ALERT PANEL DROPDOWN */
+    .alert-panel{position:absolute;top:calc(100% + 10px);right:0;width:360px;background:#1e1e1e;border:1px solid #3a3a3a;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:999;overflow:hidden;}
+    .alert-panel-hdr{background:#262626;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #3a3a3a;}
+    .alert-panel-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#e5e3e0;}
+    .alert-panel-count{font-size:9px;color:#818181;}
+    .alert-panel-body{max-height:420px;overflow-y:auto;}
+    .alert-panel-empty{padding:32px 16px;text-align:center;color:#818181;font-size:12px;}
+    .alert-panel-empty-icon{font-size:28px;margin-bottom:8px;opacity:.4;}
+    .alert-item{padding:12px 16px;border-bottom:1px solid #2a2a2a;cursor:pointer;transition:background .12s;}
+    .alert-item:last-child{border-bottom:none;}
+    .alert-item:hover{background:#262626;}
+    .alert-item-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:8px;}
+    .alert-item-proyecto{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:11px;color:#e5e3e0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .alert-item-date{font-size:9px;font-family:'Poppins',sans-serif;padding:2px 7px;border-radius:2px;white-space:nowrap;flex-shrink:0;}
+    .alert-item-date.overdue{background:#e74c3c22;color:#e74c3c;border:1px solid #e74c3c44;}
+    .alert-item-date.upcoming{background:#f39c1222;color:#f39c12;border:1px solid #f39c1244;}
+    .alert-item-texto{font-size:11px;color:#818181;line-height:1.4;}
+    .alert-item-feria{font-size:9px;color:#3a3a3a;margin-top:3px;letter-spacing:.5px;}
+    .alert-panel-footer{padding:10px 16px;border-top:1px solid #3a3a3a;background:#262626;}
+    .alert-panel-link{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#b1ada2;font-family:'Poppins',sans-serif;cursor:pointer;text-align:center;display:block;}
+    .alert-panel-link:hover{color:#e5e3e0;}
 
     /* ALERT BANNER */
     .alert-banner{background:#f39c1215;border-bottom:2px solid #f39c12;padding:10px 32px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .15s;}
@@ -431,8 +456,8 @@ function rooms(pax){return pax<=2?1:pax<=4?2:3;}
 function nightsBetween(d1,d2){if(!d1||!d2)return 0;const diff=Math.round((new Date(d2)-new Date(d1))/86400000);return diff>0?diff:0;}
 
 /* ─── FIREBASE HOOK ─── */
-function useCollection(colName, demoData=[]) {
-  const[data,setData]=useState(demoData);
+function useCollection(colName) {
+  const[data,setData]=useState([]);
   const[fbMode,setFbMode]=useState(false);
   const fb=window.__fb;
 
@@ -1365,7 +1390,7 @@ function FeriasSection({ferias,projects}){
 }
 
 /* ─── DASHBOARD ─── */
-function Dashboard({projects,ferias,onTabChange}){
+function Dashboard({projects,ferias,onTabChange,allAlertas}){
   const[filterFeria,setFilterFeria]=useState("todas");
   const[filterYear,setFilterYear]=useState("todos");
 
@@ -1387,9 +1412,7 @@ function Dashboard({projects,ferias,onTabChange}){
 
   const stageCounts={};STAGES.forEach(s=>{stageCounts[s.id]=filtered.filter(p=>p.etapa===s.id).length;});
 
-  // Alerts across ALL projects
-  const today=todayStr();
-  const alertas=projects.filter(p=>p.alertaFecha).map(p=>({...p,overdue:p.alertaFecha<=today})).sort((a,b)=>a.alertaFecha.localeCompare(b.alertaFecha));
+  const alertas = allAlertas || [];
 
   const byFeria={};
   filtered.forEach(p=>{if(!p.feria)return;if(!byFeria[p.feria])byFeria[p.feria]={ps:[],destino:p.destino};byFeria[p.feria].ps.push(p);});
@@ -1406,17 +1429,21 @@ function Dashboard({projects,ferias,onTabChange}){
       {/* Alerts banner */}
       {alertas.length>0&&(
         <div style={{marginBottom:16}}>
-          {alertas.slice(0,3).map(a=>(
-            <div key={a.id} className="alert-banner" onClick={()=>onTabChange("proyectos")}>
-              <div className="alert-icon">{a.overdue?"⚠️":"⏰"}</div>
-              <div className="alert-text">
-                <strong>{a.overdue?"ALERTA VENCIDA":"Recordatorio"} — {fmtDate(a.alertaFecha)}</strong>
-                {a.proyecto}: {a.alertaTexto||"Sin descripción"}
+          {alertas.slice(0,3).map((a,i)=>{
+            const tipoTab=a.tipo==="cliente"?"clientes":a.tipo==="proveedor"?"proveedores":"proyectos";
+            const tipoLabel=a.tipo==="cliente"?"👤":a.tipo==="proveedor"?"🏭":"📁";
+            return(
+              <div key={a.id+i} className="alert-banner" onClick={()=>onTabChange(tipoTab)}>
+                <div className="alert-icon">{a.overdue?"⚠️":"⏰"}</div>
+                <div className="alert-text">
+                  <strong>{a.overdue?"VENCIDA":"Recordatorio"} — {fmtDate(a.alertaFecha)}</strong>
+                  {" "}{tipoLabel} {a.nombre}: {a.alertaTexto||"Sin descripción"}
+                </div>
+                <div className="alert-badge">{a.overdue?"VENCIDO":"PENDIENTE"}</div>
               </div>
-              <div className="alert-badge">{a.overdue?"VENCIDO":"PENDIENTE"}</div>
-            </div>
-          ))}
-          {alertas.length>3&&<div style={{fontSize:10,color:"#818181",textAlign:"center",padding:"6px 0"}}>+{alertas.length-3} alertas más en Proyectos</div>}
+            );
+          })}
+          {alertas.length>3&&<div style={{fontSize:10,color:"#818181",textAlign:"center",padding:"6px 0"}}>+{alertas.length-3} alertas más — usá la campana 🔔</div>}
         </div>
       )}
 
@@ -1511,11 +1538,42 @@ function App(){
     setTab("proyectos");
   };
 
-  // Alerts count
-  const today=todayStr();
-  const alertCount=projects.data.filter(p=>p.alertaFecha&&p.alertaFecha<=today).length;
-  const upcomingCount=projects.data.filter(p=>p.alertaFecha&&p.alertaFecha>today&&p.alertaFecha<=new Date(Date.now()+7*86400000).toISOString().split("T")[0]).length;
-  const totalAlerts=alertCount+upcomingCount;
+  // ── ALERTS: projects + clients + suppliers ──
+  // todayStr() returns YYYY-MM-DD which compares correctly with string comparison
+  const today = todayStr();
+  const week7 = new Date(Date.now()+7*86400000).toISOString().split("T")[0];
+
+  const buildAlertas = (items, tipo) =>
+    items
+      .filter(x => x.alertaFecha && x.alertaFecha.trim() !== "")
+      .map(x => ({
+        id: x.id,
+        nombre: x.proyecto || x.empresa || "Sin nombre",
+        subtitulo: x.feria || x.cargo || "",
+        alertaFecha: x.alertaFecha.trim(),
+        alertaTexto: x.alertaTexto || "",
+        tipo,
+        overdue: x.alertaFecha.trim() <= today,
+      }));
+
+  const allAlertasFull = [
+    ...buildAlertas(projects.data, "proyecto"),
+    ...buildAlertas(clients.data,  "cliente"),
+    ...buildAlertas(suppliers.data,"proveedor"),
+  ].sort((a,b) => a.alertaFecha.localeCompare(b.alertaFecha));
+
+  const alertCount    = allAlertasFull.filter(a => a.overdue).length;
+  const upcomingCount = allAlertasFull.filter(a => !a.overdue && a.alertaFecha <= week7).length;
+  const totalAlerts   = allAlertasFull.length; // badge shows ALL, not just 7-day window
+
+  const[bellOpen,setBellOpen]=useState(false);
+  const bellRef=useRef(null);
+  useEffect(()=>{
+    if(!bellOpen)return;
+    const handler=(e)=>{if(bellRef.current&&!bellRef.current.contains(e.target))setBellOpen(false);};
+    document.addEventListener("mousedown",handler);
+    return()=>document.removeEventListener("mousedown",handler);
+  },[bellOpen]);
 
   if(loading)return(<div style={{minHeight:"100vh",background:"#262626",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:18,letterSpacing:6,color:"#e5e3e0"}}>GALERIE</div></div>);
   if(!user)return<LoginScreen onLogin={login}/>;
@@ -1537,13 +1595,71 @@ function App(){
         <header className="hdr">
           <div className="hdr-logo" onClick={()=>setTab("dashboard")}>GALERIE</div>
           <div className="hdr-right">
-            {!projects.fbMode&&<div className="hdr-pill">MODO DEMO</div>}
-            {totalAlerts>0&&(
-              <div className={`alert-bell${alertCount>0?" has-overdue":""}`} onClick={()=>setTab("proyectos")} title={`${alertCount} vencidas · ${upcomingCount} próximas`}>
+
+            {/* BELL WITH DROPDOWN */}
+            <div className="alert-bell-wrap" ref={bellRef}>
+              <div
+                className={`alert-bell${alertCount>0?" has-overdue":upcomingCount>0?" has-upcoming":""}`}
+                onClick={()=>setBellOpen(o=>!o)}
+                title={totalAlerts>0?`${alertCount} vencidas · ${upcomingCount} próximas`:"Sin alertas pendientes"}
+              >
                 <span className="alert-bell-icon">🔔</span>
-                <span className={`alert-bubble ${alertCount>0?"overdue":"upcoming"}`}>{totalAlerts}</span>
+                {totalAlerts>0&&<span className={`alert-bubble ${alertCount>0?"overdue":"upcoming"}`}>{totalAlerts}</span>}
               </div>
-            )}
+
+              {bellOpen&&(
+                <div className="alert-panel">
+                  <div className="alert-panel-hdr">
+                    <div className="alert-panel-title">Alertas</div>
+                    <div className="alert-panel-count">
+                      {alertCount>0&&<span style={{color:"#e74c3c",marginRight:8}}>⚠ {alertCount} vencida{alertCount>1?"s":""}</span>}
+                      {upcomingCount>0&&<span style={{color:"#f39c12"}}>⏰ {upcomingCount} próxima{upcomingCount>1?"s":""}</span>}
+                    </div>
+                  </div>
+
+                  <div className="alert-panel-body">
+                    {allAlertasFull.length===0?(
+                      <div className="alert-panel-empty">
+                        <div className="alert-panel-empty-icon">🔕</div>
+                        <div>Sin alertas configuradas</div>
+                        <div style={{fontSize:10,marginTop:4,color:"#3a3a3a"}}>Podés agregar recordatorios desde proyectos, clientes o proveedores</div>
+                      </div>
+                    ):(
+                      allAlertasFull.map((a,i)=>{
+                        const tipoTab = a.tipo==="cliente"?"clientes":a.tipo==="proveedor"?"proveedores":"proyectos";
+                        const tipoLabel = a.tipo==="cliente"?"👤 Cliente":a.tipo==="proveedor"?"🏭 Proveedor":"📁 Proyecto";
+                        return(
+                          <div key={a.id+"-"+i} className="alert-item" onClick={()=>{setBellOpen(false);setTab(tipoTab);}}>
+                            <div className="alert-item-top">
+                              <div className="alert-item-proyecto">{a.nombre}</div>
+                              <div className={`alert-item-date ${a.overdue?"overdue":"upcoming"}`}>
+                                {a.overdue?"⚠ VENCIDA":""} {fmtDate(a.alertaFecha)}
+                              </div>
+                            </div>
+                            <div className="alert-item-texto">{a.alertaTexto||<span style={{fontStyle:"italic",color:"#3a3a3a"}}>Sin descripción</span>}</div>
+                            <div className="alert-item-feria">
+                              <span style={{color:"#3a3a3a",marginRight:6}}>{tipoLabel}</span>
+                              {a.subtitulo&&<span>{a.subtitulo}</span>}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {allAlertasFull.length>0&&(
+                    <div className="alert-panel-footer">
+                      <div style={{display:"flex",gap:16,justifyContent:"center"}}>
+                        <div className="alert-panel-link" onClick={()=>{setBellOpen(false);setTab("proyectos");}}>Proyectos</div>
+                        <div className="alert-panel-link" onClick={()=>{setBellOpen(false);setTab("clientes");}}>Clientes</div>
+                        <div className="alert-panel-link" onClick={()=>{setBellOpen(false);setTab("proveedores");}}>Proveedores</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="hdr-user">{user.email}</div>
             <button className="btn-logout" onClick={logout}>Salir</button>
           </div>
@@ -1578,7 +1694,7 @@ function App(){
         </div>
       </div>
 
-      {tab==="dashboard"&&<Dashboard projects={projects.data} ferias={ferias.data} onTabChange={setTab}/>}
+      {tab==="dashboard"&&<Dashboard projects={projects.data} ferias={ferias.data} onTabChange={setTab} allAlertas={allAlertasFull}/>}
       {tab==="proyectos"&&<ProjectsList projects={projects.data} onUpdate={projects.update} onDelete={projects.remove} onAdd={handleAddProject} clients={clients.data} ferias={ferias.data} suppliers={suppliers.data}/>}
       {tab==="cotizacion"&&<div className="page"><BudgetCalc onSave={handleSaveFromCalc} allProjects={projects.data} clients={clients.data} ferias={ferias.data} suppliers={suppliers.data}/></div>}
       {tab==="ferias"&&<FeriasSection ferias={ferias} projects={projects.data}/>}
@@ -1587,7 +1703,7 @@ function App(){
 
       <footer className="footer">
         <div className="footer-logo">GALERIE</div>
-        <div className="footer-info">galerie-expo.com · Sistema Interno{projects.fbMode?" · Firebase ●":""}</div>
+        <div className="footer-info">galerie-expo.com · Sistema Interno</div>
       </footer>
     </>
   );
