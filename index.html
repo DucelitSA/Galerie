@@ -8,13 +8,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
-      onSnapshot, query, orderBy, serverTimestamp, getDocs }
+      onSnapshot, query, orderBy, serverTimestamp }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -31,15 +30,12 @@
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
       db = getFirestore(app);
-    } catch(e) {
-      console.warn("Firebase init failed — running in demo mode");
-    }
+    } catch(e) { console.warn("Firebase init failed — demo mode"); }
 
-    window.__galerie_firebase = { auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged,
-      collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs };
+    window.__fb = { auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+      collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp };
   </script>
 
-  <!-- React -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -49,873 +45,681 @@
     html { scroll-behavior: smooth; }
     body { background: #f0eeeb; font-family: 'Poppins', sans-serif; font-weight: 300; color: #262626; min-height: 100vh; }
     #root { min-height: 100vh; }
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #f0eeeb; } ::-webkit-scrollbar-thumb { background: #b1ada2; }
 
-    /* ── SCROLLBAR ── */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: #f0eeeb; }
-    ::-webkit-scrollbar-thumb { background: #b1ada2; }
-
-    /* ── STICKY SHELL ── */
+    /* STICKY SHELL */
     .sticky-shell { position: sticky; top: 0; z-index: 200; }
-
-    /* ── HEADER ── */
-    .hdr { background: #262626; height: 64px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #b1ada2; }
-    .hdr-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 6px; color: #e5e3e0; text-transform: uppercase; cursor: pointer; }
-    .hdr-right { display: flex; align-items: center; gap: 16px; }
-    .hdr-pill { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #b1ada2; border: 1px solid #b1ada244; padding: 5px 14px; font-family: 'Poppins', sans-serif; }
-    .hdr-user { font-size: 10px; color: #818181; letter-spacing: 1px; }
-    .btn-logout { background: transparent; border: 1px solid #3a3a3a; color: #818181; padding: 6px 14px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; font-family: 'Poppins', sans-serif; transition: all .15s; }
+    .hdr { background: #262626; height: 60px; padding: 0 36px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #b1ada2; }
+    .hdr-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: 6px; color: #e5e3e0; text-transform: uppercase; cursor: pointer; }
+    .hdr-right { display: flex; align-items: center; gap: 14px; }
+    .hdr-pill { font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: #b1ada2; border: 1px solid #b1ada244; padding: 4px 12px; }
+    .hdr-user { font-size: 10px; color: #818181; }
+    .btn-logout { background: transparent; border: 1px solid #3a3a3a; color: #818181; padding: 5px 12px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; font-family: 'Poppins', sans-serif; transition: all .15s; }
     .btn-logout:hover { border-color: #818181; color: #e5e3e0; }
-
-    /* ── NAV ── */
     .nav { background: #1e1e1e; border-bottom: 1px solid #2a2a2a; display: flex; overflow-x: auto; }
-    .nav-item { padding: 0 28px; height: 44px; display: flex; align-items: center; gap: 8px; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap; font-family: 'Poppins', sans-serif; }
+    .nav-item { padding: 0 24px; height: 42px; display: flex; align-items: center; gap: 7px; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap; font-family: 'Poppins', sans-serif; }
     .nav-item:hover { color: #b1ada2; }
     .nav-item.active { color: #e5e3e0; border-bottom-color: #b1ada2; }
-    .nav-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .nav-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
-    /* ── LOGIN ── */
+    /* LOGIN */
     .login-wrap { min-height: 100vh; background: #262626; display: flex; align-items: center; justify-content: center; }
-    .login-box { width: 380px; }
-    .login-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: 8px; color: #e5e3e0; text-align: center; margin-bottom: 6px; }
-    .login-sub { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #818181; text-align: center; margin-bottom: 48px; font-family: 'Poppins', sans-serif; }
-    .login-field { margin-bottom: 14px; }
-    .login-label { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; display: block; margin-bottom: 6px; font-family: 'Poppins', sans-serif; }
-    .login-input { width: 100%; background: #1a1a1a; border: 1px solid #3a3a3a; color: #e5e3e0; padding: 13px 16px; font-family: 'Poppins', sans-serif; font-size: 13px; outline: none; border-radius: 0; }
+    .login-box { width: 360px; }
+    .login-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: 8px; color: #e5e3e0; text-align: center; margin-bottom: 6px; }
+    .login-sub { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #818181; text-align: center; margin-bottom: 44px; }
+    .login-field { margin-bottom: 12px; }
+    .login-label { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; display: block; margin-bottom: 5px; }
+    .login-input { width: 100%; background: #1a1a1a; border: 1px solid #3a3a3a; color: #e5e3e0; padding: 12px 14px; font-family: 'Poppins', sans-serif; font-size: 13px; outline: none; border-radius: 0; }
     .login-input:focus { border-color: #b1ada2; }
-    .login-btn { width: 100%; background: #e5e3e0; color: #262626; border: none; padding: 16px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; cursor: pointer; margin-top: 8px; transition: opacity .15s; }
+    .login-btn { width: 100%; background: #e5e3e0; color: #262626; border: none; padding: 15px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; cursor: pointer; margin-top: 8px; transition: opacity .15s; }
     .login-btn:hover { opacity: .88; }
-    .login-error { background: #3a1a1a; border: 1px solid #e74c3c44; color: #e74c3c; padding: 10px 14px; font-size: 11px; margin-top: 12px; text-align: center; }
+    .login-error { background: #3a1a1a; border: 1px solid #e74c3c44; color: #e74c3c; padding: 10px 14px; font-size: 11px; margin-top: 10px; text-align: center; }
 
-    /* ── LAYOUT ── */
-    .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
-    .page-wide { max-width: 1300px; margin: 0 auto; padding: 32px 24px 80px; }
+    /* LAYOUT */
+    .page { max-width: 1060px; margin: 0 auto; padding: 28px 20px 80px; }
+    .page-wide { max-width: 1280px; margin: 0 auto; padding: 28px 20px 80px; }
+    .hero { background: #262626; padding: 32px 36px 26px; }
+    .hero-ey { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #b1ada2; margin-bottom: 6px; }
+    .hero-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 28px; color: #e5e3e0; line-height: 1.1; }
+    .hero-sub { font-size: 11px; color: #818181; margin-top: 6px; }
 
-    /* ── HERO ── */
-    .hero { background: #262626; padding: 40px 40px 32px; }
-    .hero-ey { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #b1ada2; margin-bottom: 8px; }
-    .hero-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 32px; color: #e5e3e0; line-height: 1.1; }
-    .hero-sub { font-size: 12px; color: #818181; margin-top: 8px; }
-
-    /* ── CARDS ── */
+    /* CARDS */
     .card { background: #fff; border: 1px solid #e5e3e0; margin-bottom: 14px; }
-    .card-hdr { background: #f0eeeb; padding: 14px 24px; border-bottom: 1px solid #e5e3e0; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-    .card-hdr-left { display: flex; align-items: center; gap: 14px; }
-    .step { width: 26px; height: 26px; background: #262626; color: #e5e3e0; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .card-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: #262626; }
-    .card-body { padding: 24px; }
+    .card-hdr { background: #f0eeeb; padding: 13px 22px; border-bottom: 1px solid #e5e3e0; display: flex; align-items: center; justify-content: space-between; }
+    .card-hdr-left { display: flex; align-items: center; gap: 12px; }
+    .step { width: 24px; height: 24px; background: #262626; color: #e5e3e0; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .card-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: #262626; }
+    .card-body { padding: 20px 22px; }
 
-    /* ── STAT CARDS ── */
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
-    .stat-card { background: #fff; border: 1px solid #e5e3e0; padding: 20px 22px; }
-    .stat-lbl { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; margin-bottom: 10px; font-family: 'Poppins', sans-serif; }
-    .stat-val { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 28px; color: #262626; line-height: 1; }
-    .stat-sub { font-size: 10px; color: #b1ada2; margin-top: 6px; }
-    .stat-card.dark { background: #262626; border-color: #262626; }
-    .stat-card.dark .stat-lbl { color: #818181; }
-    .stat-card.dark .stat-val { color: #e5e3e0; }
-    .stat-card.dark .stat-sub { color: #818181; }
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+    .stat-card { background: #fff; border: 1px solid #e5e3e0; padding: 18px 20px; }
+    .stat-lbl { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; margin-bottom: 8px; }
+    .stat-val { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 26px; color: #262626; line-height: 1; }
+    .stat-sub { font-size: 10px; color: #b1ada2; margin-top: 5px; }
+    .stat-card.dark { background: #262626; } .stat-card.dark .stat-lbl { color: #818181; } .stat-card.dark .stat-val { color: #e5e3e0; } .stat-card.dark .stat-sub { color: #818181; }
     .stat-card.green { border-left: 3px solid #2ecc71; }
-    .stat-card.red { border-left: 3px solid #e74c3c; }
     .stat-card.gold { border-left: 3px solid #f39c12; }
+    .stat-card.red { border-left: 3px solid #e74c3c; }
 
-    /* ── FERIAS DASHBOARD ── */
-    .feria-card { background: #fff; border: 1px solid #e5e3e0; margin-bottom: 14px; overflow: hidden; }
-    .feria-hdr { background: #262626; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
-    .feria-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 15px; color: #e5e3e0; letter-spacing: 1px; }
-    .feria-meta { font-size: 10px; color: #818181; margin-top: 3px; }
-    .feria-stats { display: flex; gap: 20px; align-items: center; }
+    /* FERIA CARDS */
+    .feria-card { background: #fff; border: 1px solid #e5e3e0; margin-bottom: 12px; overflow: hidden; }
+    .feria-hdr { background: #262626; padding: 14px 22px; display: flex; align-items: center; justify-content: space-between; }
+    .feria-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 14px; color: #e5e3e0; }
+    .feria-meta { font-size: 10px; color: #818181; margin-top: 2px; }
+    .feria-stats { display: flex; gap: 18px; align-items: center; }
     .feria-stat { text-align: right; }
     .feria-stat-lbl { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #818181; }
-    .feria-stat-val { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 14px; color: #e5e3e0; }
-    .feria-body { padding: 16px 24px; }
-    .clients-list { display: flex; flex-direction: column; gap: 8px; }
-    .client-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f0eeeb; border: 1px solid #e5e3e0; }
-    .client-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 12px; }
+    .feria-stat-val { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 13px; color: #e5e3e0; }
+    .feria-body { padding: 14px 22px; }
+    .clients-list { display: flex; flex-direction: column; gap: 7px; }
+    .client-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 13px; background: #f0eeeb; border: 1px solid #e5e3e0; }
+    .client-name-big { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 12px; }
     .client-meta { font-size: 10px; color: #818181; margin-top: 2px; }
-    .client-amount { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 13px; color: #262626; }
+    .client-amount { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 13px; }
     .client-profit { font-size: 10px; color: #2ecc71; text-align: right; }
-    .saving-badge { background: #f39c1222; border: 1px solid #f39c1244; color: #f39c12; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; font-family: 'Poppins', sans-serif; }
+    .saving-badge { background: #f39c1222; border: 1px solid #f39c1244; color: #f39c12; font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 9px; }
 
-    /* ── PROJECTS TABLE ── */
-    .proj-table { width: 100%; border-collapse: collapse; }
-    .proj-table th { background: #f0eeeb; padding: 10px 14px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #818181; text-align: left; border-bottom: 1px solid #e5e3e0; font-family: 'Poppins', sans-serif; font-weight: 500; }
-    .proj-table td { padding: 12px 14px; border-bottom: 1px solid #f0eeeb; font-size: 12px; }
-    .proj-table tr:hover td { background: #fafaf9; }
-    .proj-table tr:last-child td { border-bottom: none; }
-
-    /* ── STATUS BADGES ── */
-    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; font-family: 'Poppins', sans-serif; border: 1px solid; white-space: nowrap; }
-    .badge-exploration { background: #f0eeeb; border-color: #b1ada2; color: #818181; }
-    .badge-contact { background: #fff8e6; border-color: #f39c1266; color: #f39c12; }
-    .badge-design { background: #e6f0ff; border-color: #3498db44; color: #3498db; }
-    .badge-quote { background: #f0e6ff; border-color: #9b59b644; color: #9b59b6; }
-    .badge-accepted { background: #e6ffe6; border-color: #2ecc7144; color: #2ecc71; }
-    .badge-closed { background: #ffe6e6; border-color: #e74c3c44; color: #e74c3c; }
-    .badge-production { background: #fff3e6; border-color: #e67e2244; color: #e67e22; }
-    .badge-completed { background: #262626; border-color: #262626; color: #e5e3e0; }
-
-    /* ── PIPELINE STAGES ── */
-    .pipeline { display: flex; align-items: stretch; gap: 0; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; }
-    .pipe-stage { flex: 1; min-width: 120px; border: 1px solid #e5e3e0; border-right: none; background: #fff; padding: 14px 16px; position: relative; cursor: pointer; transition: background .15s; }
+    /* PIPELINE */
+    .pipeline { display: flex; gap: 0; margin-bottom: 22px; overflow-x: auto; }
+    .pipe-stage { flex: 1; min-width: 110px; border: 1px solid #e5e3e0; border-right: none; background: #fff; padding: 12px 14px; position: relative; }
     .pipe-stage:last-child { border-right: 1px solid #e5e3e0; }
-    .pipe-stage.active { background: #262626; }
-    .pipe-stage::after { content: '›'; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #b1ada2; z-index: 1; }
-    .pipe-stage:last-child::after { display: none; }
-    .pipe-lbl { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #818181; margin-bottom: 6px; font-family: 'Poppins', sans-serif; }
-    .pipe-count { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 24px; color: #262626; }
-    .pipe-stage.active .pipe-lbl { color: #818181; }
-    .pipe-stage.active .pipe-count { color: #e5e3e0; }
-    .pipe-sub { font-size: 9px; color: #b1ada2; margin-top: 3px; }
-    .pipe-stage.active .pipe-sub { color: #818181; }
+    .pipe-stage::after { content:'›'; position:absolute; right:-9px; top:50%; transform:translateY(-50%); font-size:14px; color:#b1ada2; z-index:1; }
+    .pipe-stage:last-child::after { display:none; }
+    .pipe-lbl { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #818181; margin-bottom: 4px; }
+    .pipe-count { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 22px; color: #262626; }
+    .pipe-sub { font-size: 9px; color: #b1ada2; margin-top: 2px; }
 
-    /* ── FORMS ── */
-    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-    .g4 { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 14px; }
-    .fg { display: flex; flex-direction: column; gap: 5px; }
+    /* TABLE */
+    .tbl { width: 100%; border-collapse: collapse; }
+    .tbl th { background: #f0eeeb; padding: 9px 13px; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #818181; text-align: left; border-bottom: 1px solid #e5e3e0; font-family: 'Poppins', sans-serif; font-weight: 500; }
+    .tbl td { padding: 11px 13px; border-bottom: 1px solid #f0eeeb; font-size: 12px; }
+    .tbl tr:hover td { background: #fafaf9; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl-actions { display: flex; gap: 6px; }
+
+    /* BADGES */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; font-family: 'Poppins', sans-serif; border: 1px solid; white-space: nowrap; }
+    .badge-exploracion { background:#f0eeeb; border-color:#b1ada2; color:#818181; }
+    .badge-contacto { background:#fff8e6; border-color:#f39c1266; color:#f39c12; }
+    .badge-diseno { background:#e6f0ff; border-color:#3498db44; color:#3498db; }
+    .badge-cotizacion { background:#f0e6ff; border-color:#9b59b644; color:#9b59b6; }
+    .badge-negociacion { background:#fff3e6; border-color:#e67e2244; color:#e67e22; }
+    .badge-aceptado { background:#e6ffe6; border-color:#2ecc7144; color:#2ecc71; }
+    .badge-produccion { background:#fff3e6; border-color:#e67e2244; color:#e67e22; }
+    .badge-completado { background:#262626; border-color:#262626; color:#e5e3e0; }
+    .badge-perdido { background:#ffe6e6; border-color:#e74c3c44; color:#e74c3c; }
+
+    /* STAGE TRACKER */
+    .stage-track { display: flex; align-items: center; overflow-x: auto; padding-bottom: 4px; }
+    .stage-item { flex: 1; min-width: 70px; display: flex; flex-direction: column; align-items: center; gap: 5px; position: relative; cursor: pointer; }
+    .stage-item::after { content:''; position:absolute; top:10px; left:calc(50% + 11px); right:calc(-50% + 11px); height:2px; background:#e5e3e0; z-index:0; }
+    .stage-item:last-child::after { display:none; }
+    .stage-dot { width:20px; height:20px; border-radius:50%; border:2px solid #e5e3e0; background:#fff; z-index:1; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:700; transition:all .2s; flex-shrink:0; }
+    .stage-dot.done { background:#2ecc71; border-color:#2ecc71; color:#fff; }
+    .stage-dot.current { background:#262626; border-color:#262626; color:#fff; }
+    .stage-dot.failed { background:#e74c3c; border-color:#e74c3c; color:#fff; }
+    .stage-lbl { font-size: 7px; letter-spacing: 1px; text-transform: uppercase; color: #818181; text-align: center; }
+    .stage-item.done .stage-lbl { color:#2ecc71; }
+    .stage-item.current .stage-lbl { color:#262626; font-weight:600; }
+
+    /* FORMS */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .g4 { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 12px; }
+    .fg { display: flex; flex-direction: column; gap: 4px; }
     label { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #818181; font-weight: 500; font-family: 'Poppins', sans-serif; }
-    input, select, textarea { font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 400; color: #262626; background: #f0eeeb; border: 1px solid #e5e3e0; padding: 10px 13px; width: 100%; outline: none; transition: border-color .15s, background .15s; -webkit-appearance: none; appearance: none; border-radius: 0; }
+    input, select, textarea { font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 400; color: #262626; background: #f0eeeb; border: 1px solid #e5e3e0; padding: 9px 12px; width: 100%; outline: none; transition: border-color .15s, background .15s; -webkit-appearance: none; appearance: none; border-radius: 0; }
     input:focus, select:focus, textarea:focus { border-color: #818181; background: #fff; }
-    textarea { resize: vertical; min-height: 80px; }
-    .pfx { display: flex; }
-    .pfx-tag { background: #e5e3e0; border: 1px solid #e5e3e0; border-right: none; padding: 10px 12px; font-size: 11px; color: #818181; display: flex; align-items: center; white-space: nowrap; font-family: 'Poppins', sans-serif; flex-shrink: 0; }
-    .pfx input { border-left: none; }
-    .sfx { display: flex; }
-    .sfx input { border-right: none; }
-    .sfx-tag { background: #e5e3e0; border: 1px solid #e5e3e0; border-left: none; padding: 10px 12px; font-size: 11px; color: #818181; display: flex; align-items: center; font-family: 'Poppins', sans-serif; }
-    .hint { font-size: 10px; color: #b1ada2; font-style: italic; margin-top: 3px; }
-    .subtotal { font-size: 11px; color: #818181; font-style: italic; margin-top: 10px; }
+    textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+    .pfx { display:flex; } .pfx-tag { background:#e5e3e0; border:1px solid #e5e3e0; border-right:none; padding:9px 11px; font-size:10px; color:#818181; display:flex; align-items:center; white-space:nowrap; font-family:'Poppins',sans-serif; flex-shrink:0; } .pfx input { border-left:none; }
+    .sfx { display:flex; } .sfx input { border-right:none; } .sfx-tag { background:#e5e3e0; border:1px solid #e5e3e0; border-left:none; padding:9px 11px; font-size:10px; color:#818181; display:flex; align-items:center; font-family:'Poppins',sans-serif; }
+    .hint { font-size: 10px; color: #b1ada2; font-style: italic; margin-top: 2px; }
+    .subtotal { font-size: 11px; color: #818181; font-style: italic; margin-top: 8px; }
     .subtotal strong { color: #262626; font-style: normal; font-weight: 500; }
 
-    /* ── BUTTONS ── */
-    .btn-dark { background: #262626; color: #e5e3e0; border: none; padding: 11px 24px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background .15s; }
-    .btn-dark:hover { background: #1a1a1a; }
-    .btn-dark:disabled { background: #b1ada2; cursor: not-allowed; }
-    .btn-warm { background: #b1ada2; color: #fff; border: none; padding: 11px 22px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: opacity .15s; }
-    .btn-warm:hover { opacity: .85; }
-    .btn-ghost { background: transparent; color: #818181; border: 1px solid #e5e3e0; padding: 10px 18px; font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: border-color .15s; }
-    .btn-ghost:hover { border-color: #818181; color: #262626; }
-    .btn-danger { background: #e74c3c22; color: #e74c3c; border: 1px solid #e74c3c44; padding: 8px 16px; font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all .15s; }
-    .btn-danger:hover { background: #e74c3c; color: #fff; }
-    .btn-success { background: #2ecc7122; color: #2ecc71; border: 1px solid #2ecc7144; padding: 8px 16px; font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all .15s; }
-    .btn-success:hover { background: #2ecc71; color: #fff; }
+    /* AUTOCOMPLETE */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #e5e3e0; border-top: none; z-index: 100; max-height: 200px; overflow-y: auto; }
+    .autocomplete-item { padding: 9px 13px; cursor: pointer; font-size: 12px; border-bottom: 1px solid #f0eeeb; transition: background .1s; }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover { background: #f0eeeb; }
+    .autocomplete-item-sub { font-size: 10px; color: #818181; margin-top: 2px; }
 
-    /* ── MODAL ── */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 24px; }
-    .modal { background: #fff; width: 100%; max-width: 720px; max-height: 90vh; overflow-y: auto; }
-    .modal-hdr { background: #262626; padding: 20px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; }
-    .modal-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 14px; color: #e5e3e0; letter-spacing: 2px; text-transform: uppercase; }
-    .modal-close { background: none; border: none; color: #818181; font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1; }
-    .modal-close:hover { color: #e5e3e0; }
-    .modal-body { padding: 28px; }
-    .modal-footer { padding: 16px 28px; border-top: 1px solid #e5e3e0; display: flex; gap: 12px; justify-content: flex-end; background: #f0eeeb; }
+    /* BUTTONS */
+    .btn-dark { background:#262626; color:#e5e3e0; border:none; padding:10px 22px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:9px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:background .15s; }
+    .btn-dark:hover { background:#1a1a1a; }
+    .btn-dark:disabled { background:#b1ada2; cursor:not-allowed; }
+    .btn-warm { background:#b1ada2; color:#fff; border:none; padding:10px 20px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:9px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:opacity .15s; }
+    .btn-warm:hover { opacity:.85; }
+    .btn-ghost { background:transparent; color:#818181; border:1px solid #e5e3e0; padding:9px 16px; font-family:'Poppins',sans-serif; font-size:9px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:border-color .15s; }
+    .btn-ghost:hover { border-color:#818181; color:#262626; }
+    .btn-danger { background:#e74c3c22; color:#e74c3c; border:1px solid #e74c3c44; padding:8px 14px; font-family:'Poppins',sans-serif; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:all .15s; }
+    .btn-danger:hover { background:#e74c3c; color:#fff; }
+    .btn-sm { padding:6px 12px !important; font-size:8px !important; }
 
-    /* ── SECTION DIVIDER ── */
-    .div-label { text-align: center; margin: 28px 0; position: relative; }
-    .div-label::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e5e3e0; }
-    .div-label span { position: relative; background: #f0eeeb; padding: 0 16px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #818181; }
+    /* MODAL */
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .modal { background:#fff; width:100%; max-width:740px; max-height:92vh; overflow-y:auto; }
+    .modal-hdr { background:#262626; padding:18px 26px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
+    .modal-title { font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:13px; color:#e5e3e0; letter-spacing:2px; text-transform:uppercase; }
+    .modal-sub { font-size:10px; color:#818181; margin-top:2px; }
+    .modal-close { background:none; border:none; color:#818181; font-size:18px; cursor:pointer; padding:0 4px; line-height:1; }
+    .modal-close:hover { color:#e5e3e0; }
+    .modal-tabs { background:#1e1e1e; display:flex; border-bottom:1px solid #2a2a2a; }
+    .modal-tab { padding:9px 18px; font-size:8px; letter-spacing:2px; text-transform:uppercase; font-family:'Poppins',sans-serif; cursor:pointer; color:#818181; border-bottom:2px solid transparent; transition:all .15s; }
+    .modal-tab.active { color:#e5e3e0; border-bottom-color:#b1ada2; }
+    .modal-body { padding:24px; }
+    .modal-footer { padding:14px 24px; border-top:1px solid #e5e3e0; display:flex; gap:10px; justify-content:flex-end; background:#f0eeeb; }
 
-    /* ── RESULTS ── */
-    .results { background: #262626; color: #e5e3e0; }
-    .res-top { padding: 28px 36px 20px; border-bottom: 1px solid #3a3a3a; }
-    .res-ey { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #b1ada2; margin-bottom: 6px; font-family: 'Poppins', sans-serif; }
-    .res-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.3; }
-    .res-sub { font-size: 12px; color: #818181; margin-top: 4px; }
-    .res-body { padding: 0 36px 28px; }
-    .res-sect { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 6px; border-bottom: 1px solid #3a3a3a; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: #b1ada2; }
-    .res-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #2a2a2a; font-size: 12px; }
-    .res-row.ind { padding-left: 16px; color: rgba(255,255,255,.45); font-size: 11px; }
-    .res-amt { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500; font-size: 13px; }
-    .res-amt.neg { color: #e74c3c; }
-    .res-amt.pos { color: #2ecc71; }
-    .res-amt.gold { color: #f39c12; }
-    .res-neto { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; margin-top: 8px; }
-    .res-neto span:first-child { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #e5e3e0; }
-    .big-box { margin: 0 36px 24px; border: 1px solid #3a3a3a; padding: 28px; text-align: center; position: relative; overflow: hidden; }
-    .big-box::before { content: 'GALERIE'; position: absolute; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 80px; letter-spacing: 10px; color: rgba(255,255,255,.025); top: 50%; left: 50%; transform: translate(-50%,-50%); white-space: nowrap; pointer-events: none; }
-    .big-lbl { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #b1ada2; font-family: 'Poppins', sans-serif; margin-bottom: 8px; }
-    .big-val { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 52px; color: #e5e3e0; line-height: 1; letter-spacing: -1px; }
-    .big-sub { font-size: 10px; color: #818181; margin-top: 6px; }
-    .res-tags { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 36px 20px; }
-    .tag { background: rgba(255,255,255,.06); border: 1px solid #3a3a3a; color: #b1ada2; font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: 1px; padding: 4px 12px; }
-    .res-actions { padding: 16px 36px 28px; border-top: 1px solid #2a2a2a; display: flex; gap: 12px; flex-wrap: wrap; }
-    .btn-ghost-inv { background: transparent; color: rgba(255,255,255,.5); border: 1px solid #3a3a3a; padding: 11px 20px; font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-ghost-inv:hover { border-color: #818181; color: #e5e3e0; }
+    /* RESULTS */
+    .results { background:#262626; color:#e5e3e0; }
+    .res-top { padding:24px 32px 18px; border-bottom:1px solid #3a3a3a; }
+    .res-ey { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:#b1ada2; margin-bottom:5px; }
+    .res-title { font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:18px; line-height:1.3; }
+    .res-sub { font-size:11px; color:#818181; margin-top:3px; }
+    .res-body { padding:0 32px 24px; }
+    .res-sect { display:flex; justify-content:space-between; align-items:center; padding:12px 0 5px; border-bottom:1px solid #3a3a3a; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:8px; letter-spacing:2.5px; text-transform:uppercase; color:#b1ada2; }
+    .res-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #2a2a2a; font-size:11px; }
+    .res-row.ind { padding-left:14px; color:rgba(255,255,255,.45); font-size:10px; }
+    .res-amt { font-family:'Plus Jakarta Sans',sans-serif; font-weight:500; font-size:12px; }
+    .res-amt.neg { color:#e74c3c; }
+    .res-amt.pos { color:#2ecc71; }
+    .res-amt.gold { color:#f39c12; }
+    .res-neto { display:flex; justify-content:space-between; align-items:center; padding:9px 0; margin-top:6px; }
+    .res-neto span:first-child { font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:#e5e3e0; }
+    .big-box { margin:0 32px 22px; border:1px solid #3a3a3a; padding:24px; text-align:center; position:relative; overflow:hidden; }
+    .big-box::before { content:'GALERIE'; position:absolute; font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:72px; letter-spacing:10px; color:rgba(255,255,255,.025); top:50%; left:50%; transform:translate(-50%,-50%); white-space:nowrap; pointer-events:none; }
+    .big-lbl { font-size:8px; letter-spacing:4px; text-transform:uppercase; color:#b1ada2; font-family:'Poppins',sans-serif; margin-bottom:7px; }
+    .big-val { font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:46px; color:#e5e3e0; line-height:1; letter-spacing:-1px; }
+    .big-sub { font-size:10px; color:#818181; margin-top:5px; }
+    .res-tags { display:flex; gap:7px; flex-wrap:wrap; padding:0 32px 18px; }
+    .tag { background:rgba(255,255,255,.06); border:1px solid #3a3a3a; color:#b1ada2; font-family:'Poppins',sans-serif; font-size:9px; letter-spacing:1px; padding:3px 10px; }
+    .res-actions { padding:14px 32px 24px; border-top:1px solid #2a2a2a; display:flex; gap:10px; flex-wrap:wrap; }
+    .btn-ghost-inv { background:transparent; color:rgba(255,255,255,.5); border:1px solid #3a3a3a; padding:10px 18px; font-family:'Poppins',sans-serif; font-size:9px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; display:inline-flex; align-items:center; gap:7px; }
+    .btn-ghost-inv:hover { border-color:#818181; color:#e5e3e0; }
 
-    /* ── TRAVEL BADGES ── */
-    .tbadges { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 18px; }
-    .tbadge { border: 1px solid #e5e3e0; padding: 14px 16px; background: #f0eeeb; }
-    .tb-lbl { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #818181; font-family: 'Poppins', sans-serif; margin-bottom: 6px; }
-    .tb-val { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 18px; color: #262626; }
-    .tb-sub { font-size: 10px; color: #b1ada2; margin-top: 2px; }
+    /* TRAVEL BADGES */
+    .tbadges { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:16px; }
+    .tbadge { border:1px solid #e5e3e0; padding:12px 14px; background:#f0eeeb; }
+    .tb-lbl { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:#818181; font-family:'Poppins',sans-serif; margin-bottom:5px; }
+    .tb-sub { font-size:9px; color:#b1ada2; margin-top:2px; }
 
-    /* ── NOTE BOX ── */
-    .note-box { background: #f0eeeb; border-left: 3px solid #b1ada2; padding: 12px 16px; margin-top: 12px; font-size: 11px; color: #262626; line-height: 1.6; }
-    .note-box strong { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #b1ada2; display: block; margin-bottom: 3px; font-family: 'Plus Jakarta Sans', sans-serif; }
-    .note-box.savings { border-left-color: #f39c12; background: #fff9f0; }
-    .note-box.savings strong { color: #f39c12; }
+    /* NOTE BOX */
+    .note-box { background:#f0eeeb; border-left:3px solid #b1ada2; padding:10px 14px; margin-top:10px; font-size:11px; color:#262626; line-height:1.6; }
+    .note-box strong { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:#b1ada2; display:block; margin-bottom:2px; font-family:'Plus Jakarta Sans',sans-serif; }
+    .note-box.savings { border-left-color:#f39c12; background:#fff9f0; }
+    .note-box.savings strong { color:#f39c12; }
 
-    /* ── STAGE TRACKER ── */
-    .stage-track { display: flex; align-items: center; gap: 0; margin: 16px 0; }
-    .stage-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; cursor: pointer; }
-    .stage-item::after { content: ''; position: absolute; top: 11px; left: calc(50% + 12px); right: calc(-50% + 12px); height: 2px; background: #e5e3e0; z-index: 0; }
-    .stage-item:last-child::after { display: none; }
-    .stage-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #e5e3e0; background: #fff; z-index: 1; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; transition: all .2s; }
-    .stage-dot.done { background: #2ecc71; border-color: #2ecc71; color: #fff; }
-    .stage-dot.current { background: #262626; border-color: #262626; color: #fff; }
-    .stage-dot.failed { background: #e74c3c; border-color: #e74c3c; color: #fff; }
-    .stage-lbl { font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: #818181; text-align: center; font-family: 'Poppins', sans-serif; }
-    .stage-item.done .stage-lbl { color: #2ecc71; }
-    .stage-item.current .stage-lbl { color: #262626; font-weight: 600; }
-    .stage-item.failed .stage-lbl { color: #e74c3c; }
+    /* DIVIDER */
+    .div-label { text-align:center; margin:24px 0; position:relative; }
+    .div-label::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:#e5e3e0; }
+    .div-label span { position:relative; background:#f0eeeb; padding:0 14px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:8px; letter-spacing:3px; text-transform:uppercase; color:#818181; }
 
-    /* ── FOOTER ── */
-    .footer { background: #262626; border-top: 2px solid #b1ada2; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; }
-    .footer-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 12px; letter-spacing: 5px; color: #b1ada2; }
-    .footer-info { font-size: 10px; color: #818181; text-align: right; line-height: 1.6; }
+    /* PACKLIST */
+    .packlist-wrap { background:#f0eeeb; border:1px solid #e5e3e0; padding:16px; margin-top:8px; }
+    .packlist-title { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:#818181; font-family:'Poppins',sans-serif; margin-bottom:10px; }
+    .packlist-text { font-size:12px; color:#262626; line-height:1.8; white-space:pre-wrap; }
 
-    /* ── EMPTY STATE ── */
-    .empty { text-align: center; padding: 60px 24px; }
-    .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: .3; }
-    .empty-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 14px; color: #818181; margin-bottom: 6px; letter-spacing: 1px; }
-    .empty-sub { font-size: 12px; color: #b1ada2; }
+    /* EMPTY STATE */
+    .empty { text-align:center; padding:50px 20px; }
+    .empty-icon { font-size:36px; margin-bottom:14px; opacity:.3; }
+    .empty-title { font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:13px; color:#818181; margin-bottom:5px; }
+    .empty-sub { font-size:11px; color:#b1ada2; }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 768px) {
-      .hdr, .hero { padding-left: 20px; padding-right: 20px; }
-      .hero-title { font-size: 26px; }
-      .page, .page-wide { padding: 20px 16px 60px; }
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .g2, .g3, .g4, .tbadges { grid-template-columns: 1fr; }
-      .stage-track { overflow-x: auto; }
-      .footer { padding: 16px 20px; flex-direction: column; gap: 12px; text-align: center; }
-      .footer-info { text-align: center; }
+    /* FOOTER */
+    .footer { background:#262626; border-top:2px solid #b1ada2; padding:18px 36px; display:flex; justify-content:space-between; align-items:center; }
+    .footer-logo { font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:12px; letter-spacing:5px; color:#b1ada2; }
+    .footer-info { font-size:9px; color:#818181; text-align:right; line-height:1.6; }
+
+    @media(max-width:768px){
+      .hdr,.hero{padding-left:16px;padding-right:16px;}
+      .hero-title{font-size:22px;}
+      .page,.page-wide{padding:16px 14px 60px;}
+      .stats-grid{grid-template-columns:1fr 1fr;}
+      .g2,.g3,.g4,.tbadges{grid-template-columns:1fr;}
+      .footer{padding:14px 16px;flex-direction:column;gap:10px;text-align:center;}
+      .footer-info{text-align:center;}
     }
-    @media (max-width: 500px) {
-      .stats-grid { grid-template-columns: 1fr; }
-    }
+    @media(max-width:480px){.stats-grid{grid-template-columns:1fr;}}
   </style>
 </head>
 <body>
 <div id="root"></div>
-
 <script type="text/babel">
-const { useState, useEffect, useRef, useCallback } = React;
+const { useState, useEffect, useRef, useMemo } = React;
 
-/* ══════════════════════════════════════════════
-   HELPERS
-══════════════════════════════════════════════ */
-const fmt = (n, d=0) => n==null||isNaN(n) ? "—"
-  : new Intl.NumberFormat("es-UY",{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
-const fc = (cur, n) => `${cur} ${fmt(n)}`;
+/* ── HELPERS ── */
+const fmt = (n,d=0) => n==null||isNaN(n)?"—":new Intl.NumberFormat("es-UY",{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
+const fc = (cur,n) => `${cur} ${fmt(n)}`;
+const today = () => new Date().toISOString().split("T")[0];
 
+/* ── STAGES ── */
 const STAGES = [
-  { id: "exploracion",  label: "Exploración",   color: "#818181" },
-  { id: "contacto",     label: "Contacto",      color: "#f39c12" },
-  { id: "diseno",       label: "Diseño",        color: "#3498db" },
-  { id: "cotizacion",   label: "Cotización",    color: "#9b59b6" },
-  { id: "negociacion",  label: "Negociación",   color: "#e67e22" },
-  { id: "aceptado",     label: "Aceptado",      color: "#2ecc71" },
-  { id: "produccion",   label: "En Producción", color: "#e67e22" },
-  { id: "completado",   label: "Completado",    color: "#262626" },
+  {id:"exploracion", label:"Exploración"},
+  {id:"contacto",    label:"Contacto"},
+  {id:"diseno",      label:"Diseño"},
+  {id:"cotizacion",  label:"Cotización"},
+  {id:"negociacion", label:"Negociación"},
+  {id:"aceptado",    label:"Aceptado"},
+  {id:"produccion",  label:"Producción"},
+  {id:"completado",  label:"Completado"},
 ];
-const LOST_STAGE = { id: "perdido", label: "Perdido", color: "#e74c3c" };
-
 const STAGE_BADGE = {
-  exploracion: "badge-exploration",
-  contacto: "badge-contact",
-  diseno: "badge-design",
-  cotizacion: "badge-quote",
-  negociacion: "badge-contact",
-  aceptado: "badge-accepted",
-  produccion: "badge-production",
-  completado: "badge-completed",
-  perdido: "badge-closed",
+  exploracion:"badge-exploracion",contacto:"badge-contacto",diseno:"badge-diseno",
+  cotizacion:"badge-cotizacion",negociacion:"badge-negociacion",aceptado:"badge-aceptado",
+  produccion:"badge-produccion",completado:"badge-completado",perdido:"badge-perdido",
 };
+// Only divide travel costs when project is Aceptado, Produccion, or Completado
+const ACCEPTED_STAGES = ["aceptado","produccion","completado"];
 
-/*
- * FLIGHT COST ENGINE — desde Montevideo (MVD/EZE)
- * Lógica: tarifa base por región + ajuste por hub de conexión + factor ciudad
- * Fuente: promedios reales de búsquedas GDS en clase económica, ida y vuelta,
- * con anticipación típica de 45–90 días, temporada media.
- * Zona horaria y conexiones: MVD vuela vía Buenos Aires (EZE) o São Paulo (GRU)
- * hacia Europa y resto del mundo, con 1–2 escalas.
- *
- * Estructura: { f: vuelo_pp_irt, h: hotel_noche, d: viaticos_dia_pp }
- * f = promedio USD por persona, ida y vuelta (incluye tasas)
- * h = promedio USD por habitación por noche (hotel 3–4 estrellas, feria)
- * d = viáticos diarios por persona (comida + transporte local)
- */
-
-// Factor de temporada feria: la mayoría de ferias son sep–nov (alta) o feb–may
-// Factor de congestión de feria: +15% sobre precio base en semanas de feria grande
+/* ── FLIGHT ALGORITHM FROM MVD ── */
 const FERIA_FACTOR = 1.15;
-
-// Tarifas base por región desde MVD/EZE (USD, ida y vuelta por persona)
 const REGION_BASE = {
-  sudamerica_cercana: { f: 380, h: 65,  d: 48 },  // Santiago, Lima, Asunción, BsAs
-  sudamerica_norte:   { f: 520, h: 72,  d: 55 },  // Bogotá, Medellín, Quito, Lima Norte
-  caribe_mexico:      { f: 620, h: 95,  d: 68 },  // México DF, Cancún, Panamá
-  usa_este:           { f: 820, h: 165, d: 110 }, // NYC, Miami, Boston, Atlanta
-  usa_centro:         { f: 850, h: 140, d: 98 },  // Chicago, Dallas, Houston
-  usa_oeste:          { f: 880, h: 160, d: 108 }, // LA, SF, Seattle
-  canada:             { f: 870, h: 135, d: 96 },  // Toronto, Montreal, Vancouver
-  europa_oeste_hub:   { f: 980, h: 115, d: 90 },  // Madrid, Lisboa, Paris, Frankfurt (hubs directos)
-  europa_oeste:       { f: 1020, h: 105, d: 88 }, // Roma, Milan, Barcelona, Amsterdam
-  europa_norte:       { f: 1050, h: 120, d: 100 },// Londres, Ámsterdam, Copenhague, Estocolmo
-  europa_central:     { f: 1000, h: 90,  d: 78 }, // Viena, Praga, Budapest, Varsovia
-  europa_este:        { f: 980,  h: 72,  d: 62 }, // Bucarest, Sofia, Belgrado
-  europa_mediterraneo:{ f: 1010, h: 85,  d: 80 }, // Atenas, Estambul, Nicosia
-  oriente_medio:      { f: 1050, h: 125, d: 95 }, // Dubai, Doha, Abu Dhabi, Tel Aviv
-  africa_norte:       { f: 1080, h: 80,  d: 65 }, // Cairo, Casablanca
-  africa_sub:         { f: 1350, h: 85,  d: 60 }, // Johannesburgo, Nairobi
-  asia_sur:           { f: 1280, h: 88,  d: 65 }, // Delhi, Mumbai, Bangalore
-  asia_sudeste:       { f: 1350, h: 82,  d: 58 }, // Bangkok, Singapur, KL, Jakarta
-  asia_este:          { f: 1480, h: 118, d: 88 }, // Tokio, Seúl, Shanghai, Pekín, Hong Kong
-  oceania:            { f: 1650, h: 145, d: 105 },// Sídney, Melbourne
-  default:            { f: 980,  h: 95,  d: 80 },
+  sudamerica_cercana:{f:380,h:65,d:48}, sudamerica_norte:{f:520,h:72,d:55},
+  caribe_mexico:{f:620,h:95,d:68}, usa_este:{f:820,h:165,d:110},
+  usa_centro:{f:850,h:140,d:98}, usa_oeste:{f:880,h:160,d:108},
+  canada:{f:870,h:135,d:96}, europa_oeste_hub:{f:980,h:115,d:90},
+  europa_oeste:{f:1020,h:105,d:88}, europa_norte:{f:1050,h:120,d:100},
+  europa_central:{f:1000,h:90,d:78}, europa_este:{f:980,h:72,d:62},
+  europa_mediterraneo:{f:1010,h:85,d:80}, oriente_medio:{f:1050,h:125,d:95},
+  africa_norte:{f:1080,h:80,d:65}, asia_sur:{f:1280,h:88,d:65},
+  asia_sudeste:{f:1350,h:82,d:58}, asia_este:{f:1480,h:118,d:88},
+  oceania:{f:1650,h:145,d:105}, default:{f:980,h:95,d:80},
 };
-
-// Mapa ciudad → región + ajuste individual (delta sobre la base regional)
-// dF = delta en vuelo, dH = delta hotel (ciudad más/menos cara), dD = delta viáticos
 const CITY_MAP = {
-  // SUDAMÉRICA CERCANA
-  "santiago":        { r:"sudamerica_cercana", dF:0,   dH:8,  dD:5  },
-  "lima":            { r:"sudamerica_cercana", dF:50,  dH:5,  dD:5  },
-  "asuncion":        { r:"sudamerica_cercana", dF:-30, dH:-10,dD:-8 },
-  "la paz":          { r:"sudamerica_cercana", dF:60,  dH:-5, dD:-5 },
-  "santa cruz":      { r:"sudamerica_cercana", dF:55,  dH:-5, dD:-5 },
-  "sao paulo":       { r:"sudamerica_cercana", dF:40,  dH:20, dD:15 },
-  "rio de janeiro":  { r:"sudamerica_cercana", dF:50,  dH:25, dD:18 },
-  "buenos aires":    { r:"sudamerica_cercana", dF:-80, dH:15, dD:12 },
-
-  // SUDAMÉRICA NORTE
-  "bogota":          { r:"sudamerica_norte",   dF:0,   dH:-5, dD:-5 },
-  "medellin":        { r:"sudamerica_norte",   dF:10,  dH:-8, dD:-8 },
-  "quito":           { r:"sudamerica_norte",   dF:20,  dH:-5, dD:-5 },
-  "guayaquil":       { r:"sudamerica_norte",   dF:20,  dH:-8, dD:-8 },
-  "caracas":         { r:"sudamerica_norte",   dF:40,  dH:5,  dD:5  },
-
-  // CARIBE / MÉXICO
-  "mexico city":     { r:"caribe_mexico",      dF:0,   dH:0,  dD:0  },
-  "guadalajara":     { r:"caribe_mexico",      dF:10,  dH:-8, dD:-5 },
-  "monterrey":       { r:"caribe_mexico",      dF:5,   dH:-5, dD:-5 },
-  "cancun":          { r:"caribe_mexico",      dF:-10, dH:0,  dD:0  },
-  "panama":          { r:"caribe_mexico",      dF:-20, dH:5,  dD:5  },
-
-  // USA ESTE
-  "new york":        { r:"usa_este",           dF:0,   dH:35, dD:22 },
-  "miami":           { r:"usa_este",           dF:-30, dH:5,  dD:10 },
-  "boston":          { r:"usa_este",           dF:10,  dH:20, dD:15 },
-  "atlanta":         { r:"usa_este",           dF:-30, dH:5,  dD:5  },
-  "washington":      { r:"usa_este",           dF:0,   dH:15, dD:12 },
-  "philadelphia":    { r:"usa_este",           dF:0,   dH:10, dD:8  },
-  "orlando":         { r:"usa_este",           dF:-40, dH:-5, dD:-5 },
-  "fort lauderdale": { r:"usa_este",           dF:-40, dH:0,  dD:0  },
-
-  // USA CENTRO
-  "chicago":         { r:"usa_centro",         dF:0,   dH:18, dD:12 },
-  "dallas":          { r:"usa_centro",         dF:-20, dH:5,  dD:3  },
-  "houston":         { r:"usa_centro",         dF:-20, dH:5,  dD:3  },
-  "denver":          { r:"usa_centro",         dF:-5,  dH:5,  dD:3  },
-
-  // USA OESTE
-  "los angeles":     { r:"usa_oeste",          dF:-10, dH:20, dD:12 },
-  "san francisco":   { r:"usa_oeste",          dF:0,   dH:30, dD:18 },
-  "las vegas":       { r:"usa_oeste",          dF:-10, dH:0,  dD:8  },
-  "seattle":         { r:"usa_oeste",          dF:0,   dH:15, dD:8  },
-
-  // CANADÁ
-  "toronto":         { r:"canada",             dF:0,   dH:5,  dD:5  },
-  "montreal":        { r:"canada",             dF:0,   dH:-5, dD:0  },
-  "vancouver":       { r:"canada",             dF:5,   dH:5,  dD:5  },
-
-  // EUROPA OESTE HUBS (vuelo más barato por directo o competencia)
-  "madrid":          { r:"europa_oeste_hub",   dF:-60, dH:-8, dD:-5 },
-  "lisbon":          { r:"europa_oeste_hub",   dF:-50, dH:-5, dD:-5 },
-  "paris":           { r:"europa_oeste_hub",   dF:0,   dH:22, dD:18 },
-  "frankfurt":       { r:"europa_oeste_hub",   dF:0,   dH:15, dD:10 },
-
-  // EUROPA OESTE
-  "barcelona":       { r:"europa_oeste",       dF:-20, dH:-5, dD:0  },
-  "rome":            { r:"europa_oeste",       dF:-10, dH:0,  dD:5  },
-  "milan":           { r:"europa_oeste",       dF:-10, dH:15, dD:10 },
-  "amsterdam":       { r:"europa_oeste",       dF:10,  dH:15, dD:8  },
-  "brussels":        { r:"europa_oeste",       dF:10,  dH:8,  dD:5  },
-  "lyon":            { r:"europa_oeste",       dF:0,   dH:0,  dD:0  },
-  "nice":            { r:"europa_oeste",       dF:0,   dH:20, dD:12 },
-  "cannes":          { r:"europa_oeste",       dF:0,   dH:40, dD:20 },
-  "florence":        { r:"europa_oeste",       dF:-10, dH:5,  dD:5  },
-  "venice":          { r:"europa_oeste",       dF:-10, dH:25, dD:12 },
-  "bologna":         { r:"europa_oeste",       dF:-10, dH:-2, dD:-2 },
-  "seville":         { r:"europa_oeste",       dF:-20, dH:-5, dD:-5 },
-  "valencia":        { r:"europa_oeste",       dF:-20, dH:-8, dD:-5 },
-  "bilbao":          { r:"europa_oeste",       dF:-15, dH:-5, dD:-5 },
-  "porto":           { r:"europa_oeste",       dF:-30, dH:-5, dD:-5 },
-  "dusseldorf":      { r:"europa_oeste",       dF:5,   dH:8,  dD:5  },
-  "cologne":         { r:"europa_oeste",       dF:5,   dH:5,  dD:3  },
-  "hamburg":         { r:"europa_oeste",       dF:10,  dH:5,  dD:3  },
-  "munich":          { r:"europa_oeste",       dF:5,   dH:18, dD:8  },
-  "dortmund":        { r:"europa_oeste",       dF:5,   dH:3,  dD:3  },
-  "hannover":        { r:"europa_oeste",       dF:5,   dH:-2, dD:-2 },
-  "nuremberg":       { r:"europa_oeste",       dF:5,   dH:-2, dD:-2 },
-  "berlin":          { r:"europa_oeste",       dF:10,  dH:5,  dD:3  },
-
-  // EUROPA NORTE
-  "london":          { r:"europa_norte",       dF:0,   dH:40, dD:28 },
-  "edinburgh":       { r:"europa_norte",       dF:10,  dH:15, dD:10 },
-  "manchester":      { r:"europa_norte",       dF:5,   dH:10, dD:8  },
-  "copenhagen":      { r:"europa_norte",       dF:10,  dH:20, dD:12 },
-  "stockholm":       { r:"europa_norte",       dF:10,  dH:18, dD:10 },
-  "oslo":            { r:"europa_norte",       dF:15,  dH:25, dD:15 },
-  "helsinki":        { r:"europa_norte",       dF:15,  dH:15, dD:10 },
-  "dublin":          { r:"europa_norte",       dF:0,   dH:18, dD:10 },
-
-  // EUROPA CENTRAL
-  "vienna":          { r:"europa_central",     dF:0,   dH:12, dD:8  },
-  "prague":          { r:"europa_central",     dF:-5,  dH:0,  dD:-2 },
-  "budapest":        { r:"europa_central",     dF:-5,  dH:-2, dD:-5 },
-  "warsaw":          { r:"europa_central",     dF:-5,  dH:-2, dD:-5 },
-  "zurich":          { r:"europa_central",     dF:10,  dH:65, dD:40 },
-  "geneva":          { r:"europa_central",     dF:10,  dH:70, dD:42 },
-  "basel":           { r:"europa_central",     dF:10,  dH:52, dD:30 },
-  "bern":            { r:"europa_central",     dF:10,  dH:50, dD:28 },
-  "luxembourg":      { r:"europa_central",     dF:5,   dH:20, dD:12 },
-
-  // EUROPA MEDITERRÁNEO
-  "athens":          { r:"europa_mediterraneo",dF:0,   dH:0,  dD:0  },
-  "istanbul":        { r:"europa_mediterraneo",dF:-20, dH:-5, dD:-5 },
-  "tel aviv":        { r:"europa_mediterraneo",dF:10,  dH:30, dD:15 },
-
-  // ORIENTE MEDIO
-  "dubai":           { r:"oriente_medio",      dF:0,   dH:20, dD:10 },
-  "doha":            { r:"oriente_medio",      dF:0,   dH:25, dD:10 },
-  "abu dhabi":       { r:"oriente_medio",      dF:0,   dH:15, dD:8  },
-  "riyadh":          { r:"oriente_medio",      dF:10,  dH:18, dD:5  },
-
-  // ASIA ESTE
-  "tokyo":           { r:"asia_este",          dF:0,   dH:20, dD:12 },
-  "osaka":           { r:"asia_este",          dF:-10, dH:10, dD:8  },
-  "seoul":           { r:"asia_este",          dF:-20, dH:15, dD:5  },
-  "shanghai":        { r:"asia_este",          dF:-20, dH:18, dD:5  },
-  "beijing":         { r:"asia_este",          dF:-20, dH:15, dD:5  },
-  "hong kong":       { r:"asia_este",          dF:-30, dH:30, dD:15 },
-
-  // ASIA SUDESTE
-  "singapore":       { r:"asia_sudeste",       dF:0,   dH:40, dD:18 },
-  "bangkok":         { r:"asia_sudeste",       dF:-20, dH:-5, dD:-8 },
-  "kuala lumpur":    { r:"asia_sudeste",       dF:-20, dH:-5, dD:-8 },
-  "jakarta":         { r:"asia_sudeste",       dF:-20, dH:-5, dD:-8 },
-  "bali":            { r:"asia_sudeste",       dF:-30, dH:5,  dD:-8 },
-  "manila":          { r:"asia_sudeste",       dF:-20, dH:-5, dD:-8 },
-
-  // ASIA SUR
-  "delhi":           { r:"asia_sur",           dF:0,   dH:5,  dD:0  },
-  "mumbai":          { r:"asia_sur",           dF:0,   dH:8,  dD:5  },
-  "bangalore":       { r:"asia_sur",           dF:5,   dH:0,  dD:0  },
-
-  // OCEANÍA
-  "sydney":          { r:"oceania",            dF:0,   dH:10, dD:5  },
-  "melbourne":       { r:"oceania",            dF:0,   dH:5,  dD:0  },
+  "santiago":{r:"sudamerica_cercana",dF:0,dH:8,dD:5},"lima":{r:"sudamerica_cercana",dF:50,dH:5,dD:5},
+  "sao paulo":{r:"sudamerica_cercana",dF:40,dH:20,dD:15},"rio de janeiro":{r:"sudamerica_cercana",dF:50,dH:25,dD:18},
+  "buenos aires":{r:"sudamerica_cercana",dF:-80,dH:15,dD:12},"bogota":{r:"sudamerica_norte",dF:0,dH:-5,dD:-5},
+  "mexico city":{r:"caribe_mexico",dF:0,dH:0,dD:0},"cancun":{r:"caribe_mexico",dF:-10,dH:0,dD:0},
+  "panama":{r:"caribe_mexico",dF:-20,dH:5,dD:5},"new york":{r:"usa_este",dF:0,dH:35,dD:22},
+  "miami":{r:"usa_este",dF:-30,dH:5,dD:10},"boston":{r:"usa_este",dF:10,dH:20,dD:15},
+  "atlanta":{r:"usa_este",dF:-30,dH:5,dD:5},"washington":{r:"usa_este",dF:0,dH:15,dD:12},
+  "orlando":{r:"usa_este",dF:-40,dH:-5,dD:-5},"chicago":{r:"usa_centro",dF:0,dH:18,dD:12},
+  "dallas":{r:"usa_centro",dF:-20,dH:5,dD:3},"houston":{r:"usa_centro",dF:-20,dH:5,dD:3},
+  "los angeles":{r:"usa_oeste",dF:-10,dH:20,dD:12},"san francisco":{r:"usa_oeste",dF:0,dH:30,dD:18},
+  "las vegas":{r:"usa_oeste",dF:-10,dH:0,dD:8},"seattle":{r:"usa_oeste",dF:0,dH:15,dD:8},
+  "toronto":{r:"canada",dF:0,dH:5,dD:5},"montreal":{r:"canada",dF:0,dH:-5,dD:0},
+  "vancouver":{r:"canada",dF:5,dH:5,dD:5},"madrid":{r:"europa_oeste_hub",dF:-60,dH:-8,dD:-5},
+  "lisbon":{r:"europa_oeste_hub",dF:-50,dH:-5,dD:-5},"paris":{r:"europa_oeste_hub",dF:0,dH:22,dD:18},
+  "frankfurt":{r:"europa_oeste_hub",dF:0,dH:15,dD:10},"barcelona":{r:"europa_oeste",dF:-20,dH:-5,dD:0},
+  "rome":{r:"europa_oeste",dF:-10,dH:0,dD:5},"milan":{r:"europa_oeste",dF:-10,dH:15,dD:10},
+  "amsterdam":{r:"europa_oeste",dF:10,dH:15,dD:8},"brussels":{r:"europa_oeste",dF:10,dH:8,dD:5},
+  "cologne":{r:"europa_oeste",dF:5,dH:5,dD:3},"hamburg":{r:"europa_oeste",dF:10,dH:5,dD:3},
+  "munich":{r:"europa_oeste",dF:5,dH:18,dD:8},"berlin":{r:"europa_oeste",dF:10,dH:5,dD:3},
+  "dusseldorf":{r:"europa_oeste",dF:5,dH:8,dD:5},"hannover":{r:"europa_oeste",dF:5,dH:-2,dD:-2},
+  "bologna":{r:"europa_oeste",dF:-10,dH:-2,dD:-2},"florence":{r:"europa_oeste",dF:-10,dH:5,dD:5},
+  "venice":{r:"europa_oeste",dF:-10,dH:25,dD:12},"nice":{r:"europa_oeste",dF:0,dH:20,dD:12},
+  "cannes":{r:"europa_oeste",dF:0,dH:40,dD:20},"seville":{r:"europa_oeste",dF:-20,dH:-5,dD:-5},
+  "valencia":{r:"europa_oeste",dF:-20,dH:-8,dD:-5},"bilbao":{r:"europa_oeste",dF:-15,dH:-5,dD:-5},
+  "london":{r:"europa_norte",dF:0,dH:40,dD:28},"edinburgh":{r:"europa_norte",dF:10,dH:15,dD:10},
+  "manchester":{r:"europa_norte",dF:5,dH:10,dD:8},"copenhagen":{r:"europa_norte",dF:10,dH:20,dD:12},
+  "stockholm":{r:"europa_norte",dF:10,dH:18,dD:10},"oslo":{r:"europa_norte",dF:15,dH:25,dD:15},
+  "helsinki":{r:"europa_norte",dF:15,dH:15,dD:10},"dublin":{r:"europa_norte",dF:0,dH:18,dD:10},
+  "vienna":{r:"europa_central",dF:0,dH:12,dD:8},"prague":{r:"europa_central",dF:-5,dH:0,dD:-2},
+  "budapest":{r:"europa_central",dF:-5,dH:-2,dD:-5},"warsaw":{r:"europa_central",dF:-5,dH:-2,dD:-5},
+  "zurich":{r:"europa_central",dF:10,dH:65,dD:40},"geneva":{r:"europa_central",dF:10,dH:70,dD:42},
+  "basel":{r:"europa_central",dF:10,dH:52,dD:30},"athens":{r:"europa_mediterraneo",dF:0,dH:0,dD:0},
+  "istanbul":{r:"europa_mediterraneo",dF:-20,dH:-5,dD:-5},"tel aviv":{r:"europa_mediterraneo",dF:10,dH:30,dD:15},
+  "dubai":{r:"oriente_medio",dF:0,dH:20,dD:10},"doha":{r:"oriente_medio",dF:0,dH:25,dD:10},
+  "abu dhabi":{r:"oriente_medio",dF:0,dH:15,dD:8},"tokyo":{r:"asia_este",dF:0,dH:20,dD:12},
+  "osaka":{r:"asia_este",dF:-10,dH:10,dD:8},"seoul":{r:"asia_este",dF:-20,dH:15,dD:5},
+  "shanghai":{r:"asia_este",dF:-20,dH:18,dD:5},"beijing":{r:"asia_este",dF:-20,dH:15,dD:5},
+  "hong kong":{r:"asia_este",dF:-30,dH:30,dD:15},"singapore":{r:"asia_sudeste",dF:0,dH:40,dD:18},
+  "bangkok":{r:"asia_sudeste",dF:-20,dH:-5,dD:-8},"kuala lumpur":{r:"asia_sudeste",dF:-20,dH:-5,dD:-8},
+  "jakarta":{r:"asia_sudeste",dF:-20,dH:-5,dD:-8},"bali":{r:"asia_sudeste",dF:-30,dH:5,dD:-8},
+  "delhi":{r:"asia_sur",dF:0,dH:5,dD:0},"mumbai":{r:"asia_sur",dF:0,dH:8,dD:5},
+  "sydney":{r:"oceania",dF:0,dH:10,dD:5},"melbourne":{r:"oceania",dF:0,dH:5,dD:0},
 };
-
 function getDef(city) {
-  const l = (city||"").toLowerCase().trim();
-  // Busca match exacto primero, luego parcial
-  let entry = null;
-  for(const [k,v] of Object.entries(CITY_MAP)) {
-    if(l === k) { entry=v; break; }
-  }
-  if(!entry) {
-    for(const [k,v] of Object.entries(CITY_MAP)) {
-      if(l.includes(k) || k.includes(l)) { entry=v; break; }
-    }
-  }
-  if(!entry) {
-    // Fallback inteligente por palabras clave regionales
-    if(l.includes("eur")||["germany","france","italy","spain","uk"].some(x=>l.includes(x))) entry={r:"europa_oeste",dF:0,dH:0,dD:0};
-    else if(["usa","united states","estados unidos"].some(x=>l.includes(x))) entry={r:"usa_este",dF:0,dH:0,dD:0};
-    else entry={r:"default",dF:0,dH:0,dD:0};
-  }
-  const base = REGION_BASE[entry.r] || REGION_BASE.default;
-  return {
-    f: Math.round((base.f + (entry.dF||0)) * FERIA_FACTOR),
-    h: Math.round(base.h + (entry.dH||0)),
-    d: Math.round(base.d + (entry.dD||0)),
-    region: entry.r,
-  };
+  const l=(city||"").toLowerCase().trim();
+  let entry=null;
+  for(const[k,v] of Object.entries(CITY_MAP)){if(l===k){entry=v;break;}}
+  if(!entry){for(const[k,v] of Object.entries(CITY_MAP)){if(l.includes(k)||k.includes(l)){entry=v;break;}}}
+  if(!entry) entry={r:"default",dF:0,dH:0,dD:0};
+  const base=REGION_BASE[entry.r]||REGION_BASE.default;
+  return {f:Math.round((base.f+(entry.dF||0))*FERIA_FACTOR),h:Math.round(base.h+(entry.dH||0)),d:Math.round(base.d+(entry.dD||0))};
 }
-function rooms(pax) { return pax<=2?1:pax<=4?2:3; }
-function nightsBetween(d1,d2) {
-  if(!d1||!d2) return 0;
-  const diff=Math.round((new Date(d2)-new Date(d1))/86400000);
-  return diff>0?diff:0;
-}
+function rooms(pax){return pax<=2?1:pax<=4?2:3;}
+function nightsBetween(d1,d2){if(!d1||!d2)return 0;const diff=Math.round((new Date(d2)-new Date(d1))/86400000);return diff>0?diff:0;}
 
-/* ══════════════════════════════════════════════
-   DEMO DATA (when Firebase not connected)
-══════════════════════════════════════════════ */
-const DEMO_PROJECTS = [
-  { id:"p1", proyecto:"BILBOSA", cliente:"Stand Pabellón B", feria:"Seafood Barcelona 2026",
-    destino:"Barcelona", etapa:"completado", moneda:"USD", ingresos:18500, costoStand:8200,
-    costoCatering:0, costoServicios:400, personas:2, llegada:"2026-04-10", partida:"2026-04-13",
-    flightTotal:1900, hotelTotal:855, dailyTotal:480, gastosAdmin:405, rentaBruta:6260,
-    irae:1565, neto:4695, gastosAdminPct:0.05, notas:"Cliente muy satisfecho. Renovar para 2027.",
-    createdAt: new Date("2026-01-15"), updatedAt: new Date("2026-04-14") },
-  { id:"p2", proyecto:"MARFRIO", cliente:"Stand 36m²", feria:"Anuga Cologne 2026",
-    destino:"Cologne", etapa:"aceptado", moneda:"EUR", ingresos:22000, costoStand:12000,
-    costoCatering:800, costoServicios:600, personas:2, llegada:"2026-10-04", partida:"2026-10-08",
-    flightTotal:1890, hotelTotal:1440, dailyTotal:624, gastosAdmin:502, rentaBruta:4144,
-    irae:1036, neto:3108, gastosAdminPct:0.05, notas:"Anticipo cobrado. Stand en producción.",
-    createdAt: new Date("2026-02-20"), updatedAt: new Date("2026-03-15") },
-  { id:"p3", proyecto:"ARROZAL", cliente:"Stand 18m²", feria:"Anuga Cologne 2026",
-    destino:"Cologne", etapa:"produccion", moneda:"EUR", ingresos:14500, costoStand:7800,
-    costoCatering:500, costoServicios:200, personas:2, llegada:"2026-10-04", partida:"2026-10-08",
-    flightTotal:1890, hotelTotal:1440, dailyTotal:624, gastosAdmin:294, rentaBruta:1752,
-    irae:438, neto:1314, gastosAdminPct:0.05, notas:"Mismo destino que MARFRIO — costos de viaje compartidos.",
-    createdAt: new Date("2026-02-22"), updatedAt: new Date("2026-03-18") },
-  { id:"p4", proyecto:"NUTRIPACK", cliente:"Stand 24m²", feria:"SIAL Paris 2026",
-    destino:"Paris", etapa:"cotizacion", moneda:"EUR", ingresos:19000, costoStand:10500,
-    costoCatering:600, costoServicios:400, personas:2, llegada:"2026-10-18", partida:"2026-10-23",
-    flightTotal:2000, hotelTotal:2400, dailyTotal:1000, gastosAdmin:415, rentaBruta:2685,
-    irae:671, neto:2014, gastosAdminPct:0.05, notas:"En espera de aprobación presupuesto.",
-    createdAt: new Date("2026-03-01"), updatedAt: new Date("2026-04-01") },
-  { id:"p5", proyecto:"CONAPROLE", cliente:"Stand 30m²", feria:"Anuga Cologne 2026",
-    destino:"Cologne", etapa:"diseno", moneda:"EUR", ingresos:21000, costoStand:11500,
-    costoCatering:700, costoServicios:300, personas:2, llegada:"2026-10-04", partida:"2026-10-08",
-    flightTotal:1890, hotelTotal:1440, dailyTotal:624, gastosAdmin:437, rentaBruta:4209,
-    irae:1052, neto:3157, gastosAdminPct:0.05, notas:"3er cliente en Anuga. Viaje muy rentable.",
-    createdAt: new Date("2026-03-10"), updatedAt: new Date("2026-04-10") },
-  { id:"p6", proyecto:"OLIVOS SA", cliente:"Stand 12m²", feria:"SIAL Paris 2026",
-    destino:"Paris", etapa:"perdido", moneda:"EUR", ingresos:12000, costoStand:6500,
-    costoCatering:0, costoServicios:200, personas:2, llegada:"2026-10-18", partida:"2026-10-23",
-    flightTotal:2000, hotelTotal:2400, dailyTotal:1000, gastosAdmin:185, rentaBruta:1715,
-    irae:429, neto:1286, gastosAdminPct:0.05, notas:"Eligieron proveedor local. Hacer seguimiento para próxima edición.",
-    createdAt: new Date("2026-03-05"), updatedAt: new Date("2026-04-05") },
-];
-
-/* ══════════════════════════════════════════════
-   FIREBASE BRIDGE
-══════════════════════════════════════════════ */
-function useProjects() {
-  const [projects, setProjects] = useState(DEMO_PROJECTS);
+/* ── FIREBASE HOOKS ── */
+function useCollection(colName) {
+  const [data, setData] = useState([]);
   const [fbMode, setFbMode] = useState(false);
-  const fb = window.__galerie_firebase;
+  const fb = window.__fb;
 
-  useEffect(() => {
+  useEffect(()=>{
     if(!fb?.db) return;
     try {
-      const { collection, query, orderBy, onSnapshot } = fb;
-      const q = query(collection(fb.db,"projects"), orderBy("updatedAt","desc"));
-      const unsub = onSnapshot(q, snap => {
-        const data = snap.docs.map(d=>({id:d.id,...d.data(),
+      const {collection,query,orderBy,onSnapshot}=fb;
+      const q=query(collection(fb.db,colName),orderBy("updatedAt","desc"));
+      const unsub=onSnapshot(q,snap=>{
+        setData(snap.docs.map(d=>({id:d.id,...d.data(),
           createdAt:d.data().createdAt?.toDate?.()??new Date(),
           updatedAt:d.data().updatedAt?.toDate?.()??new Date()
-        }));
-        setProjects(data);
+        })));
         setFbMode(true);
-      }, ()=>{});
+      },()=>{});
       return unsub;
-    } catch(e){}
-  },[]);
+    }catch(e){}
+  },[colName]);
 
-  const addProject = async (proj) => {
-    if(fb?.db) {
-      const { collection, addDoc, serverTimestamp } = fb;
-      await addDoc(collection(fb.db,"projects"),{...proj,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
-    } else {
-      setProjects(p=>[{id:"p"+Date.now(),...proj,createdAt:new Date(),updatedAt:new Date()},...p]);
-    }
+  const add = async(doc) => {
+    if(fb?.db){
+      const{collection,addDoc,serverTimestamp}=fb;
+      await addDoc(collection(fb.db,colName),{...doc,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+    } else setData(p=>[{id:"local_"+Date.now(),...doc,createdAt:new Date(),updatedAt:new Date()},...p]);
   };
-
-  const updateProject = async (id, data) => {
-    if(fb?.db) {
-      const { doc, updateDoc, serverTimestamp } = fb;
-      await updateDoc(doc(fb.db,"projects",id),{...data,updatedAt:serverTimestamp()});
-    } else {
-      setProjects(p=>p.map(x=>x.id===id?{...x,...data,updatedAt:new Date()}:x));
-    }
+  const update = async(id,doc) => {
+    if(fb?.db){const{doc:d,updateDoc,serverTimestamp}=fb;await updateDoc(d(fb.db,colName,id),{...doc,updatedAt:serverTimestamp()});}
+    else setData(p=>p.map(x=>x.id===id?{...x,...doc,updatedAt:new Date()}:x));
   };
-
-  const deleteProject = async (id) => {
-    if(fb?.db) {
-      const { doc, deleteDoc } = fb;
-      await deleteDoc(doc(fb.db,"projects",id));
-    } else {
-      setProjects(p=>p.filter(x=>x.id!==id));
-    }
+  const remove = async(id) => {
+    if(fb?.db){const{doc:d,deleteDoc}=fb;await deleteDoc(d(fb.db,colName,id));}
+    else setData(p=>p.filter(x=>x.id!==id));
   };
-
-  return { projects, addProject, updateProject, deleteProject, fbMode };
+  return {data,fbMode,add,update,remove};
 }
 
-/* ══════════════════════════════════════════════
-   AUTH
-══════════════════════════════════════════════ */
 function useAuth() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const fb = window.__galerie_firebase;
-
-  useEffect(() => {
-    if(!fb?.auth) { setLoading(false); return; }
-    const unsub = fb.onAuthStateChanged(fb.auth, u=>{ setUser(u); setLoading(false); });
-    return unsub;
+  const [user,setUser]=useState(null);
+  const [loading,setLoading]=useState(true);
+  const fb=window.__fb;
+  useEffect(()=>{
+    if(!fb?.auth){setLoading(false);return;}
+    return fb.onAuthStateChanged(fb.auth,u=>{setUser(u);setLoading(false);});
   },[]);
-
-  const login = async (email, pass) => {
-    if(!fb?.auth) {
-      // demo mode
-      if(email==="info@galerie-expo.com"&&pass==="Galerie270925") {
-        setUser({email,displayName:"Galerie Admin"});
-      } else throw new Error("Credenciales incorrectas");
-      return;
+  const login=async(email,pass)=>{
+    if(!fb?.auth){
+      if(email==="info@galerie-expo.com"&&pass==="Galerie270925")setUser({email});
+      else throw new Error("Credenciales incorrectas");return;
     }
-    await fb.signInWithEmailAndPassword(fb.auth, email, pass);
+    await fb.signInWithEmailAndPassword(fb.auth,email,pass);
   };
-
-  const logout = async () => {
-    if(!fb?.auth) { setUser(null); return; }
-    await fb.signOut(fb.auth);
-  };
-
-  return { user, loading, login, logout };
+  const logout=async()=>{if(!fb?.auth){setUser(null);return;}await fb.signOut(fb.auth);};
+  return{user,loading,login,logout};
 }
 
-/* ══════════════════════════════════════════════
-   LOGIN SCREEN
-══════════════════════════════════════════════ */
-function LoginScreen({ onLogin }) {
-  const [email, setEmail] = useState("info@galerie-expo.com");
-  const [pass, setPass] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const submit = async () => {
-    setError(""); setLoading(true);
-    try { await onLogin(email, pass); }
-    catch(e){ setError(e.message||"Error de autenticación"); }
-    finally { setLoading(false); }
-  };
-
-  return (
+/* ── LOGIN ── */
+function LoginScreen({onLogin}){
+  const[email,setEmail]=useState("info@galerie-expo.com");
+  const[pass,setPass]=useState("");
+  const[error,setError]=useState("");
+  const[loading,setLoading]=useState(false);
+  const submit=async()=>{setError("");setLoading(true);try{await onLogin(email,pass);}catch(e){setError(e.message);}finally{setLoading(false);}};
+  return(
     <div className="login-wrap">
       <div className="login-box">
         <div className="login-logo">GALERIE</div>
         <div className="login-sub">Sistema de Gestión de Proyectos</div>
-        <div className="login-field">
-          <label className="login-label">Email</label>
-          <input className="login-input" type="email" value={email}
-            onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} />
-        </div>
-        <div className="login-field">
-          <label className="login-label">Contraseña</label>
-          <input className="login-input" type="password" value={pass}
-            onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} />
-        </div>
-        <button className="login-btn" onClick={submit} disabled={loading}>
-          {loading ? "INGRESANDO..." : "INGRESAR"}
-        </button>
-        {error && <div className="login-error">{error}</div>}
+        <div className="login-field"><label className="login-label">Email</label><input className="login-input" type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} /></div>
+        <div className="login-field"><label className="login-label">Contraseña</label><input className="login-input" type="password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} /></div>
+        <button className="login-btn" onClick={submit} disabled={loading}>{loading?"INGRESANDO...":"INGRESAR"}</button>
+        {error&&<div className="login-error">{error}</div>}
       </div>
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════
-   STAGE TRACKER COMPONENT
-══════════════════════════════════════════════ */
-function StageTracker({ currentStage, onStageClick, compact=false }) {
-  const stageIdx = STAGES.findIndex(s=>s.id===currentStage);
-  const isLost = currentStage==="perdido";
-
-  return (
+/* ── STAGE TRACKER ── */
+function StageTracker({currentStage,onStageClick}){
+  const idx=STAGES.findIndex(s=>s.id===currentStage);
+  const isLost=currentStage==="perdido";
+  return(
     <div className="stage-track">
       {STAGES.map((s,i)=>{
-        const done = !isLost && i < stageIdx;
-        const curr = !isLost && s.id === currentStage;
-        const cls = done?"done":curr?"current":"";
-        return (
+        const done=!isLost&&i<idx,curr=!isLost&&s.id===currentStage;
+        const cls=done?"done":curr?"current":"";
+        return(
           <div key={s.id} className={`stage-item ${cls}`} onClick={()=>onStageClick&&onStageClick(s.id)}>
             <div className={`stage-dot ${cls}`}>{done?"✓":i+1}</div>
-            {!compact && <div className="stage-lbl">{s.label}</div>}
+            <div className="stage-lbl">{s.label}</div>
           </div>
         );
       })}
-      {isLost && (
-        <div className="stage-item failed">
-          <div className="stage-dot failed">✕</div>
-          {!compact && <div className="stage-lbl" style={{color:"#e74c3c"}}>Perdido</div>}
+      {isLost&&<div className="stage-item failed"><div className="stage-dot failed">✕</div><div className="stage-lbl" style={{color:"#e74c3c"}}>Perdido</div></div>}
+    </div>
+  );
+}
+
+/* ── CLIENT AUTOCOMPLETE ── */
+function ClientSearch({clients, value, onSelect, placeholder="Buscar cliente..."}){
+  const[q,setQ]=useState(value||"");
+  const[open,setOpen]=useState(false);
+  const filtered=useMemo(()=>{
+    if(!q.trim()) return clients.slice(0,8);
+    const l=q.toLowerCase();
+    return clients.filter(c=>c.empresa?.toLowerCase().includes(l)||c.contacto?.toLowerCase().includes(l)).slice(0,8);
+  },[q,clients]);
+  const select=(c)=>{setQ(c.empresa);setOpen(false);onSelect(c);};
+  return(
+    <div className="autocomplete-wrap">
+      <input value={q} placeholder={placeholder}
+        onChange={e=>{setQ(e.target.value);setOpen(true);if(!e.target.value)onSelect(null);}}
+        onFocus={()=>setOpen(true)} onBlur={()=>setTimeout(()=>setOpen(false),150)} />
+      {open&&filtered.length>0&&(
+        <div className="autocomplete-list">
+          {filtered.map(c=>(
+            <div key={c.id} className="autocomplete-item" onMouseDown={()=>select(c)}>
+              <div style={{fontWeight:500}}>{c.empresa}</div>
+              <div className="autocomplete-item-sub">{c.contacto}{c.cargo?` · ${c.cargo}`:""}</div>
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════
-   BUDGET CALCULATOR (standalone or embedded)
-══════════════════════════════════════════════ */
-function BudgetCalc({ onSave, initialData={}, companyClients=[] }) {
-  const [form, setForm] = useState({
-    proyecto: initialData.proyecto||"",
-    cliente: initialData.cliente||"",
-    feria: initialData.feria||"",
-    destino: initialData.destino||"",
-    llegada: initialData.llegada||"",
-    partida: initialData.partida||"",
-    personas: initialData.personas||"2",
-    costoStand: initialData.costoStand||"",
-    costoCatering: initialData.costoCatering||"",
-    costoServicios: initialData.costoServicios||"",
-    moneda: initialData.moneda||"USD",
-    gastosAdminPct: initialData.gastosAdminPct ? String(initialData.gastosAdminPct*100) : "5",
-    resultadoEsperado: "",
-    notas: initialData.notas||"",
-    etapa: initialData.etapa||"exploracion",
-  });
-  const [travel, setTravel] = useState({
-    flight: initialData.flightCostPax ? String(initialData.flightCostPax) : "",
-    hotel: initialData.hotelCostNight ? String(initialData.hotelCostNight) : "",
-    daily: initialData.dailyCostPax ? String(initialData.dailyCostPax) : "",
-  });
-  const [result, setResult] = useState(null);
-  const [sharedCostNote, setSharedCostNote] = useState(null);
-  const resRef = useRef(null);
-  const set = (k,v) => setForm(f=>({...f,[k]:v}));
-
-  const n = nightsBetween(form.llegada, form.partida);
-  const pax = parseInt(form.personas)||1;
-
-  // Check if there are other projects going to same feria (cost sharing)
-  const sameFeraProjects = companyClients.filter(p =>
-    p.feria === form.feria && p.destino?.toLowerCase() === form.destino?.toLowerCase()
+/* ── FERIA SEARCH ── */
+function FeriaSearch({ferias, value, onSelect, placeholder="Buscar feria..."}){
+  const[q,setQ]=useState(value||"");
+  const[open,setOpen]=useState(false);
+  const filtered=useMemo(()=>{
+    if(!q.trim()) return ferias.slice(0,8);
+    const l=q.toLowerCase();
+    return ferias.filter(f=>f.nombre?.toLowerCase().includes(l)||f.ciudad?.toLowerCase().includes(l)).slice(0,8);
+  },[q,ferias]);
+  const select=(f)=>{setQ(f.nombre);setOpen(false);onSelect(f);};
+  return(
+    <div className="autocomplete-wrap">
+      <input value={q} placeholder={placeholder}
+        onChange={e=>{setQ(e.target.value);setOpen(true);if(!e.target.value)onSelect(null);}}
+        onFocus={()=>setOpen(true)} onBlur={()=>setTimeout(()=>setOpen(false),150)} />
+      {open&&filtered.length>0&&(
+        <div className="autocomplete-list">
+          {filtered.map(f=>(
+            <div key={f.id} className="autocomplete-item" onMouseDown={()=>select(f)}>
+              <div style={{fontWeight:500}}>{f.nombre}</div>
+              <div className="autocomplete-item-sub">{f.ciudad}{f.pais?`, ${f.pais}`:""}{f.fechaInicio?` · ${f.fechaInicio}`:""}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
-  const totalClientsOnFeria = sameFeraProjects.length + 1;
+}
 
-  const onDestinoBlur = () => {
-    if(!form.destino) return;
-    const d = getDef(form.destino);
-    setTravel({ flight: String(d.f), hotel: String(d.h), daily: String(d.d) });
+/* ── BUDGET CALCULATOR ── */
+function BudgetCalc({onSave,initialData={},allProjects=[],clients=[],ferias=[]}){
+  const[form,setForm]=useState({
+    proyecto:initialData.proyecto||"",
+    clienteId:initialData.clienteId||"",
+    clienteNombre:initialData.clienteNombre||"",
+    feriaId:initialData.feriaId||"",
+    feria:initialData.feria||"",
+    destino:initialData.destino||"",
+    llegada:initialData.llegada||"",
+    partida:initialData.partida||"",
+    personas:String(initialData.personas||"2"),
+    m2:initialData.m2||"",
+    costoStand:initialData.costoStand||"",
+    costoCatering:initialData.costoCatering||"",
+    costoServicios:initialData.costoServicios||"",
+    moneda:initialData.moneda||"USD",
+    gastosAdminPct:initialData.gastosAdminPct?String(initialData.gastosAdminPct*100):"5",
+    resultadoEsperado:"",
+    notas:initialData.notas||"",
+    etapa:initialData.etapa||"exploracion",
+  });
+  const[travel,setTravel]=useState({
+    flight:initialData.flightCostPax?String(initialData.flightCostPax):"",
+    hotel:initialData.hotelCostNight?String(initialData.hotelCostNight):"",
+    daily:initialData.dailyCostPax?String(initialData.dailyCostPax):"",
+  });
+  const[result,setResult]=useState(null);
+  const resRef=useRef(null);
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+
+  const n=nightsBetween(form.llegada,form.partida);
+  const pax=parseInt(form.personas)||1;
+  const m2=parseFloat(form.m2)||0;
+
+  // Only count projects in ACCEPTED_STAGES for cost sharing
+  const sameFeraAccepted=allProjects.filter(p=>
+    p.feria===form.feria&&
+    p.destino?.toLowerCase()===form.destino?.toLowerCase()&&
+    ACCEPTED_STAGES.includes(p.etapa)&&
+    p.id!==initialData.id
+  );
+  const divisor=ACCEPTED_STAGES.includes(form.etapa)?sameFeraAccepted.length+1:1;
+
+  const onDestinoBlur=()=>{
+    if(!form.destino)return;
+    const d=getDef(form.destino);
+    setTravel({flight:String(d.f),hotel:String(d.h),daily:String(d.d)});
   };
 
-  const calcular = () => {
-    const cs = parseFloat(form.costoStand)||0;
-    const cc = parseFloat(form.costoCatering)||0;
-    const cv = parseFloat(form.costoServicios)||0;
-    const top = cs+cc+cv;
+  const selectCliente=(c)=>{
+    if(!c){set("clienteId","");set("clienteNombre","");return;}
+    set("clienteId",c.id);set("clienteNombre",c.empresa);
+    if(!form.proyecto)set("proyecto",c.empresa);
+  };
+  const selectFeria=(f)=>{
+    if(!f){set("feriaId","");set("feria","");set("destino","");return;}
+    set("feriaId",f.id);set("feria",f.nombre);
+    if(f.ciudad){
+      set("destino",f.ciudad);
+      const d=getDef(f.ciudad);
+      setTravel({flight:String(d.f),hotel:String(d.h),daily:String(d.d)});
+    }
+    if(f.fechaInicio)set("llegada",f.fechaInicio);
+    if(f.fechaFin)set("partida",f.fechaFin);
+  };
 
-    const flightUnit = parseFloat(travel.flight)||0;
-    const hotelUnit  = parseFloat(travel.hotel)||0;
-    const dailyUnit  = parseFloat(travel.daily)||0;
-
-    // Cost sharing logic — travel costs divided among all clients at same feria
-    const divisor = totalClientsOnFeria;
-    const ft  = (flightUnit * pax) / divisor;
-    const ht  = (hotelUnit * n * rooms(pax)) / divisor;
-    const dt  = (dailyUnit * n * pax) / divisor;
-    const trep = ft+ht+dt;
-
-    const pct = (parseFloat(form.gastosAdminPct)/100)||0.05;
-    const neto = parseFloat(form.resultadoEsperado)||0;
-    const costos = top+trep;
-    const rb = neto/0.75;
-    const ingresos = costos + rb/(1-pct);
-    const ga = (ingresos-costos)*pct;
-    const rbc = ingresos-costos-ga;
-    const irae = rbc*0.25;
-
-    const r = {
-      ingresos, costoStand:cs, costoCatering:cc, costoServicios:cv, totalOperativos:top,
-      flightTotal:ft, hotelTotal:ht, dailyTotal:dt, totalRepresentacion:trep,
-      flightCostPax:flightUnit, hotelCostNight:hotelUnit, dailyCostPax:dailyUnit,
-      gastosAdminPct:pct, gastosAdmin:ga, rentaBruta:rbc, irae, neto:rbc-irae,
-      moneda:form.moneda, personas:pax, nights:n,
-      proyecto:form.proyecto, cliente:form.cliente, feria:form.feria, destino:form.destino,
-      costoViajeFull: flightUnit*pax*2 + hotelUnit*n*rooms(pax) + dailyUnit*n*pax,
-      divisor,
-    };
-    setResult(r);
-    if(divisor>1) setSharedCostNote(`Costos de viaje divididos entre ${divisor} clientes en ${form.feria}.`);
-    else setSharedCostNote(null);
+  const calcular=()=>{
+    const cs=parseFloat(form.costoStand)||0;
+    const cc=parseFloat(form.costoCatering)||0;
+    const cv=parseFloat(form.costoServicios)||0;
+    const top=cs+cc+cv;
+    const ft=(parseFloat(travel.flight)||0)*pax/divisor;
+    const ht=(parseFloat(travel.hotel)||0)*n*rooms(pax)/divisor;
+    const dt=(parseFloat(travel.daily)||0)*n*pax/divisor;
+    const trep=ft+ht+dt;
+    const pct=(parseFloat(form.gastosAdminPct)/100)||0.05;
+    const neto=parseFloat(form.resultadoEsperado)||0;
+    const costos=top+trep;
+    const rb=neto/0.75;
+    const ingresos=costos+rb/(1-pct);
+    const ga=(ingresos-costos)*pct;
+    const rbc=ingresos-costos-ga;
+    const irae=rbc*0.25;
+    const costoViajeFull=(parseFloat(travel.flight)||0)*pax+(parseFloat(travel.hotel)||0)*n*rooms(pax)+(parseFloat(travel.daily)||0)*n*pax;
+    setResult({
+      ingresos,costoStand:cs,costoCatering:cc,costoServicios:cv,totalOperativos:top,
+      flightTotal:ft,hotelTotal:ht,dailyTotal:dt,totalRepresentacion:trep,
+      flightCostPax:parseFloat(travel.flight)||0,hotelCostNight:parseFloat(travel.hotel)||0,dailyCostPax:parseFloat(travel.daily)||0,
+      gastosAdminPct:pct,gastosAdmin:ga,rentaBruta:rbc,irae,neto:rbc-irae,
+      moneda:form.moneda,personas:pax,nights:n,divisor,costoViajeFull,
+      m2,costoM2:m2>0?cs/m2:0,
+    });
     setTimeout(()=>resRef.current?.scrollIntoView({behavior:"smooth"}),100);
   };
 
-  const canCalc = form.costoStand && form.resultadoEsperado && travel.flight && travel.hotel && travel.daily && n>0;
+  const canCalc=form.costoStand&&form.resultadoEsperado&&travel.flight&&travel.hotel&&travel.daily&&n>0;
 
-  const handleSave = () => {
-    if(!result||!onSave) return;
-    onSave({
-      ...form,
-      personas: pax,
-      gastosAdminPct: result.gastosAdminPct,
-      ingresos: result.ingresos,
-      costoStand: result.costoStand,
-      costoCatering: result.costoCatering,
-      costoServicios: result.costoServicios,
-      flightTotal: result.flightTotal,
-      hotelTotal: result.hotelTotal,
-      dailyTotal: result.dailyTotal,
-      flightCostPax: result.flightCostPax,
-      hotelCostNight: result.hotelCostNight,
-      dailyCostPax: result.dailyCostPax,
-      gastosAdmin: result.gastosAdmin,
-      rentaBruta: result.rentaBruta,
-      irae: result.irae,
-      neto: result.neto,
-      totalRepresentacion: result.totalRepresentacion,
-      totalOperativos: result.totalOperativos,
+  const handleSave=()=>{
+    if(!result||!onSave)return;
+    onSave({...form,personas:pax,gastosAdminPct:result.gastosAdminPct,
+      ingresos:result.ingresos,costoStand:result.costoStand,costoCatering:result.costoCatering,
+      costoServicios:result.costoServicios,flightTotal:result.flightTotal,hotelTotal:result.hotelTotal,
+      dailyTotal:result.dailyTotal,flightCostPax:result.flightCostPax,hotelCostNight:result.hotelCostNight,
+      dailyCostPax:result.dailyCostPax,gastosAdmin:result.gastosAdmin,rentaBruta:result.rentaBruta,
+      irae:result.irae,neto:result.neto,totalRepresentacion:result.totalRepresentacion,
+      totalOperativos:result.totalOperativos,m2:result.m2,costoM2:result.costoM2,
     });
   };
 
-  return (
+  return(
     <div>
       {/* 1 — Proyecto */}
       <div className="card">
         <div className="card-hdr"><div className="card-hdr-left"><span className="step">1</span><span className="card-title">Información del Proyecto</span></div></div>
         <div className="card-body">
           <div className="g2" style={{marginBottom:14}}>
-            <div className="fg"><label>Proyecto / Cliente</label><input placeholder="ej. BILBOSA" value={form.proyecto} onChange={e=>set("proyecto",e.target.value)} /></div>
-            <div className="fg"><label>Stand / Descripción</label><input placeholder="ej. Stand Pabellón B 24m²" value={form.cliente} onChange={e=>set("cliente",e.target.value)} /></div>
-            <div className="fg"><label>Nombre de la Feria</label><input placeholder="ej. Seafood Barcelona 2026" value={form.feria} onChange={e=>set("feria",e.target.value)} /></div>
             <div className="fg">
-              <label>Moneda del Presupuesto</label>
+              <label>Cliente</label>
+              <ClientSearch clients={clients} value={form.clienteNombre} onSelect={selectCliente} placeholder="Buscar cliente registrado..." />
+              {form.clienteId&&<span className="hint">✓ Cliente vinculado</span>}
+            </div>
+            <div className="fg"><label>Nombre del Proyecto</label><input placeholder="ej. BILBOSA — Seafood 2026" value={form.proyecto} onChange={e=>set("proyecto",e.target.value)} /></div>
+            <div className="fg">
+              <label>Feria</label>
+              <FeriaSearch ferias={ferias} value={form.feria} onSelect={selectFeria} placeholder="Buscar feria registrada..." />
+              {!form.feriaId&&<span className="hint">O escribí el nombre manualmente</span>}
+            </div>
+            <div className="fg">
+              <label>Moneda</label>
               <select value={form.moneda} onChange={e=>set("moneda",e.target.value)}>
-                <option value="USD">USD — Dólar Americano</option>
-                <option value="EUR">EUR — Euro</option>
-                <option value="UYU">UYU — Peso Uruguayo</option>
+                <option value="USD">USD — Dólar</option><option value="EUR">EUR — Euro</option><option value="UYU">UYU — Peso</option>
               </select>
             </div>
             <div className="fg">
-              <label>Etapa Actual</label>
+              <label>Etapa</label>
               <select value={form.etapa} onChange={e=>set("etapa",e.target.value)}>
                 {STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
                 <option value="perdido">Perdido</option>
               </select>
             </div>
-            {onSave && (
-              <div className="fg"><label>Notas</label><textarea value={form.notas} onChange={e=>set("notas",e.target.value)} placeholder="Observaciones, estado, etc." /></div>
-            )}
+            {onSave&&<div className="fg"><label>Packlist / Observaciones del Stand</label><textarea value={form.notas} onChange={e=>set("notas",e.target.value)} rows={3} placeholder="Ej: 2 sillas, 1 barra, mesa de reunión, folletería, pantalla LED..." /></div>}
           </div>
-          {sameFeraProjects.length>0 && (
+          {sameFeraAccepted.length>0&&ACCEPTED_STAGES.includes(form.etapa)&&(
             <div className="note-box savings">
-              <strong>⚡ Licuación de Costos Detectada</strong>
-              Hay {sameFeraProjects.length} proyecto{sameFeraProjects.length>1?"s":""} más en {form.feria}: {sameFeraProjects.map(p=>p.proyecto).join(", ")}.
-              Los costos de viaje se dividirán en {totalClientsOnFeria} partes.
+              <strong>⚡ Licuación de Costos</strong>
+              {sameFeraAccepted.length} proyecto{sameFeraAccepted.length>1?"s aceptados":"aceptado"} más en {form.feria}: {sameFeraAccepted.map(p=>p.proyecto).join(", ")}. Los costos de viaje se dividirán en {divisor} partes.
             </div>
           )}
         </div>
       </div>
 
-      {/* 2 — Costos Operativos */}
+      {/* 2 — Costos */}
       <div className="card">
         <div className="card-hdr"><div className="card-hdr-left"><span className="step">2</span><span className="card-title">Costos Operativos del Stand</span></div></div>
         <div className="card-body">
-          <div className="g3">
-            <div className="fg"><label>Stand / Montaje</label><div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoStand} onChange={e=>set("costoStand",e.target.value)} /></div></div>
-            <div className="fg"><label>Catering</label><div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoCatering} onChange={e=>set("costoCatering",e.target.value)} /></div></div>
-            <div className="fg"><label>Otros Servicios</label><div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoServicios} onChange={e=>set("costoServicios",e.target.value)} /></div></div>
+          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:12,marginBottom:12}}>
+            <div className="fg">
+              <label>Stand / Montaje</label>
+              <div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoStand} onChange={e=>set("costoStand",e.target.value)} /></div>
+            </div>
+            <div className="fg">
+              <label>Superficie (m²)</label>
+              <div className="sfx"><input type="number" placeholder="0" value={form.m2} onChange={e=>set("m2",e.target.value)} /><span className="sfx-tag">m²</span></div>
+            </div>
+            <div className="fg">
+              <label>Catering</label>
+              <div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoCatering} onChange={e=>set("costoCatering",e.target.value)} /></div>
+            </div>
+            <div className="fg">
+              <label>Servicios</label>
+              <div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="0" value={form.costoServicios} onChange={e=>set("costoServicios",e.target.value)} /></div>
+            </div>
           </div>
+          {form.costoStand&&m2>0&&(
+            <div className="note-box"><strong>Costo por m²</strong>
+              Stand: {fc(form.moneda,(parseFloat(form.costoStand)||0)/m2)}/m² · Total operativos: {fc(form.moneda,(parseFloat(form.costoStand)||0)+(parseFloat(form.costoCatering)||0)+(parseFloat(form.costoServicios)||0))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -923,14 +727,15 @@ function BudgetCalc({ onSave, initialData={}, companyClients=[] }) {
       <div className="card">
         <div className="card-hdr">
           <div className="card-hdr-left"><span className="step">3</span><span className="card-title">Costos de Representación</span></div>
-          {totalClientsOnFeria>1 && <span className="saving-badge">÷{totalClientsOnFeria} clientes</span>}
+          {divisor>1&&<span className="saving-badge">÷{divisor} proyectos aceptados</span>}
+          {divisor===1&&ACCEPTED_STAGES.includes(form.etapa)&&<span style={{fontSize:9,color:"#818181"}}>Solo se divide si hay otros aceptados</span>}
+          {!ACCEPTED_STAGES.includes(form.etapa)&&<span style={{fontSize:9,color:"#b1ada2",fontStyle:"italic"}}>Se prorrateará al aceptar el proyecto</span>}
         </div>
         <div className="card-body">
           <div className="g4">
             <div className="fg">
               <label>Ciudad destino</label>
-              <input placeholder="ej. Barcelona, Paris, Dubai..." value={form.destino}
-                onChange={e=>set("destino",e.target.value)} onBlur={onDestinoBlur} />
+              <input placeholder="ej. Barcelona, Cologne..." value={form.destino} onChange={e=>set("destino",e.target.value)} onBlur={onDestinoBlur} />
             </div>
             <div className="fg">
               <label>Personas</label>
@@ -941,16 +746,16 @@ function BudgetCalc({ onSave, initialData={}, companyClients=[] }) {
             <div className="fg"><label>Llegada</label><input type="date" value={form.llegada} onChange={e=>set("llegada",e.target.value)} /></div>
             <div className="fg"><label>Partida</label><input type="date" value={form.partida} onChange={e=>set("partida",e.target.value)} /></div>
           </div>
-          {n>0 && <p className="subtotal" style={{marginTop:10}}><strong>{n} noches · {pax} persona{pax>1?"s":""}</strong>{totalClientsOnFeria>1 && <span style={{color:"#f39c12"}}> · Costos de viaje prorrateados entre {totalClientsOnFeria} clientes</span>}</p>}
+          {n>0&&<p className="subtotal" style={{marginTop:10}}><strong>{n} noches · {pax} persona{pax>1?"s":""}</strong>{divisor>1&&<span style={{color:"#f39c12"}}> · Viaje ÷{divisor}</span>}</p>}
           <div className="tbadges">
             {[
-              {k:"flight",lbl:"Pasaje por persona",sub:"ida y vuelta (total)"},
-              {k:"hotel", lbl:"Hotel por noche",   sub:`por habitación · ${rooms(pax)} hab.`},
-              {k:"daily", lbl:"Viáticos por día/pax",sub:"comida + transporte"},
+              {k:"flight",lbl:"Pasaje/pax I+V",sub:"ida y vuelta total"},
+              {k:"hotel",lbl:"Hotel/noche/hab",sub:`${rooms(pax)} hab. para ${pax} pax`},
+              {k:"daily",lbl:"Viáticos/día/pax",sub:"comida + transporte"},
             ].map(({k,lbl,sub})=>(
               <div className="tbadge" key={k}>
                 <div className="tb-lbl">{lbl}</div>
-                <div className="pfx" style={{marginTop:6}}>
+                <div className="pfx" style={{marginTop:5}}>
                   <span className="pfx-tag">{form.moneda}</span>
                   <input type="number" value={travel[k]} onChange={e=>setTravel(t=>({...t,[k]:e.target.value}))} />
                 </div>
@@ -958,11 +763,11 @@ function BudgetCalc({ onSave, initialData={}, companyClients=[] }) {
               </div>
             ))}
           </div>
-          {travel.flight && totalClientsOnFeria>1 && (
-            <div className="note-box savings" style={{marginTop:14}}>
+          {travel.flight&&divisor>1&&(
+            <div className="note-box savings" style={{marginTop:12}}>
               <strong>Ahorro por licuación</strong>
-              Costo viaje completo: {fc(form.moneda,(parseFloat(travel.flight)||0)*pax*2 + (parseFloat(travel.hotel)||0)*n*rooms(pax) + (parseFloat(travel.daily)||0)*n*pax)}.
-              Este proyecto absorbe solo 1/{totalClientsOnFeria} = {fc(form.moneda, ((parseFloat(travel.flight)||0)*pax + (parseFloat(travel.hotel)||0)*n*rooms(pax) + (parseFloat(travel.daily)||0)*n*pax)/totalClientsOnFeria)}
+              Costo viaje completo sin compartir: {fc(form.moneda,(parseFloat(travel.flight)||0)*pax+(parseFloat(travel.hotel)||0)*n*rooms(pax)+(parseFloat(travel.daily)||0)*n*pax)}.
+              Este proyecto absorbe: {fc(form.moneda,((parseFloat(travel.flight)||0)*pax+(parseFloat(travel.hotel)||0)*n*rooms(pax)+(parseFloat(travel.daily)||0)*n*pax)/divisor)}
             </div>
           )}
         </div>
@@ -975,18 +780,12 @@ function BudgetCalc({ onSave, initialData={}, companyClients=[] }) {
           <div className="g2">
             <div className="fg">
               <label>Gastos Administrativos</label>
-              <div className="sfx">
-                <input type="number" step="0.5" min="0" max="100" value={form.gastosAdminPct} onChange={e=>set("gastosAdminPct",e.target.value)} />
-                <span className="sfx-tag">%</span>
-              </div>
+              <div className="sfx"><input type="number" step="0.5" min="0" max="100" value={form.gastosAdminPct} onChange={e=>set("gastosAdminPct",e.target.value)} /><span className="sfx-tag">%</span></div>
               <p className="hint">Pre-cargado en 5% — política interna Galerie</p>
             </div>
             <div className="fg">
-              <label>Resultado esperado después de impuestos ({form.moneda})</label>
-              <div className="pfx">
-                <span className="pfx-tag">{form.moneda}</span>
-                <input type="number" placeholder="ej. 1500" value={form.resultadoEsperado} onChange={e=>set("resultadoEsperado",e.target.value)} />
-              </div>
+              <label>Resultado esperado neto ({form.moneda})</label>
+              <div className="pfx"><span className="pfx-tag">{form.moneda}</span><input type="number" placeholder="ej. 1500" value={form.resultadoEsperado} onChange={e=>set("resultadoEsperado",e.target.value)} /></div>
               <p className="hint">IRAE Uruguay = 25% sobre renta bruta</p>
             </div>
           </div>
@@ -994,66 +793,53 @@ function BudgetCalc({ onSave, initialData={}, companyClients=[] }) {
       </div>
 
       <div style={{display:"flex",justifyContent:"center",marginTop:8}}>
-        <button className="btn-dark" style={{padding:"16px 48px",fontSize:11,letterSpacing:4}} onClick={calcular} disabled={!canCalc}>
-          {canCalc ? "◆  CALCULAR PRESUPUESTO" : "COMPLETÁ TODOS LOS CAMPOS"}
+        <button className="btn-dark" style={{padding:"14px 44px",fontSize:10,letterSpacing:4}} onClick={calcular} disabled={!canCalc}>
+          {canCalc?"◆  CALCULAR PRESUPUESTO":"COMPLETÁ TODOS LOS CAMPOS"}
         </button>
       </div>
 
-      {result && (
+      {result&&(
         <div ref={resRef}>
           <div className="div-label"><span>Resultado</span></div>
           <div className="results">
             <div className="res-top">
               <div className="res-ey">Presupuesto calculado</div>
               <div className="res-title">{result.feria||"Feria Internacional"}{result.destino?` — ${result.destino}`:""}</div>
-              {result.proyecto && <div className="res-sub">{result.proyecto}{result.cliente?` · ${result.cliente}`:""}</div>}
-              {result.divisor>1 && <div className="res-sub" style={{color:"#f39c12",marginTop:4}}>⚡ Costos de viaje ÷ {result.divisor} clientes</div>}
+              {result.proyecto&&<div className="res-sub">{result.proyecto}{result.clienteNombre?` · ${result.clienteNombre}`:""}</div>}
+              {result.divisor>1&&<div className="res-sub" style={{color:"#f39c12",marginTop:3}}>⚡ Costos de viaje ÷{result.divisor} proyectos aceptados</div>}
             </div>
-
             <div className="res-body">
               <div className="res-sect"><span>Costos Operativos</span><span>{fc(result.moneda,result.totalOperativos)}</span></div>
-              {result.costoStand>0    && <div className="res-row ind"><span>Stand / Montaje</span><span className="res-amt">{fc(result.moneda,result.costoStand)}</span></div>}
-              {result.costoCatering>0 && <div className="res-row ind"><span>Catering</span><span className="res-amt">{fc(result.moneda,result.costoCatering)}</span></div>}
-              {result.costoServicios>0&& <div className="res-row ind"><span>Servicios</span><span className="res-amt">{fc(result.moneda,result.costoServicios)}</span></div>}
-
-              <div className="res-sect"><span>Costos de Representación {result.divisor>1?`(1/${result.divisor} del viaje)`:""}</span><span>{fc(result.moneda,result.totalRepresentacion)}</span></div>
-              <div className="res-row ind"><span>Pasajes ({result.personas} pax, ida y vuelta)</span><span className="res-amt">{fc(result.moneda,result.flightTotal)}</span></div>
+              {result.costoStand>0&&<div className="res-row ind"><span>Stand / Montaje{result.m2>0?` (${result.m2}m² · ${fc(result.moneda,result.costoM2)}/m²)`:""}  </span><span className="res-amt">{fc(result.moneda,result.costoStand)}</span></div>}
+              {result.costoCatering>0&&<div className="res-row ind"><span>Catering</span><span className="res-amt">{fc(result.moneda,result.costoCatering)}</span></div>}
+              {result.costoServicios>0&&<div className="res-row ind"><span>Servicios</span><span className="res-amt">{fc(result.moneda,result.costoServicios)}</span></div>}
+              <div className="res-sect"><span>Costos de Representación{result.divisor>1?` (1/${result.divisor} del viaje)`:""}</span><span>{fc(result.moneda,result.totalRepresentacion)}</span></div>
+              <div className="res-row ind"><span>Pasajes ({result.personas} pax)</span><span className="res-amt">{fc(result.moneda,result.flightTotal)}</span></div>
               <div className="res-row ind"><span>Hotel ({result.nights} noches × {rooms(result.personas)} hab.)</span><span className="res-amt">{fc(result.moneda,result.hotelTotal)}</span></div>
               <div className="res-row ind"><span>Viáticos ({result.nights} días × {result.personas} pax)</span><span className="res-amt">{fc(result.moneda,result.dailyTotal)}</span></div>
-              {result.divisor>1 && (
-                <div className="res-row ind" style={{color:"#f39c12"}}>
-                  <span>Ahorro vs. un solo cliente</span>
-                  <span className="res-amt gold">−{fc(result.moneda, result.costoViajeFull - result.totalRepresentacion)}</span>
-                </div>
-              )}
-
-              <div className="res-sect"><span>Gastos Administrativos ({(result.gastosAdminPct*100).toFixed(1)}%)</span><span>{fc(result.moneda,result.gastosAdmin)}</span></div>
+              {result.divisor>1&&<div className="res-row ind" style={{color:"#f39c12"}}><span>Ahorro vs. sin compartir</span><span className="res-amt gold">−{fc(result.moneda,result.costoViajeFull-result.totalRepresentacion)}</span></div>}
+              <div className="res-sect"><span>Gastos Admin ({(result.gastosAdminPct*100).toFixed(1)}%)</span><span>{fc(result.moneda,result.gastosAdmin)}</span></div>
               <div className="res-sect"><span>Renta Bruta antes de IRAE</span><span>{fc(result.moneda,result.rentaBruta)}</span></div>
               <div className="res-row ind"><span>IRAE (25%)</span><span className="res-amt neg">({fc(result.moneda,result.irae)})</span></div>
-              <div className="res-neto">
-                <span>Resultado Neto después de Impuestos</span>
-                <span className="res-amt pos">{fc(result.moneda,result.neto)}</span>
-              </div>
+              <div className="res-neto"><span>Resultado Neto después de Impuestos</span><span className="res-amt pos">{fc(result.moneda,result.neto)}</span></div>
             </div>
-
             <div className="big-box">
               <div className="big-lbl">Ingreso Operativo a Cotizar</div>
-              <div className="big-val">{fc(result.moneda, result.ingresos)}</div>
-              <div className="big-sub">Valor mínimo a cobrar por el stand</div>
+              <div className="big-val">{fc(result.moneda,result.ingresos)}</div>
+              <div className="big-sub">Valor mínimo a cobrar por el stand{result.m2>0?` · ${fc(result.moneda,result.ingresos/result.m2)}/m²`:""}</div>
             </div>
-
             <div className="res-tags">
-              {result.destino && <span className="tag">{result.destino}</span>}
+              {result.destino&&<span className="tag">{result.destino}</span>}
               <span className="tag">{result.nights} noches</span>
               <span className="tag">{result.personas} pax</span>
+              {result.m2>0&&<span className="tag">{result.m2}m²</span>}
               <span className="tag">IRAE 25%</span>
               <span className="tag">Admin {(result.gastosAdminPct*100).toFixed(0)}%</span>
               <span className="tag">{result.moneda}</span>
-              {result.divisor>1 && <span className="tag" style={{borderColor:"#f39c1244",color:"#f39c12"}}>÷{result.divisor} clientes</span>}
+              {result.divisor>1&&<span className="tag" style={{borderColor:"#f39c1244",color:"#f39c12"}}>÷{result.divisor} proyectos</span>}
             </div>
-
             <div className="res-actions">
-              {onSave && <button className="btn-dark" onClick={handleSave}>◆  GUARDAR PROYECTO</button>}
+              {onSave&&<button className="btn-dark" onClick={handleSave}>◆  GUARDAR PROYECTO</button>}
               <button className="btn-ghost-inv" onClick={()=>{setResult(null);window.scrollTo({top:0,behavior:"smooth"});}}>Nuevo cálculo</button>
             </div>
           </div>
@@ -1063,67 +849,431 @@ function BudgetCalc({ onSave, initialData={}, companyClients=[] }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   DASHBOARD VIEW
-══════════════════════════════════════════════ */
-function Dashboard({ projects }) {
-  const active = projects.filter(p=>!["completado","perdido"].includes(p.etapa));
-  const completed = projects.filter(p=>p.etapa==="completado");
-  const lost = projects.filter(p=>p.etapa==="perdido");
-  const revenue = completed.reduce((a,p)=>a+(p.ingresos||0),0);
-  const netProfit = completed.reduce((a,p)=>a+(p.neto||0),0);
-
-  // Group by feria
-  const byFeria = {};
-  projects.forEach(p => {
-    if(!p.feria) return;
-    if(!byFeria[p.feria]) byFeria[p.feria]={ projects:[], destino:p.destino };
-    byFeria[p.feria].projects.push(p);
+/* ── PROJECT MODAL ── */
+function ProjectModal({project,onClose,onUpdate,onDelete,allProjects,clients,ferias}){
+  const[mode,setMode]=useState("view");
+  const[saving,setSaving]=useState(false);
+  const[confirm,setConfirm]=useState(false);
+  const[newStage,setNewStage]=useState(project.etapa);
+  const[notas,setNotas]=useState(project.notas||"");
+  const[qResult,setQResult]=useState(null);
+  const[qForm,setQForm]=useState({
+    proyecto:project.proyecto||"",clienteId:project.clienteId||"",clienteNombre:project.clienteNombre||"",
+    feriaId:project.feriaId||"",feria:project.feria||"",destino:project.destino||"",
+    llegada:project.llegada||"",partida:project.partida||"",personas:String(project.personas||2),
+    m2:String(project.m2||""),costoStand:String(project.costoStand||""),costoCatering:String(project.costoCatering||""),
+    costoServicios:String(project.costoServicios||""),moneda:project.moneda||"USD",
+    gastosAdminPct:String((project.gastosAdminPct||0.05)*100),
   });
+  const[qTravel,setQTravel]=useState({
+    flight:String(project.flightCostPax||Math.round((project.flightTotal||0)/(project.personas||2))||""),
+    hotel:String(project.hotelCostNight||""),daily:String(project.dailyCostPax||""),
+  });
+  const[resultadoEsp,setResultadoEsp]=useState(String(project.neto||""));
+  const setQ=(k,v)=>setQForm(f=>({...f,[k]:v}));
+  const qN=nightsBetween(qForm.llegada,qForm.partida);
+  const qPax=parseInt(qForm.personas)||1;
+  const sameFeraCount=allProjects.filter(p=>p.feria===project.feria&&p.id!==project.id&&ACCEPTED_STAGES.includes(p.etapa)).length;
+  const divisor=ACCEPTED_STAGES.includes(project.etapa)?sameFeraCount+1:1;
 
-  const feriaData = Object.entries(byFeria).map(([name,{projects:ps,destino}])=>{
-    const activos = ps.filter(p=>!["perdido"].includes(p.etapa));
-    const totalIngresos = activos.reduce((a,p)=>a+(p.ingresos||0),0);
-    const totalNeto = activos.reduce((a,p)=>a+(p.neto||0),0);
-    // travel cost that would be without sharing
-    const travelFull = ps[0] ? ((ps[0].flightCostPax||0)*2*(ps[0].personas||2) + (ps[0].hotelCostNight||0)*nightsBetween(ps[0].llegada,ps[0].partida)*rooms(ps[0].personas||2) + (ps[0].dailyCostPax||0)*nightsBetween(ps[0].llegada,ps[0].partida)*(ps[0].personas||2)) : 0;
-    const travelSaved = activos.length>1 ? travelFull*(activos.length-1)/activos.length : 0;
-    return { name, destino, ps: activos, totalIngresos, totalNeto, travelSaved };
-  }).sort((a,b)=>b.totalIngresos-a.totalIngresos);
+  const saveStage=async()=>{setSaving(true);await onUpdate(project.id,{etapa:newStage,notas});setSaving(false);setMode("view");};
+  const recalcular=()=>{
+    const cs=parseFloat(qForm.costoStand)||0,cc=parseFloat(qForm.costoCatering)||0,cv=parseFloat(qForm.costoServicios)||0,top=cs+cc+cv;
+    const qDiv=ACCEPTED_STAGES.includes(qForm.etapa||project.etapa)?sameFeraCount+1:1;
+    const ft=(parseFloat(qTravel.flight)||0)*qPax/qDiv,ht=(parseFloat(qTravel.hotel)||0)*qN*rooms(qPax)/qDiv,dt=(parseFloat(qTravel.daily)||0)*qN*qPax/qDiv,trep=ft+ht+dt;
+    const pct=(parseFloat(qForm.gastosAdminPct)/100)||0.05,neto=parseFloat(resultadoEsp)||0,costos=top+trep;
+    const rb=neto/0.75,ingresos=costos+rb/(1-pct),ga=(ingresos-costos)*pct,rbc=ingresos-costos-ga,irae=rbc*0.25;
+    const m2=parseFloat(qForm.m2)||0;
+    setQResult({ingresos,costoStand:cs,costoCatering:cc,costoServicios:cv,totalOperativos:top,flightTotal:ft,hotelTotal:ht,dailyTotal:dt,totalRepresentacion:trep,flightCostPax:parseFloat(qTravel.flight)||0,hotelCostNight:parseFloat(qTravel.hotel)||0,dailyCostPax:parseFloat(qTravel.daily)||0,gastosAdminPct:pct,gastosAdmin:ga,rentaBruta:rbc,irae,neto:rbc-irae,moneda:qForm.moneda,m2,costoM2:m2>0?cs/m2:0});
+  };
+  const saveQuote=async()=>{
+    if(!qResult)return;setSaving(true);
+    await onUpdate(project.id,{...qForm,personas:qPax,gastosAdminPct:qResult.gastosAdminPct,...qResult,notas});
+    setSaving(false);setMode("view");
+  };
+  const cur=project.moneda;
 
-  // Pipeline counts
-  const stageCounts = {};
-  STAGES.forEach(s=>{ stageCounts[s.id]=projects.filter(p=>p.etapa===s.id).length; });
+  return(
+    <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{maxWidth:800}}>
+        <div className="modal-hdr">
+          <div>
+            <div className="modal-title">{project.proyecto}</div>
+            <div className="modal-sub">{project.feria}{project.destino?` · ${project.destino}`:""}{project.clienteNombre?` · ${project.clienteNombre}`:""}</div>
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-tabs">
+          {[{id:"view",label:"Resumen"},{id:"edit-stage",label:"Etapa"},{id:"edit-quote",label:"Editar Cotización"}].map(t=>(
+            <div key={t.id} className={`modal-tab${mode===t.id?" active":""}`} onClick={()=>setMode(t.id)}>{t.label}</div>
+          ))}
+        </div>
+        <div className="modal-body">
 
-  return (
-    <div className="page-wide">
-      {/* Stats */}
-      <div className="stats-grid">
-        <div className="stat-card dark">
-          <div className="stat-lbl">Proyectos Activos</div>
-          <div className="stat-val">{active.length}</div>
-          <div className="stat-sub">{projects.length} proyectos en total</div>
+          {/* VIEW */}
+          {mode==="view"&&(
+            <>
+              <div style={{marginBottom:20}}>
+                <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Etapa Actual</div>
+                <StageTracker currentStage={project.etapa} />
+              </div>
+              <div className="g2" style={{marginBottom:18}}>
+                <div>
+                  <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:3,fontFamily:"'Poppins',sans-serif"}}>Stand</div>
+                  <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>{project.cliente||project.clienteNombre||"—"}</div>
+                  <div style={{fontSize:"11px",color:"#818181"}}>{project.llegada||"—"} → {project.partida||"—"} · {project.personas||2} pax{project.m2?` · ${project.m2}m²`:""}</div>
+                  {project.m2>0&&project.costoStand>0&&<div style={{fontSize:"11px",color:"#b1ada2",marginTop:2}}>{fc(cur,project.costoStand/project.m2)}/m² de stand</div>}
+                </div>
+                <div>
+                  <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:3,fontFamily:"'Poppins',sans-serif"}}>Notas / Packlist</div>
+                  {project.notas
+                    ?<div className="packlist-wrap"><div className="packlist-text">{project.notas}</div></div>
+                    :<div style={{fontSize:"12px",color:"#b1ada2",fontStyle:"italic"}}>Sin packlist registrado</div>
+                  }
+                </div>
+              </div>
+              {sameFeraCount>0&&ACCEPTED_STAGES.includes(project.etapa)&&(
+                <div className="note-box savings" style={{marginBottom:14}}>
+                  <strong>⚡ Costos de viaje compartidos</strong>
+                  {sameFeraCount} proyecto{sameFeraCount>1?"s aceptados":"aceptado"} más en {project.feria}. Viaje ÷{divisor}.
+                </div>
+              )}
+              <div className="results">
+                <div className="res-body" style={{paddingTop:14}}>
+                  <div className="res-sect"><span>Costos Operativos</span><span>{fc(cur,project.totalOperativos)}</span></div>
+                  {project.costoStand>0&&<div className="res-row ind"><span>Stand{project.m2>0?` (${project.m2}m² · ${fc(cur,project.costoStand/project.m2)}/m²)`:""}  </span><span className="res-amt">{fc(cur,project.costoStand)}</span></div>}
+                  {project.costoCatering>0&&<div className="res-row ind"><span>Catering</span><span className="res-amt">{fc(cur,project.costoCatering)}</span></div>}
+                  {project.costoServicios>0&&<div className="res-row ind"><span>Servicios</span><span className="res-amt">{fc(cur,project.costoServicios)}</span></div>}
+                  <div className="res-sect"><span>Representación{divisor>1?` (÷${divisor})`:""}</span><span>{fc(cur,project.totalRepresentacion)}</span></div>
+                  <div className="res-row ind"><span>Pasajes</span><span className="res-amt">{fc(cur,project.flightTotal)}</span></div>
+                  <div className="res-row ind"><span>Hotel</span><span className="res-amt">{fc(cur,project.hotelTotal)}</span></div>
+                  <div className="res-row ind"><span>Viáticos</span><span className="res-amt">{fc(cur,project.dailyTotal)}</span></div>
+                  <div className="res-sect"><span>Admin + IRAE</span><span>{fc(cur,(project.gastosAdmin||0)+(project.irae||0))}</span></div>
+                  <div className="res-neto"><span>Resultado Neto</span><span className="res-amt pos">{fc(cur,project.neto)}</span></div>
+                </div>
+                <div className="big-box" style={{margin:"0 22px 16px"}}>
+                  <div className="big-lbl">Ingreso a Cotizar</div>
+                  <div className="big-val" style={{fontSize:34}}>{fc(cur,project.ingresos)}</div>
+                  {project.m2>0&&project.ingresos>0&&<div className="big-sub">{fc(cur,project.ingresos/project.m2)}/m²</div>}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* EDIT STAGE */}
+          {mode==="edit-stage"&&(
+            <>
+              <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Hacé click en la etapa para cambiarla</div>
+              <StageTracker currentStage={newStage} onStageClick={setNewStage} />
+              <div style={{marginTop:16}}>
+                <div style={{marginBottom:12}}>
+                  <label style={{display:"block",marginBottom:6}}>O seleccioná directamente</label>
+                  <select value={newStage} onChange={e=>setNewStage(e.target.value)}>
+                    {STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
+                    <option value="perdido">Perdido</option>
+                  </select>
+                </div>
+                {ACCEPTED_STAGES.includes(newStage)&&!ACCEPTED_STAGES.includes(project.etapa)&&(
+                  <div className="note-box savings"><strong>⚡ Al aceptar</strong>Los costos de viaje se prorratearán con otros proyectos aceptados en la misma feria.</div>
+                )}
+                <label style={{display:"block",marginBottom:6,marginTop:12}}>Packlist / Observaciones del Stand</label>
+                <textarea value={notas} onChange={e=>setNotas(e.target.value)} rows={5}
+                  placeholder="Ej: 2 sillas tapizadas, 1 barra alta, mesa de reunión 4 personas, 2 pantallas LED, folletería, heladera..." />
+              </div>
+            </>
+          )}
+
+          {/* EDIT QUOTE */}
+          {mode==="edit-quote"&&(
+            <>
+              <div className="note-box" style={{marginBottom:18}}>Editá los valores y recalculá para actualizar el presupuesto.</div>
+              <div className="g2" style={{marginBottom:14}}>
+                <div className="fg"><label>Proyecto</label><input value={qForm.proyecto} onChange={e=>setQ("proyecto",e.target.value)} /></div>
+                <div className="fg"><label>Moneda</label><select value={qForm.moneda} onChange={e=>setQ("moneda",e.target.value)}><option value="USD">USD</option><option value="EUR">EUR</option><option value="UYU">UYU</option></select></div>
+                <div className="fg"><label>Feria</label><input value={qForm.feria} onChange={e=>setQ("feria",e.target.value)} /></div>
+                <div className="fg"><label>Destino</label><input value={qForm.destino} onChange={e=>setQ("destino",e.target.value)} onBlur={()=>{if(qForm.destino){const d=getDef(qForm.destino);setQTravel({flight:String(d.f),hotel:String(d.h),daily:String(d.d)});}}}/></div>
+                <div className="fg"><label>Llegada</label><input type="date" value={qForm.llegada} onChange={e=>setQ("llegada",e.target.value)} /></div>
+                <div className="fg"><label>Partida</label><input type="date" value={qForm.partida} onChange={e=>setQ("partida",e.target.value)} /></div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:12,marginBottom:14}}>
+                <div className="fg"><label>Stand/Montaje</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoStand} onChange={e=>setQ("costoStand",e.target.value)} /></div></div>
+                <div className="fg"><label>m²</label><div className="sfx"><input type="number" value={qForm.m2} onChange={e=>setQ("m2",e.target.value)} /><span className="sfx-tag">m²</span></div></div>
+                <div className="fg"><label>Catering</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoCatering} onChange={e=>setQ("costoCatering",e.target.value)} /></div></div>
+                <div className="fg"><label>Servicios</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoServicios} onChange={e=>setQ("costoServicios",e.target.value)} /></div></div>
+              </div>
+              <div className="g3" style={{marginBottom:14}}>
+                <div className="fg"><label>Pasaje/pax I+V</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.flight} onChange={e=>setQTravel(t=>({...t,flight:e.target.value}))} /></div></div>
+                <div className="fg"><label>Hotel/noche/hab</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.hotel} onChange={e=>setQTravel(t=>({...t,hotel:e.target.value}))} /></div></div>
+                <div className="fg"><label>Viáticos/día/pax</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.daily} onChange={e=>setQTravel(t=>({...t,daily:e.target.value}))} /></div></div>
+              </div>
+              <div className="g2" style={{marginBottom:16}}>
+                <div className="fg"><label>Admin %</label><div className="sfx"><input type="number" step="0.5" value={qForm.gastosAdminPct} onChange={e=>setQ("gastosAdminPct",e.target.value)} /><span className="sfx-tag">%</span></div></div>
+                <div className="fg"><label>Resultado esperado neto ({qForm.moneda})</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={resultadoEsp} onChange={e=>setResultadoEsp(e.target.value)} /></div></div>
+              </div>
+              <div className="fg" style={{marginBottom:16}}>
+                <label>Packlist / Observaciones</label>
+                <textarea value={notas} onChange={e=>setNotas(e.target.value)} rows={4} placeholder="Ej: 2 sillas tapizadas, 1 barra alta, mesa de reunión..." />
+              </div>
+              <div style={{display:"flex",justifyContent:"center",marginBottom:16}}>
+                <button className="btn-dark" onClick={recalcular} disabled={!qForm.costoStand||!resultadoEsp||!qTravel.flight||qN<=0}>◆ RECALCULAR</button>
+              </div>
+              {qResult&&(
+                <div className="results">
+                  <div className="res-body" style={{paddingTop:14}}>
+                    <div className="res-sect"><span>Operativos</span><span>{fc(qResult.moneda,qResult.totalOperativos)}</span></div>
+                    <div className="res-sect"><span>Representación</span><span>{fc(qResult.moneda,qResult.totalRepresentacion)}</span></div>
+                    <div className="res-neto"><span>Resultado Neto</span><span className="res-amt pos">{fc(qResult.moneda,qResult.neto)}</span></div>
+                  </div>
+                  <div className="big-box" style={{margin:"0 22px 14px"}}>
+                    <div className="big-lbl">Nuevo Ingreso a Cotizar</div>
+                    <div className="big-val" style={{fontSize:30}}>{fc(qResult.moneda,qResult.ingresos)}</div>
+                    <div className="big-sub">Δ vs anterior: {qResult.ingresos>project.ingresos?"+":""}{fc(qResult.moneda,qResult.ingresos-(project.ingresos||0))}{qResult.m2>0?` · ${fc(qResult.moneda,qResult.ingresos/qResult.m2)}/m²`:""}</div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
-        <div className="stat-card green">
-          <div className="stat-lbl">Proyectos Completados</div>
-          <div className="stat-val">{completed.length}</div>
-          <div className="stat-sub">Tasa éxito: {projects.length ? Math.round(completed.length/projects.length*100) : 0}%</div>
-        </div>
-        <div className="stat-card gold">
-          <div className="stat-lbl">Revenue Total (Completados)</div>
-          <div className="stat-val" style={{fontSize:20}}>USD {fmt(revenue)}</div>
-          <div className="stat-sub">Neto: USD {fmt(netProfit)}</div>
-        </div>
-        <div className="stat-card red">
-          <div className="stat-lbl">Perdidos</div>
-          <div className="stat-val">{lost.length}</div>
-          <div className="stat-sub">{projects.length ? Math.round(lost.length/projects.length*100) : 0}% tasa de pérdida</div>
+        <div className="modal-footer">
+          {!confirm?<button className="btn-danger" onClick={()=>setConfirm(true)}>Eliminar</button>:<button className="btn-danger" onClick={()=>{onDelete(project.id);onClose();}}>¿Confirmar?</button>}
+          <button className="btn-ghost" onClick={onClose}>Cerrar</button>
+          {mode==="edit-stage"&&<button className="btn-dark" onClick={saveStage} disabled={saving}>{saving?"...":"Guardar Etapa"}</button>}
+          {mode==="edit-quote"&&qResult&&<button className="btn-dark" onClick={saveQuote} disabled={saving}>{saving?"...":"Guardar Cotización"}</button>}
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Pipeline */}
-      <div style={{marginBottom:24}}>
-        <div style={{fontSize:"9px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#818181",marginBottom:12,fontFamily:"'Poppins',sans-serif"}}>Pipeline de Proyectos</div>
+/* ── CLIENTS SECTION ── */
+function ClientsSection({clients}){
+  const[modal,setModal]=useState(null); // null | {mode:"new"|"edit", data?}
+  const[confirm,setConfirm]=useState(null);
+  const[search,setSearch]=useState("");
+  const filtered=clients.data.filter(c=>!search||c.empresa?.toLowerCase().includes(search.toLowerCase())||c.contacto?.toLowerCase().includes(search.toLowerCase())||c.mail?.toLowerCase().includes(search.toLowerCase()));
+
+  const blankForm={empresa:"",contacto:"",cargo:"",telefono:"",mail:""};
+  const[form,setForm]=useState(blankForm);
+  const setF=(k,v)=>setForm(f=>({...f,[k]:v}));
+
+  const openNew=()=>{setForm(blankForm);setModal({mode:"new"});};
+  const openEdit=(c)=>{setForm({empresa:c.empresa||"",contacto:c.contacto||"",cargo:c.cargo||"",telefono:c.telefono||"",mail:c.mail||""});setModal({mode:"edit",id:c.id});};
+  const save=async()=>{
+    if(modal.mode==="new")await clients.add({...form});
+    else await clients.update(modal.id,{...form});
+    setModal(null);
+  };
+  const del=async(id)=>{await clients.remove(id);setConfirm(null);};
+
+  return(
+    <div className="page-wide">
+      <div style={{display:"flex",gap:12,marginBottom:20,alignItems:"center",flexWrap:"wrap"}}>
+        <input placeholder="Buscar empresa, contacto o mail..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:1,minWidth:200,maxWidth:360}} />
+        <button className="btn-dark" onClick={openNew}>+ Nuevo Cliente</button>
+      </div>
+
+      {filtered.length===0
+        ?<div className="empty"><div className="empty-icon">👤</div><div className="empty-title">Sin clientes{search?" encontrados":""}</div><div className="empty-sub">{search?"Ajustá la búsqueda":"Agregá tu primer cliente"}</div></div>
+        :(
+          <div className="card"><div className="card-body" style={{padding:0}}>
+            <table className="tbl">
+              <thead><tr>
+                <th>Empresa</th><th>Contacto</th><th>Cargo</th><th>Teléfono</th><th>Mail</th><th style={{width:80}}></th>
+              </tr></thead>
+              <tbody>
+                {filtered.map(c=>(
+                  <tr key={c.id}>
+                    <td><div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>{c.empresa}</div></td>
+                    <td>{c.contacto||"—"}</td>
+                    <td><span style={{fontSize:10,color:"#818181"}}>{c.cargo||"—"}</span></td>
+                    <td style={{fontSize:11}}>{c.telefono||"—"}</td>
+                    <td style={{fontSize:11}}>{c.mail||"—"}</td>
+                    <td>
+                      <div className="tbl-actions">
+                        <button className="btn-ghost btn-sm" onClick={()=>openEdit(c)}>Editar</button>
+                        <button className="btn-danger btn-sm" onClick={()=>setConfirm(c.id)}>✕</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div></div>
+        )
+      }
+
+      {/* Client modal */}
+      {modal&&(
+        <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
+          <div className="modal" style={{maxWidth:520}}>
+            <div className="modal-hdr">
+              <div className="modal-title">{modal.mode==="new"?"Nuevo Cliente":"Editar Cliente"}</div>
+              <button className="modal-close" onClick={()=>setModal(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="g2">
+                <div className="fg" style={{gridColumn:"1/-1"}}><label>Empresa / Razón Social</label><input value={form.empresa} onChange={e=>setF("empresa",e.target.value)} placeholder="ej. BILBOSA S.A." /></div>
+                <div className="fg"><label>Nombre de Contacto</label><input value={form.contacto} onChange={e=>setF("contacto",e.target.value)} placeholder="ej. María García" /></div>
+                <div className="fg"><label>Cargo</label><input value={form.cargo} onChange={e=>setF("cargo",e.target.value)} placeholder="ej. Gerente de Marketing" /></div>
+                <div className="fg"><label>Teléfono / WhatsApp</label><input value={form.telefono} onChange={e=>setF("telefono",e.target.value)} placeholder="ej. +598 99 123 456" /></div>
+                <div className="fg"><label>Mail</label><input type="email" value={form.mail} onChange={e=>setF("mail",e.target.value)} placeholder="ej. maria@empresa.com" /></div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-ghost" onClick={()=>setModal(null)}>Cancelar</button>
+              <button className="btn-dark" onClick={save} disabled={!form.empresa}>Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirm */}
+      {confirm&&(
+        <div className="modal-backdrop" onClick={()=>setConfirm(null)}>
+          <div className="modal" style={{maxWidth:360}} onClick={e=>e.stopPropagation()}>
+            <div className="modal-hdr"><div className="modal-title">Confirmar eliminación</div></div>
+            <div className="modal-body"><p style={{fontSize:13}}>¿Eliminás este cliente? Esta acción no se puede deshacer.</p></div>
+            <div className="modal-footer"><button className="btn-ghost" onClick={()=>setConfirm(null)}>Cancelar</button><button className="btn-danger" onClick={()=>del(confirm)}>Eliminar</button></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── FERIAS SECTION ── */
+function FeriasSection({ferias,projects}){
+  const[modal,setModal]=useState(null);
+  const[confirm,setConfirm]=useState(null);
+  const[search,setSearch]=useState("");
+  const filtered=ferias.data.filter(f=>!search||f.nombre?.toLowerCase().includes(search.toLowerCase())||f.ciudad?.toLowerCase().includes(search.toLowerCase())||f.pais?.toLowerCase().includes(search.toLowerCase()));
+
+  const blankForm={nombre:"",ciudad:"",pais:"",fechaInicio:"",fechaFin:"",notas:""};
+  const[form,setForm]=useState(blankForm);
+  const setF=(k,v)=>setForm(f=>({...f,[k]:v}));
+
+  const openNew=()=>{setForm(blankForm);setModal({mode:"new"});};
+  const openEdit=(f)=>{setForm({nombre:f.nombre||"",ciudad:f.ciudad||"",pais:f.pais||"",fechaInicio:f.fechaInicio||"",fechaFin:f.fechaFin||"",notas:f.notas||""});setModal({mode:"edit",id:f.id});};
+  const save=async()=>{
+    if(modal.mode==="new")await ferias.add({...form});
+    else await ferias.update(modal.id,{...form});
+    setModal(null);
+  };
+  const del=async(id)=>{await ferias.remove(id);setConfirm(null);};
+
+  const getProjectCount=(feriaId,nombre)=>projects.filter(p=>p.feriaId===feriaId||p.feria===nombre).length;
+  const getRevenue=(feriaId,nombre)=>projects.filter(p=>(p.feriaId===feriaId||p.feria===nombre)&&!["perdido"].includes(p.etapa)).reduce((a,p)=>a+(p.ingresos||0),0);
+
+  return(
+    <div className="page-wide">
+      <div style={{display:"flex",gap:12,marginBottom:20,alignItems:"center",flexWrap:"wrap"}}>
+        <input placeholder="Buscar feria o ciudad..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:1,minWidth:200,maxWidth:360}} />
+        <button className="btn-dark" onClick={openNew}>+ Nueva Feria</button>
+      </div>
+
+      {filtered.length===0
+        ?<div className="empty"><div className="empty-icon">🎪</div><div className="empty-title">Sin ferias{search?" encontradas":""}</div><div className="empty-sub">{search?"Ajustá la búsqueda":"Registrá tu primera feria"}</div></div>
+        :(
+          <div className="card"><div className="card-body" style={{padding:0}}>
+            <table className="tbl">
+              <thead><tr>
+                <th>Feria</th><th>Ciudad / País</th><th>Fechas</th><th>Proyectos</th><th>Revenue</th><th style={{width:80}}></th>
+              </tr></thead>
+              <tbody>
+                {filtered.map(f=>{
+                  const pc=getProjectCount(f.id,f.nombre);
+                  const rev=getRevenue(f.id,f.nombre);
+                  return(
+                    <tr key={f.id}>
+                      <td><div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>{f.nombre}</div>{f.notas&&<div style={{fontSize:10,color:"#818181",marginTop:2}}>{f.notas}</div>}</td>
+                      <td><div style={{fontWeight:500}}>{f.ciudad||"—"}</div><div style={{fontSize:10,color:"#818181"}}>{f.pais||""}</div></td>
+                      <td style={{fontSize:11}}>{f.fechaInicio||"—"}<br/>{f.fechaFin||""}</td>
+                      <td><span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:16}}>{pc}</span><span style={{fontSize:10,color:"#818181"}}> proyecto{pc!==1?"s":""}</span></td>
+                      <td style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,color:rev>0?"#2ecc71":"#818181"}}>{rev>0?`USD ${fmt(rev)}`:"—"}</td>
+                      <td>
+                        <div className="tbl-actions">
+                          <button className="btn-ghost btn-sm" onClick={()=>openEdit(f)}>Editar</button>
+                          <button className="btn-danger btn-sm" onClick={()=>setConfirm(f.id)}>✕</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div></div>
+        )
+      }
+
+      {modal&&(
+        <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
+          <div className="modal" style={{maxWidth:540}}>
+            <div className="modal-hdr">
+              <div className="modal-title">{modal.mode==="new"?"Nueva Feria":"Editar Feria"}</div>
+              <button className="modal-close" onClick={()=>setModal(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="g2">
+                <div className="fg" style={{gridColumn:"1/-1"}}><label>Nombre de la Feria</label><input value={form.nombre} onChange={e=>setF("nombre",e.target.value)} placeholder="ej. Anuga Cologne 2026" /></div>
+                <div className="fg"><label>Ciudad</label><input value={form.ciudad} onChange={e=>setF("ciudad",e.target.value)} placeholder="ej. Cologne" /></div>
+                <div className="fg"><label>País</label><input value={form.pais} onChange={e=>setF("pais",e.target.value)} placeholder="ej. Alemania" /></div>
+                <div className="fg"><label>Fecha Inicio</label><input type="date" value={form.fechaInicio} onChange={e=>setF("fechaInicio",e.target.value)} /></div>
+                <div className="fg"><label>Fecha Fin</label><input type="date" value={form.fechaFin} onChange={e=>setF("fechaFin",e.target.value)} /></div>
+                <div className="fg" style={{gridColumn:"1/-1"}}><label>Notas / Descripción</label><textarea value={form.notas} onChange={e=>setF("notas",e.target.value)} rows={2} placeholder="Sector, descripción, link al manual del expositor..." /></div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-ghost" onClick={()=>setModal(null)}>Cancelar</button>
+              <button className="btn-dark" onClick={save} disabled={!form.nombre}>Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirm&&(
+        <div className="modal-backdrop" onClick={()=>setConfirm(null)}>
+          <div className="modal" style={{maxWidth:360}} onClick={e=>e.stopPropagation()}>
+            <div className="modal-hdr"><div className="modal-title">Confirmar eliminación</div></div>
+            <div className="modal-body"><p style={{fontSize:13}}>¿Eliminás esta feria del registro?</p></div>
+            <div className="modal-footer"><button className="btn-ghost" onClick={()=>setConfirm(null)}>Cancelar</button><button className="btn-danger" onClick={()=>del(confirm)}>Eliminar</button></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── DASHBOARD ── */
+function Dashboard({projects,ferias}){
+  const active=projects.filter(p=>!["completado","perdido"].includes(p.etapa));
+  const completed=projects.filter(p=>p.etapa==="completado");
+  const lost=projects.filter(p=>p.etapa==="perdido");
+  const revenue=completed.reduce((a,p)=>a+(p.ingresos||0),0);
+  const netProfit=completed.reduce((a,p)=>a+(p.neto||0),0);
+  const stageCounts={};STAGES.forEach(s=>{stageCounts[s.id]=projects.filter(p=>p.etapa===s.id).length;});
+
+  const byFeria={};
+  projects.forEach(p=>{if(!p.feria)return;if(!byFeria[p.feria])byFeria[p.feria]={ps:[],destino:p.destino};byFeria[p.feria].ps.push(p);});
+  const feriaData=Object.entries(byFeria).map(([name,{ps,destino}])=>{
+    const activos=ps.filter(p=>!["perdido"].includes(p.etapa));
+    const aceptados=ps.filter(p=>ACCEPTED_STAGES.includes(p.etapa));
+    const totalIngresos=activos.reduce((a,p)=>a+(p.ingresos||0),0);
+    const totalNeto=activos.reduce((a,p)=>a+(p.neto||0),0);
+    const travelFull=ps[0]?((ps[0].flightCostPax||0)*2*(ps[0].personas||2)+(ps[0].hotelCostNight||0)*nightsBetween(ps[0].llegada,ps[0].partida)*rooms(ps[0].personas||2)+(ps[0].dailyCostPax||0)*nightsBetween(ps[0].llegada,ps[0].partida)*(ps[0].personas||2)):0;
+    const travelSaved=aceptados.length>1?travelFull*(aceptados.length-1)/aceptados.length:0;
+    return{name,destino,ps:activos,aceptados,totalIngresos,totalNeto,travelSaved};
+  }).sort((a,b)=>b.totalIngresos-a.totalIngresos);
+
+  return(
+    <div className="page-wide">
+      <div className="stats-grid">
+        <div className="stat-card dark"><div className="stat-lbl">Activos</div><div className="stat-val">{active.length}</div><div className="stat-sub">{projects.length} proyectos en total</div></div>
+        <div className="stat-card green"><div className="stat-lbl">Completados</div><div className="stat-val">{completed.length}</div><div className="stat-sub">Tasa éxito: {projects.length?Math.round(completed.length/projects.length*100):0}%</div></div>
+        <div className="stat-card gold"><div className="stat-lbl">Revenue (Completados)</div><div className="stat-val" style={{fontSize:18}}>USD {fmt(revenue)}</div><div className="stat-sub">Neto: USD {fmt(netProfit)}</div></div>
+        <div className="stat-card red"><div className="stat-lbl">Perdidos</div><div className="stat-val">{lost.length}</div><div className="stat-sub">{projects.length?Math.round(lost.length/projects.length*100):0}% tasa de pérdida</div></div>
+      </div>
+      <div style={{marginBottom:20}}>
+        <div style={{fontSize:"9px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#818181",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Pipeline</div>
         <div className="pipeline">
           {STAGES.slice(0,6).map(s=>(
             <div key={s.id} className="pipe-stage">
@@ -1133,32 +1283,16 @@ function Dashboard({ projects }) {
           ))}
         </div>
       </div>
-
-      {/* Por Feria */}
-      <div style={{fontSize:"9px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#818181",marginBottom:12,fontFamily:"'Poppins',sans-serif"}}>Potencial por Feria</div>
-      {feriaData.length===0 && <div className="empty"><div className="empty-icon">📊</div><div className="empty-title">Sin datos de ferias</div><div className="empty-sub">Agregá proyectos para ver el dashboard por feria</div></div>}
+      <div style={{fontSize:"9px",letterSpacing:"2.5px",textTransform:"uppercase",color:"#818181",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Potencial por Feria</div>
+      {feriaData.length===0&&<div className="empty"><div className="empty-icon">📊</div><div className="empty-title">Sin datos aún</div><div className="empty-sub">Creá proyectos para ver el análisis por feria</div></div>}
       {feriaData.map(fd=>(
         <div key={fd.name} className="feria-card">
           <div className="feria-hdr">
-            <div>
-              <div className="feria-name">{fd.name}</div>
-              <div className="feria-meta">{fd.destino} · {fd.ps.length} cliente{fd.ps.length!==1?"s":""} en esta feria</div>
-            </div>
+            <div><div className="feria-name">{fd.name}</div><div className="feria-meta">{fd.destino} · {fd.ps.length} proyecto{fd.ps.length!==1?"s":""}{fd.aceptados.length>0?` · ${fd.aceptados.length} aceptado${fd.aceptados.length>1?"s":""} (viaje compartido)`:""}</div></div>
             <div className="feria-stats">
-              {fd.travelSaved>0 && (
-                <div className="feria-stat">
-                  <div className="feria-stat-lbl">Ahorro viaje</div>
-                  <div className="feria-stat-val" style={{color:"#f39c12"}}>+{fc("USD",fd.travelSaved)}</div>
-                </div>
-              )}
-              <div className="feria-stat">
-                <div className="feria-stat-lbl">Ingresos totales</div>
-                <div className="feria-stat-val">{fc(fd.ps[0]?.moneda||"USD",fd.totalIngresos)}</div>
-              </div>
-              <div className="feria-stat">
-                <div className="feria-stat-lbl">Neto total</div>
-                <div className="feria-stat-val" style={{color:"#2ecc71"}}>{fc(fd.ps[0]?.moneda||"USD",fd.totalNeto)}</div>
-              </div>
+              {fd.travelSaved>0&&<div className="feria-stat"><div className="feria-stat-lbl">Ahorro viaje</div><div className="feria-stat-val" style={{color:"#f39c12"}}>+USD {fmt(fd.travelSaved)}</div></div>}
+              <div className="feria-stat"><div className="feria-stat-lbl">Ingresos</div><div className="feria-stat-val">{fc(fd.ps[0]?.moneda||"USD",fd.totalIngresos)}</div></div>
+              <div className="feria-stat"><div className="feria-stat-lbl">Neto</div><div className="feria-stat-val" style={{color:"#2ecc71"}}>{fc(fd.ps[0]?.moneda||"USD",fd.totalNeto)}</div></div>
             </div>
           </div>
           <div className="feria-body">
@@ -1166,11 +1300,12 @@ function Dashboard({ projects }) {
               {fd.ps.map(p=>(
                 <div key={p.id} className="client-row">
                   <div>
-                    <div className="client-name">{p.proyecto}</div>
-                    <div className="client-meta">{p.cliente} · <span className={`badge ${STAGE_BADGE[p.etapa]||""}`}>{STAGES.find(s=>s.id===p.etapa)?.label||p.etapa}</span></div>
+                    <div className="client-name-big">{p.proyecto}</div>
+                    <div className="client-meta">{p.feria&&p.clienteNombre?p.clienteNombre:p.cliente||"—"}{p.m2>0?` · ${p.m2}m²`:""} · <span className={`badge ${STAGE_BADGE[p.etapa]||""}`}>{STAGES.find(s=>s.id===p.etapa)?.label||p.etapa}</span></div>
                   </div>
-                  <div>
+                  <div style={{textAlign:"right"}}>
                     <div className="client-amount">{fc(p.moneda,p.ingresos)}</div>
+                    {p.m2>0&&p.ingresos>0&&<div style={{fontSize:10,color:"#b1ada2"}}>{fc(p.moneda,p.ingresos/p.m2)}/m²</div>}
                     <div className="client-profit">Neto: {fc(p.moneda,p.neto)}</div>
                   </div>
                 </div>
@@ -1183,478 +1318,101 @@ function Dashboard({ projects }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   PROJECT DETAIL MODAL — Full edit
-══════════════════════════════════════════════ */
-function ProjectModal({ project, onClose, onUpdate, onDelete, allProjects }) {
-  const [mode, setMode] = useState("view"); // "view" | "edit-stage" | "edit-quote"
-  const [saving, setSaving] = useState(false);
-  const [confirm, setConfirm] = useState(false);
-
-  // Stage edit state
-  const [newStage, setNewStage] = useState(project.etapa);
-  const [notas, setNotas] = useState(project.notas||"");
-
-  // Quote edit state — mirrors BudgetCalc fields
-  const [qForm, setQForm] = useState({
-    proyecto: project.proyecto||"",
-    cliente: project.cliente||"",
-    feria: project.feria||"",
-    destino: project.destino||"",
-    llegada: project.llegada||"",
-    partida: project.partida||"",
-    personas: String(project.personas||2),
-    costoStand: String(project.costoStand||""),
-    costoCatering: String(project.costoCatering||""),
-    costoServicios: String(project.costoServicios||""),
-    moneda: project.moneda||"USD",
-    gastosAdminPct: String((project.gastosAdminPct||0.05)*100),
+/* ── PROJECTS LIST ── */
+function ProjectsList({projects,onUpdate,onDelete,clients,ferias}){
+  const[selected,setSelected]=useState(null);
+  const[filter,setFilter]=useState("todos");
+  const[search,setSearch]=useState("");
+  const filtered=projects.filter(p=>{
+    const mS=filter==="todos"||p.etapa===filter;
+    const mQ=!search||p.proyecto?.toLowerCase().includes(search.toLowerCase())||p.feria?.toLowerCase().includes(search.toLowerCase())||p.destino?.toLowerCase().includes(search.toLowerCase())||p.clienteNombre?.toLowerCase().includes(search.toLowerCase());
+    return mS&&mQ;
   });
-  const [qTravel, setQTravel] = useState({
-    flight: String(project.flightCostPax || Math.round((project.flightTotal||0)/(project.personas||2)) || ""),
-    hotel:  String(project.hotelCostNight || ""),
-    daily:  String(project.dailyCostPax || ""),
-  });
-  const [resultadoEsperado, setResultadoEsperado] = useState(String(project.neto||""));
-  const [qResult, setQResult] = useState(null);
-
-  const setQ = (k,v) => setQForm(f=>({...f,[k]:v}));
-  const n = nightsBetween(qForm.llegada, qForm.partida);
-  const pax = parseInt(qForm.personas)||1;
-
-  const sameFeraCount = allProjects.filter(p=>p.feria===project.feria&&p.id!==project.id&&!["perdido"].includes(p.etapa)).length;
-  const divisor = sameFeraCount + 1;
-
-  const onDestinoBlur = () => {
-    if(!qForm.destino) return;
-    const d = getDef(qForm.destino);
-    setQTravel({ flight: String(d.f), hotel: String(d.h), daily: String(d.d) });
-  };
-
-  const recalcular = () => {
-    const cs = parseFloat(qForm.costoStand)||0;
-    const cc = parseFloat(qForm.costoCatering)||0;
-    const cv = parseFloat(qForm.costoServicios)||0;
-    const top = cs+cc+cv;
-    const ft = (parseFloat(qTravel.flight)||0)*pax / divisor;
-    const ht = (parseFloat(qTravel.hotel)||0)*n*rooms(pax) / divisor;
-    const dt = (parseFloat(qTravel.daily)||0)*n*pax / divisor;
-    const trep = ft+ht+dt;
-    const pct = (parseFloat(qForm.gastosAdminPct)/100)||0.05;
-    const neto = parseFloat(resultadoEsperado)||0;
-    const costos = top+trep;
-    const rb = neto/0.75;
-    const ingresos = costos + rb/(1-pct);
-    const ga = (ingresos-costos)*pct;
-    const rbc = ingresos-costos-ga;
-    const irae = rbc*0.25;
-    setQResult({
-      ingresos, costoStand:cs, costoCatering:cc, costoServicios:cv, totalOperativos:top,
-      flightTotal:ft, hotelTotal:ht, dailyTotal:dt, totalRepresentacion:trep,
-      flightCostPax:parseFloat(qTravel.flight)||0, hotelCostNight:parseFloat(qTravel.hotel)||0,
-      dailyCostPax:parseFloat(qTravel.daily)||0,
-      gastosAdminPct:pct, gastosAdmin:ga, rentaBruta:rbc, irae, neto:rbc-irae,
-      moneda:qForm.moneda, personas:pax, nights:n, divisor,
-    });
-  };
-
-  const saveStage = async () => {
-    setSaving(true);
-    await onUpdate(project.id, { etapa: newStage, notas });
-    setSaving(false);
-    setMode("view");
-  };
-
-  const saveQuote = async () => {
-    if(!qResult) return;
-    setSaving(true);
-    await onUpdate(project.id, {
-      ...qForm,
-      personas: pax,
-      gastosAdminPct: qResult.gastosAdminPct,
-      ingresos: qResult.ingresos,
-      costoStand: qResult.costoStand,
-      costoCatering: qResult.costoCatering,
-      costoServicios: qResult.costoServicios,
-      flightTotal: qResult.flightTotal,
-      hotelTotal: qResult.hotelTotal,
-      dailyTotal: qResult.dailyTotal,
-      flightCostPax: qResult.flightCostPax,
-      hotelCostNight: qResult.hotelCostNight,
-      dailyCostPax: qResult.dailyCostPax,
-      gastosAdmin: qResult.gastosAdmin,
-      rentaBruta: qResult.rentaBruta,
-      irae: qResult.irae,
-      neto: qResult.neto,
-      totalRepresentacion: qResult.totalRepresentacion,
-      totalOperativos: qResult.totalOperativos,
-    });
-    setSaving(false);
-    setMode("view");
-  };
-
-  const cur = project.moneda;
-
-  return (
-    <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal" style={{maxWidth:800}}>
-        <div className="modal-hdr">
-          <div>
-            <div className="modal-title">{project.proyecto}</div>
-            <div style={{fontSize:10,color:"#818181",marginTop:2,letterSpacing:1}}>{project.feria} · {project.destino}</div>
-          </div>
-          <div style={{display:"flex",gap:8,alignItems:"center"}}>
-            <button className="modal-close" onClick={onClose}>✕</button>
-          </div>
-        </div>
-
-        {/* Tab switcher inside modal */}
-        <div style={{background:"#1e1e1e",display:"flex",borderBottom:"1px solid #2a2a2a"}}>
-          {[
-            {id:"view",      label:"Resumen"},
-            {id:"edit-stage",label:"Cambiar Etapa"},
-            {id:"edit-quote",label:"Editar Cotización"},
-          ].map(t=>(
-            <div key={t.id}
-              onClick={()=>setMode(t.id)}
-              style={{
-                padding:"10px 20px", fontSize:9, letterSpacing:"2px", textTransform:"uppercase",
-                fontFamily:"'Poppins',sans-serif", cursor:"pointer", color:mode===t.id?"#e5e3e0":"#818181",
-                borderBottom:mode===t.id?"2px solid #b1ada2":"2px solid transparent", transition:"all .15s"
-              }}>
-              {t.label}
-            </div>
-          ))}
-        </div>
-
-        <div className="modal-body">
-
-          {/* ── VIEW MODE ── */}
-          {mode==="view" && (
-            <>
-              <div style={{marginBottom:20}}>
-                <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Etapa Actual</div>
-                <StageTracker currentStage={project.etapa} />
-              </div>
-              <div className="g2" style={{marginBottom:20}}>
-                <div>
-                  <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:4,fontFamily:"'Poppins',sans-serif"}}>Stand</div>
-                  <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700}}>{project.cliente||"—"}</div>
-                  <div style={{fontSize:"11px",color:"#818181"}}>{project.llegada||"—"} → {project.partida||"—"} · {project.personas||2} pax</div>
-                </div>
-                <div>
-                  <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:4,fontFamily:"'Poppins',sans-serif"}}>Notas</div>
-                  <div style={{fontSize:"12px",color:"#262626",lineHeight:1.5}}>{project.notas||<span style={{color:"#b1ada2"}}>Sin notas</span>}</div>
-                </div>
-              </div>
-              <div className="results">
-                <div className="res-body" style={{paddingTop:16}}>
-                  <div className="res-sect"><span>Costos Operativos</span><span>{fc(cur,project.totalOperativos)}</span></div>
-                  {project.costoStand>0    && <div className="res-row ind"><span>Stand / Montaje</span><span className="res-amt">{fc(cur,project.costoStand)}</span></div>}
-                  {project.costoCatering>0 && <div className="res-row ind"><span>Catering</span><span className="res-amt">{fc(cur,project.costoCatering)}</span></div>}
-                  {project.costoServicios>0&& <div className="res-row ind"><span>Servicios</span><span className="res-amt">{fc(cur,project.costoServicios)}</span></div>}
-                  <div className="res-sect"><span>Representación{sameFeraCount>0?` (÷${divisor})`:""}</span><span>{fc(cur,project.totalRepresentacion)}</span></div>
-                  <div className="res-row ind"><span>Pasajes</span><span className="res-amt">{fc(cur,project.flightTotal)}</span></div>
-                  <div className="res-row ind"><span>Hotel</span><span className="res-amt">{fc(cur,project.hotelTotal)}</span></div>
-                  <div className="res-row ind"><span>Viáticos</span><span className="res-amt">{fc(cur,project.dailyTotal)}</span></div>
-                  <div className="res-sect"><span>Gastos Admin ({((project.gastosAdminPct||0.05)*100).toFixed(0)}%)</span><span>{fc(cur,project.gastosAdmin)}</span></div>
-                  <div className="res-sect"><span>IRAE (25%)</span><span className="res-amt neg">{fc(cur,project.irae)}</span></div>
-                  <div className="res-neto"><span>Resultado Neto</span><span className="res-amt pos">{fc(cur,project.neto)}</span></div>
-                </div>
-                <div className="big-box" style={{margin:"0 24px 16px"}}>
-                  <div className="big-lbl">Ingreso a Cotizar</div>
-                  <div className="big-val" style={{fontSize:36}}>{fc(cur,project.ingresos)}</div>
-                </div>
-              </div>
-              {sameFeraCount>0 && (
-                <div className="note-box savings" style={{marginTop:14}}>
-                  <strong>⚡ Feria Compartida</strong>
-                  {sameFeraCount} cliente{sameFeraCount>1?"s":""} más en {project.feria}. Costos de viaje divididos entre {divisor} proyectos.
-                </div>
-              )}
-            </>
-          )}
-
-          {/* ── EDIT STAGE MODE ── */}
-          {mode==="edit-stage" && (
-            <>
-              <div style={{marginBottom:16}}>
-                <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Seleccioná la etapa actual haciendo click</div>
-                <div className="stage-track">
-                  {STAGES.map((s,i)=>{
-                    const stageIdx = STAGES.findIndex(x=>x.id===newStage);
-                    const done = i < stageIdx;
-                    const curr = s.id === newStage;
-                    const cls = done?"done":curr?"current":"";
-                    return (
-                      <div key={s.id} className={`stage-item ${cls}`} onClick={()=>setNewStage(s.id)} style={{cursor:"pointer"}}>
-                        <div className={`stage-dot ${cls}`} style={{width:28,height:28,fontSize:10}}>{done?"✓":i+1}</div>
-                        <div className="stage-lbl" style={{fontSize:8}}>{s.label}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{marginTop:16}}>
-                  <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:6,fontFamily:"'Poppins',sans-serif"}}>O elegí directamente</div>
-                  <select value={newStage} onChange={e=>setNewStage(e.target.value)}>
-                    {STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
-                    <option value="perdido">Perdido</option>
-                  </select>
-                </div>
-              </div>
-              <div style={{marginTop:16}}>
-                <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:6,fontFamily:"'Poppins',sans-serif"}}>Notas / Observaciones</div>
-                <textarea value={notas} onChange={e=>setNotas(e.target.value)} rows={4}
-                  placeholder="Actualizá el estado, comentarios del cliente, próximos pasos..." />
-              </div>
-            </>
-          )}
-
-          {/* ── EDIT QUOTE MODE ── */}
-          {mode==="edit-quote" && (
-            <>
-              <div style={{fontSize:"10px",color:"#818181",marginBottom:20,background:"#f0eeeb",padding:"10px 14px",borderLeft:"3px solid #b1ada2"}}>
-                Editá los valores y recalculá. Al guardar se actualiza el presupuesto del proyecto.
-              </div>
-
-              {/* Datos básicos */}
-              <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Datos del Proyecto</div>
-              <div className="g2" style={{marginBottom:16}}>
-                <div className="fg"><label>Proyecto / Cliente</label><input value={qForm.proyecto} onChange={e=>setQ("proyecto",e.target.value)} /></div>
-                <div className="fg"><label>Stand / Descripción</label><input value={qForm.cliente} onChange={e=>setQ("cliente",e.target.value)} /></div>
-                <div className="fg"><label>Nombre de la Feria</label><input value={qForm.feria} onChange={e=>setQ("feria",e.target.value)} /></div>
-                <div className="fg">
-                  <label>Moneda</label>
-                  <select value={qForm.moneda} onChange={e=>setQ("moneda",e.target.value)}>
-                    <option value="USD">USD</option><option value="EUR">EUR</option><option value="UYU">UYU</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Fechas y destino */}
-              <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Fechas y Destino</div>
-              <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:14,marginBottom:16}}>
-                <div className="fg">
-                  <label>Ciudad Destino</label>
-                  <input value={qForm.destino} onChange={e=>setQ("destino",e.target.value)} onBlur={onDestinoBlur} />
-                </div>
-                <div className="fg">
-                  <label>Personas</label>
-                  <select value={qForm.personas} onChange={e=>setQ("personas",e.target.value)}>
-                    {[1,2,3,4,5,6].map(x=><option key={x} value={x}>{x} pax</option>)}
-                  </select>
-                </div>
-                <div className="fg"><label>Llegada</label><input type="date" value={qForm.llegada} onChange={e=>setQ("llegada",e.target.value)} /></div>
-                <div className="fg"><label>Partida</label><input type="date" value={qForm.partida} onChange={e=>setQ("partida",e.target.value)} /></div>
-              </div>
-
-              {/* Costos operativos */}
-              <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>Costos Operativos</div>
-              <div className="g3" style={{marginBottom:16}}>
-                <div className="fg"><label>Stand / Montaje</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoStand} onChange={e=>setQ("costoStand",e.target.value)} /></div></div>
-                <div className="fg"><label>Catering</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoCatering} onChange={e=>setQ("costoCatering",e.target.value)} /></div></div>
-                <div className="fg"><label>Servicios</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qForm.costoServicios} onChange={e=>setQ("costoServicios",e.target.value)} /></div></div>
-              </div>
-
-              {/* Costos de viaje */}
-              <div style={{fontSize:"9px",letterSpacing:"2px",color:"#818181",textTransform:"uppercase",marginBottom:10,fontFamily:"'Poppins',sans-serif"}}>
-                Costos de Viaje {divisor>1?<span style={{color:"#f39c12"}}> · ÷{divisor} clientes</span>:null}
-              </div>
-              <div className="g3" style={{marginBottom:16}}>
-                <div className="fg"><label>Pasaje/pax I+V</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.flight} onChange={e=>setQTravel(t=>({...t,flight:e.target.value}))} /></div></div>
-                <div className="fg"><label>Hotel/noche/hab</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.hotel} onChange={e=>setQTravel(t=>({...t,hotel:e.target.value}))} /></div></div>
-                <div className="fg"><label>Viáticos/día/pax</label><div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={qTravel.daily} onChange={e=>setQTravel(t=>({...t,daily:e.target.value}))} /></div></div>
-              </div>
-
-              {/* Financiero */}
-              <div className="g2" style={{marginBottom:20}}>
-                <div className="fg">
-                  <label>Gastos Administrativos</label>
-                  <div className="sfx"><input type="number" step="0.5" value={qForm.gastosAdminPct} onChange={e=>setQ("gastosAdminPct",e.target.value)} /><span className="sfx-tag">%</span></div>
-                </div>
-                <div className="fg">
-                  <label>Resultado esperado neto ({qForm.moneda})</label>
-                  <div className="pfx"><span className="pfx-tag">{qForm.moneda}</span><input type="number" value={resultadoEsperado} onChange={e=>setResultadoEsperado(e.target.value)} /></div>
-                </div>
-              </div>
-
-              <div style={{display:"flex",justifyContent:"center",marginBottom:20}}>
-                <button className="btn-dark" onClick={recalcular}
-                  disabled={!qForm.costoStand||!resultadoEsperado||!qTravel.flight||n<=0}>
-                  ◆ RECALCULAR
-                </button>
-              </div>
-
-              {qResult && (
-                <div className="results">
-                  <div className="res-body" style={{paddingTop:16}}>
-                    <div className="res-sect"><span>Costos Operativos</span><span>{fc(qResult.moneda,qResult.totalOperativos)}</span></div>
-                    <div className="res-sect"><span>Representación{qResult.divisor>1?` (÷${qResult.divisor})`:""}</span><span>{fc(qResult.moneda,qResult.totalRepresentacion)}</span></div>
-                    <div className="res-sect"><span>Admin + IRAE</span><span>{fc(qResult.moneda,qResult.gastosAdmin+qResult.irae)}</span></div>
-                    <div className="res-neto"><span>Resultado Neto</span><span className="res-amt pos">{fc(qResult.moneda,qResult.neto)}</span></div>
-                  </div>
-                  <div className="big-box" style={{margin:"0 24px 16px"}}>
-                    <div className="big-lbl">Nuevo Ingreso a Cotizar</div>
-                    <div className="big-val" style={{fontSize:36}}>{fc(qResult.moneda,qResult.ingresos)}</div>
-                    <div className="big-sub">Diferencia vs anterior: {qResult.ingresos>project.ingresos?"+":""}
-                      {fc(qResult.moneda,qResult.ingresos-(project.ingresos||0))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-
-        </div>
-
-        <div className="modal-footer">
-          {!confirm
-            ? <button className="btn-danger" onClick={()=>setConfirm(true)}>Eliminar proyecto</button>
-            : <button className="btn-danger" onClick={()=>{ onDelete(project.id); onClose(); }}>¿Confirmar?</button>
-          }
-          <button className="btn-ghost" onClick={onClose}>Cerrar</button>
-          {mode==="edit-stage" && (
-            <button className="btn-dark" onClick={saveStage} disabled={saving}>
-              {saving?"Guardando...":"Guardar Etapa"}
-            </button>
-          )}
-          {mode==="edit-quote" && qResult && (
-            <button className="btn-dark" onClick={saveQuote} disabled={saving}>
-              {saving?"Guardando...":"Guardar Cotización"}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════
-   PROJECTS LIST VIEW
-══════════════════════════════════════════════ */
-function ProjectsList({ projects, onUpdate, onDelete }) {
-  const [selected, setSelected] = useState(null);
-  const [filter, setFilter] = useState("todos");
-  const [search, setSearch] = useState("");
-
-  const filtered = projects.filter(p => {
-    const matchStage = filter==="todos"||p.etapa===filter;
-    const matchSearch = !search || p.proyecto?.toLowerCase().includes(search.toLowerCase()) ||
-      p.feria?.toLowerCase().includes(search.toLowerCase()) || p.destino?.toLowerCase().includes(search.toLowerCase());
-    return matchStage && matchSearch;
-  });
-
-  return (
+  return(
     <div className="page-wide">
-      {/* Filters */}
       <div style={{display:"flex",gap:12,marginBottom:20,flexWrap:"wrap",alignItems:"center"}}>
-        <input placeholder="Buscar proyecto, feria, destino..." value={search}
-          onChange={e=>setSearch(e.target.value)}
-          style={{flex:"1",minWidth:200,maxWidth:340}} />
+        <input placeholder="Buscar proyecto, feria, cliente, destino..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:1,minWidth:200,maxWidth:360}} />
         <select value={filter} onChange={e=>setFilter(e.target.value)} style={{width:"auto",minWidth:160}}>
           <option value="todos">Todas las etapas</option>
           {STAGES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
           <option value="perdido">Perdido</option>
         </select>
       </div>
-
-      {filtered.length===0 ? (
-        <div className="empty">
-          <div className="empty-icon">📁</div>
-          <div className="empty-title">Sin proyectos</div>
-          <div className="empty-sub">Ajustá el filtro o creá un nuevo proyecto</div>
-        </div>
-      ) : (
-        <div className="card">
-          <div className="card-body" style={{padding:0}}>
-            <table className="proj-table">
-              <thead>
-                <tr>
-                  <th>Proyecto</th>
-                  <th>Feria / Destino</th>
-                  <th>Etapa</th>
-                  <th>Ingreso</th>
-                  <th>Neto</th>
-                  <th>Fechas</th>
-                </tr>
-              </thead>
+      {filtered.length===0
+        ?<div className="empty"><div className="empty-icon">📁</div><div className="empty-title">Sin proyectos</div><div className="empty-sub">Ajustá el filtro o creá un nuevo proyecto</div></div>
+        :(
+          <div className="card"><div className="card-body" style={{padding:0}}>
+            <table className="tbl">
+              <thead><tr><th>Proyecto</th><th>Cliente</th><th>Feria / Destino</th><th>m²</th><th>Etapa</th><th>Ingreso</th><th>€/m²</th><th>Neto</th></tr></thead>
               <tbody>
                 {filtered.map(p=>(
                   <tr key={p.id} style={{cursor:"pointer"}} onClick={()=>setSelected(p)}>
-                    <td>
-                      <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:13}}>{p.proyecto}</div>
-                      <div style={{fontSize:11,color:"#818181"}}>{p.cliente}</div>
-                    </td>
-                    <td>
-                      <div style={{fontWeight:500}}>{p.feria}</div>
-                      <div style={{fontSize:11,color:"#818181"}}>{p.destino}</div>
-                    </td>
+                    <td><div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:13}}>{p.proyecto}</div></td>
+                    <td style={{fontSize:11,color:"#818181"}}>{p.clienteNombre||p.cliente||"—"}</td>
+                    <td><div style={{fontWeight:500,fontSize:12}}>{p.feria}</div><div style={{fontSize:10,color:"#818181"}}>{p.destino}</div></td>
+                    <td style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600}}>{p.m2>0?`${p.m2}m²`:"—"}</td>
                     <td><span className={`badge ${STAGE_BADGE[p.etapa]||""}`}>{STAGES.find(s=>s.id===p.etapa)?.label||p.etapa}</span></td>
-                    <td style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600}}>{fc(p.moneda,p.ingresos)}</td>
-                    <td style={{color:"#2ecc71",fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600}}>{fc(p.moneda,p.neto)}</td>
-                    <td style={{fontSize:11,color:"#818181"}}>{p.llegada||"—"}<br/>{p.partida||"—"}</td>
+                    <td style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,fontSize:12}}>{fc(p.moneda,p.ingresos)}</td>
+                    <td style={{fontSize:11,color:"#b1ada2"}}>{p.m2>0&&p.ingresos>0?fc(p.moneda,p.ingresos/p.m2):"—"}</td>
+                    <td style={{color:"#2ecc71",fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,fontSize:12}}>{fc(p.moneda,p.neto)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
-      )}
-
-      {selected && (
+          </div></div>
+        )
+      }
+      {selected&&(
         <ProjectModal
           project={selected}
           onClose={()=>setSelected(null)}
-          onUpdate={async(id,data)=>{ await onUpdate(id,data); setSelected(p=>({...p,...data})); }}
+          onUpdate={async(id,data)=>{await onUpdate(id,data);setSelected(p=>({...p,...data}));}}
           onDelete={onDelete}
           allProjects={projects}
+          clients={clients}
+          ferias={ferias}
         />
       )}
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════
-   MAIN APP
-══════════════════════════════════════════════ */
-function App() {
-  const { user, loading, login, logout } = useAuth();
-  const { projects, addProject, updateProject, deleteProject, fbMode } = useProjects();
-  const [tab, setTab] = useState("dashboard");
+/* ── MAIN APP ── */
+function App(){
+  const{user,loading,login,logout}=useAuth();
+  const projects=useCollection("projects");
+  const clients=useCollection("clients");
+  const ferias=useCollection("ferias");
+  const[tab,setTab]=useState("dashboard");
 
-  if(loading) return (
-    <div style={{minHeight:"100vh",background:"#262626",display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:18,letterSpacing:6,color:"#e5e3e0"}}>GALERIE</div>
-    </div>
-  );
+  if(loading)return(<div style={{minHeight:"100vh",background:"#262626",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:18,letterSpacing:6,color:"#e5e3e0"}}>GALERIE</div></div>);
+  if(!user)return<LoginScreen onLogin={login}/>;
 
-  if(!user) return <LoginScreen onLogin={login} />;
+  const handleSaveProject=async(data)=>{await projects.add(data);setTab("proyectos");};
 
-  const handleSaveProject = async (data) => {
-    await addProject(data);
-    setTab("proyectos");
-  };
-
-  const tabs = [
-    { id:"dashboard",   label:"Dashboard",          dot:"#f39c12" },
-    { id:"proyectos",   label:"Proyectos",           dot:"#3498db" },
-    { id:"presupuesto", label:"Nueva Cotización",    dot:"#2ecc71" },
+  const TABS=[
+    {id:"dashboard",   label:"Dashboard",       dot:"#f39c12"},
+    {id:"proyectos",   label:"Proyectos",        dot:"#3498db"},
+    {id:"presupuesto", label:"Nueva Cotización", dot:"#2ecc71"},
+    {id:"ferias",      label:"Ferias",           dot:"#9b59b6"},
+    {id:"clientes",    label:"Clientes",         dot:"#e67e22"},
   ];
 
-  return (
+  const activeCount=projects.data.filter(p=>!["completado","perdido"].includes(p.etapa)).length;
+
+  return(
     <>
       <div className="sticky-shell">
         <header className="hdr">
           <div className="hdr-logo" onClick={()=>setTab("dashboard")}>GALERIE</div>
           <div className="hdr-right">
-            {!fbMode && <div className="hdr-pill">MODO DEMO</div>}
+            {!projects.fbMode&&<div className="hdr-pill">MODO DEMO</div>}
             <div className="hdr-user">{user.email}</div>
             <button className="btn-logout" onClick={logout}>Salir</button>
           </div>
         </header>
-
         <nav className="nav">
-          {tabs.map(t=>(
+          {TABS.map(t=>(
             <div key={t.id} className={`nav-item${tab===t.id?" active":""}`} onClick={()=>setTab(t.id)}>
               <div className="nav-dot" style={{background:tab===t.id?t.dot:"#3a3a3a"}}></div>
               {t.label}
@@ -1663,41 +1421,39 @@ function App() {
         </nav>
       </div>
 
-      {/* Hero */}
       <div className="hero">
         <div className="hero-ey">Galerie — Gestión de Proyectos</div>
         <h1 className="hero-title">
-          {tab==="dashboard"   && "Dashboard General"}
-          {tab==="proyectos"   && "Proyectos"}
-          {tab==="presupuesto" && "Nueva Cotización de Feria"}
+          {tab==="dashboard"&&"Dashboard General"}
+          {tab==="proyectos"&&"Proyectos"}
+          {tab==="presupuesto"&&"Nueva Cotización"}
+          {tab==="ferias"&&"Ferias"}
+          {tab==="clientes"&&"Clientes"}
         </h1>
         <div className="hero-sub">
-          {tab==="dashboard"   && `${projects.filter(p=>!["completado","perdido"].includes(p.etapa)).length} proyectos activos · ${projects.filter(p=>p.etapa==="completado").length} completados`}
-          {tab==="proyectos"   && `${projects.length} proyectos registrados`}
-          {tab==="presupuesto" && "Desde Montevideo al mundo · Uso interno Galerie"}
+          {tab==="dashboard"&&`${activeCount} proyectos activos · ${projects.data.filter(p=>p.etapa==="completado").length} completados · ${clients.data.length} clientes · ${ferias.data.length} ferias`}
+          {tab==="proyectos"&&`${projects.data.length} proyectos registrados`}
+          {tab==="presupuesto"&&"Calculadora con costos desde Montevideo · Uso interno Galerie"}
+          {tab==="ferias"&&`${ferias.data.length} ferias registradas`}
+          {tab==="clientes"&&`${clients.data.length} clientes registrados`}
         </div>
       </div>
 
-      {tab==="dashboard"   && <Dashboard projects={projects} />}
-      {tab==="proyectos"   && <ProjectsList projects={projects} onUpdate={updateProject} onDelete={deleteProject} />}
-      {tab==="presupuesto" && (
-        <div className="page">
-          <BudgetCalc
-            onSave={handleSaveProject}
-            companyClients={projects.filter(p=>!["perdido"].includes(p.etapa))}
-          />
-        </div>
-      )}
+      {tab==="dashboard"  &&<Dashboard projects={projects.data} ferias={ferias.data}/>}
+      {tab==="proyectos"  &&<ProjectsList projects={projects.data} onUpdate={projects.update} onDelete={projects.remove} clients={clients.data} ferias={ferias.data}/>}
+      {tab==="presupuesto"&&<div className="page"><BudgetCalc onSave={handleSaveProject} allProjects={projects.data} clients={clients.data} ferias={ferias.data}/></div>}
+      {tab==="ferias"     &&<FeriasSection ferias={ferias} projects={projects.data}/>}
+      {tab==="clientes"   &&<ClientsSection clients={clients}/>}
 
       <footer className="footer">
         <div className="footer-logo">GALERIE</div>
-        <div className="footer-info">galerie-expo.com · Sistema de Gestión Interno{fbMode?" · Firebase conectado":""}</div>
+        <div className="footer-info">galerie-expo.com · Sistema de Gestión Interno{projects.fbMode?" · Firebase ●":""}</div>
       </footer>
     </>
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 </body>
 </html>
